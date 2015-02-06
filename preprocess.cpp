@@ -22,7 +22,7 @@ int main(int argc, char **argv)
         fout << label;
         for( int i=0; i<norm_img.total(); i++ ){
             if( norm_img.at<uchar>(i)!=0 )
-                fout << " " << i+1 << ":" << norm_img.at<uchar>(i);
+                fout << " " << i+1 << ":" << (int)norm_img.at<uchar>(i);
         }
         fout << std::endl;
 
