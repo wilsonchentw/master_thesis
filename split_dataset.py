@@ -4,28 +4,39 @@
 import sys
 import random
 import argparse
+from itertools import accumulate
 from os import getcwd, listdir
 from os.path import isfile, join, abspath
 
-parser = argparse.ArgumentParser()
-parser.add_argument("dataset", help="dataset directory", type=str)
-parser.add_argument("train_list", help="training set filelist", type=str)
-parser.add_argument("test_list", help="testing set filelist", type=str)
-parser.add_argument("fold", help="n-fold validation", type=int)
-if len(sys.argv) <= 1:
-    args = parser.parse_args(['-h'])
-else:
-    args = parser.parse_args()
+def check_option(args):
+    if not args.f and not args.v:
+        args.f = [sys.stdout]
+        args.v = [1]
+    elif len(args.f) != len(args.v):
+        print("mismatch number of arguments")
+        exit(1)
+    elif len([e for e in args.v if e <= 0]) > 0:
+        print("number of fold must be positive")
+        exit(1)
+    else:
+        args.f = [open(f, mode="w") for f in args.f]
+    return abspath(args.dataset), args.f, args.v 
 
-v = args.fold
-rootpath = abspath(args.dataset)
-trainfile = open(args.train_list, mode='w')
-testfile = open(args.test_list, mode='w')
+parser = argparse.ArgumentParser()
+parser.add_argument("dataset", help="path to dataset directory")
+parser.add_argument("-f", nargs="*", type=str, metavar="list_name")
+parser.add_argument("-v", nargs="*", type=int, metavar="fold")
+args = parser.parse_args()
+
+rootpath, filelist, fold = check_option(args)
 for idx, label in enumerate(listdir(rootpath)):
     dirpath = join(rootpath, label)
-    filelist = [ f for f in listdir(dirpath) if isfile(join(dirpath, f)) ]
-    random.shuffle(filelist)
-    test_sample = filelist[0:len(filelist):v]
-    train_sample = [f for f in filelist if f not in test_sample]
-    for f in test_sample: print(join(dirpath, f) + " " + str(idx), file=testfile)
-    for f in train_sample: print(join(dirpath, f) + " " + str(idx), file=trainfile)
+    pathlist = [p for p in listdir(dirpath) if isfile(join(dirpath, p))]
+    random.shuffle(pathlist)
+
+    num = [v*len(pathlist)//sum(fold) for v in fold]
+    num = [n+1 if i < len(pathlist)-sum(num) else n for i, n in enumerate(num)]
+    acc = list(accumulate(num))
+    for i, f in enumerate(filelist):
+        for image in pathlist[acc[i]-num[i]:acc[i]]:
+            print(join(dirpath, image) + " " + str(idx), file=f)
