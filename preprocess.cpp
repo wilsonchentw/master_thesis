@@ -29,7 +29,7 @@ int main(int argc, char **argv)
                 fout << " " << i+1 << ":" << (int)norm_img.at<uchar>(i);
         }
         fout << std::endl;
-        std::cout << "\r" << path;
+        std::cout << path << std::endl;
     }
     fin.close();
 

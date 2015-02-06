@@ -20,3 +20,4 @@ ${LIBSVM_PATH}/svm-scale -l 0 -u 1 -s ${TRAIN}.range > ${TRAIN}.scale.dat
 #${LIBSVM_PATH}/svm-scale -l 0 -u 1 -s ${VAL}.range > ${VAL}.scale.dat
 ${LIBSVM_PATH}/svm-scale -l 0 -u 1 -r ${TRAIN}.range > ${TEST}.scale.dat
 
+rm preprocess
