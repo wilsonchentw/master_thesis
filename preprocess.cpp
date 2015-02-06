@@ -13,7 +13,6 @@ int main(int argc, char **argv)
     std::fstream fin(argv[1], std::fstream::in);
     std::fstream fout(argv[2], std::fstream::out);
 
-    fout.precision(4);
     while(fin >> path >> label){
         cv::Mat image, norm_img;
         image = cv::imread(path, CV_LOAD_IMAGE_COLOR);
@@ -26,6 +25,8 @@ int main(int argc, char **argv)
                 fout << " " << i+1 << ":" << (double)norm_img.at<uchar>(i)/255;
         }
         fout << std::endl;
+
+        std::cout << path << std::endl;
     }
     fin.close();
 
