@@ -7,6 +7,10 @@
 
 int main(int argc, char **argv)
 {
+    if(argc != 3){
+        printf("Usage: %s image_list data_filename\n", argv[0]);
+        return -1;
+    }
 
     int label;
     std::string path;
@@ -25,8 +29,7 @@ int main(int argc, char **argv)
                 fout << " " << i+1 << ":" << (int)norm_img.at<uchar>(i);
         }
         fout << std::endl;
-
-        std::cout << path << std::endl;
+        std::cout << "\r" << path;
     }
     fin.close();
 
