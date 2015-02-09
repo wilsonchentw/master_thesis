@@ -5,6 +5,9 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+#define WIDTH 256
+#define HEIGHT 256
+
 int main(int argc, char **argv)
 {
     if(argc != 3){
@@ -21,7 +24,7 @@ int main(int argc, char **argv)
     while(fin >> path >> label){
         cv::Mat image, norm_img;
         image = cv::imread(path, CV_LOAD_IMAGE_COLOR);
-        cv::resize(image, norm_img, cv::Size(256, 256));
+        cv::resize(image, norm_img, cv::Size(HEIGHT, WIDTH));
         norm_img = norm_img.reshape(1, 1);
 
         fout << label;
