@@ -1,5 +1,5 @@
-#PFID: Pittsburgh fast-food image dataset
-##*ICIP'09*
+##PFID: Pittsburgh fast-food image dataset
+###*ICIP'09*
 - dataset:
 	- 61 kinds of fast food with each contains 3x(4+4+6) images, 
 	- 2 stereo images, 1 360-degree video
@@ -15,8 +15,8 @@
 	- top-1 accuracy: 9.2%
 
 -------------------------------------------------------------------------------
-#A food image recognition system with Multiple Kernel Learning 
-##*ICIP'09*
+##A food image recognition system with Multiple Kernel Learning 
+###*ICIP'09*
 - dataset: 50-category with 100 images for each category
 - 5-fold cross-validation
 	- top-1 accuracy: 26.10% ~ 38.18% with single feature, 61.34% with MKL
@@ -30,8 +30,8 @@
 	multiple kernel learning in SVM with &chi;2 kernel
 
 -------------------------------------------------------------------------------
-#Image processing based approach to food balance analysis for personal food logging
-##*ICME'10*
+##Image processing based approach to food balance analysis for personal food logging
+###*ICME'10*
 - dataset
 	- detect food: 93.3% accuracy (500 images)
 	- balance estimation: 73% (with some bias catagory)
@@ -51,8 +51,8 @@
 	- both SVM in ingredient and food
 
 -------------------------------------------------------------------------------
-#Food Recognition Using Statistics of Pairwise Local Features
-##*CVPR'10*
+##Food Recognition Using Statistics of Pairwise Local Features
+###*CVPR'10*
 - dataset: PFID, 61 catagories with masked background
 - 3-fold cross validation
 	- train 2, test 1
@@ -67,8 +67,8 @@
 	- SVM with &chi;2 kernel
 
 -------------------------------------------------------------------------------
-#Combining Global and Local Features for Food Identification in Dietary Assessment  
-##*ICIP'11*
+##Combining Global and Local Features for Food Identification in Dietary Assessment  
+###*ICIP'11*
 - dataset:
 	- more than 1000 hand-segmented images under controlled condition
 - user study: 
@@ -98,8 +98,8 @@
 		- DoG for POI -> local features -> hierarchical K-means -> 1NN
 
 -------------------------------------------------------------------------------
-#Automatic Chinese Food Identification and Quantity Estimation  
-##*SIGGRAPH Asia 2012 Technical Briefs*
+##Automatic Chinese Food Identification and Quantity Estimation  
+###*SIGGRAPH Asia 2012 Technical Briefs*
 - 50 categories, 5000 images
 - 5-fold cross validation
 - training 3, fuse 1, validation 1
@@ -115,8 +115,8 @@
 	- multi-class AdaBoost with loss functino SAMME
 
 -------------------------------------------------------------------------------
-#A Novel SVM Based Food Recognition Method for Calorie Measurement Applications 
-##*ICME'12 Workshops*
+##A Novel SVM Based Food Recognition Method for Calorie Measurement Applications 
+###*ICME'12 Workshops*
 - dataset: 1636 images with 12 catagories of fruits and food
 	- train 1, test 1
 	- For each catagory top-1 accuracy range from 58.13% to 97.64% (avg. 92.6%)
@@ -128,8 +128,8 @@
 	- SVM
 
 -------------------------------------------------------------------------------
-#Segmentation and Recognition of Multi-Food Meal Images for Carbohydrate Counting 
-##*BIBE'13*
+##Segmentation and Recognition of Multi-Food Meal Images for Carbohydrate Counting 
+###*BIBE'13*
 - dataset: 
 	- segmentation: HSI=0.885 in 65 images
 	- recognition: >5000 images, >13000 patches
@@ -146,8 +146,8 @@
 	SVM with RBF kernel
 
 -------------------------------------------------------------------------------
-#Food-101 ─ Mining Discriminative Components with Random Forests
-##*ECCV'14*
+##Food-101 ─ Mining Discriminative Components with Random Forests
+###*ECCV'14*
 - dataset: 101-catagory with 1000 images for each category 
 	- 250 images were manually cleaned (testing)
 	- train 3, test 1
@@ -172,8 +172,8 @@
 	  and train a sructured-output multi-class svm
 
 -------------------------------------------------------------------------------
-#FoodCam: A Real-Time Mobile Food Recognition System Employing Fisher Vector
-##*MultiMedia Modeling, 2014*
+##FoodCam: A Real-Time Mobile Food Recognition System Employing Fisher Vector
+###*MultiMedia Modeling, 2014*
 - dataset: 12905 images with 100 catagories
 	- top-1: 51.9%, top-5: 79.2%
 	- recognition time on Samsung Galaxy Note&#8545; costs 0.065s
@@ -187,9 +187,9 @@
 	- linear SVM with one-versus-rest strategy
 
 -------------------------------------------------------------------------------
-#Multiple-food recognition considering co-occurrence employing manifold ranking
-##*ICPR'12*
+##Multiple-food recognition considering co-occurrence employing manifold ranking
+###*ICPR'12*
 
 -------------------------------------------------------------------------------
-#Food Detection and Recognition Using Convolutional Neural Network
-##*MM'14*
+##Food Detection and Recognition Using Convolutional Neural Network
+###*MM'14*
