@@ -2,7 +2,7 @@
 ###*ICIP'09*
 - dataset:
 	- 61 kinds of fast food with each contains 3x(4+4+6) images, 
-	- 2 stereo images, 1 360-degree video
+	- two stereo images, one 360-degree video
 	- train 2, test 1
 	- use labortary images, 3-fold cross-validation
 - baseline 1:
