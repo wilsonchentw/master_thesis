@@ -18,12 +18,11 @@
 -------------------------------------------------------------------------------
 ##Preliminary Method: 
 
-###Patch with Majority Vote (Na&iuml;ve)
+###Hard-Labeled Patch with Majority Vote (Na&iuml;ve)
 - In training phase, divide training image into patches with label,
   then learn a classifier to hard-classify patch. 
-  For testing, divide testing image into patches,
+- For testing, divide testing image into patches,
   and classify the image with majority label of patches.
-
 
 ------------------------------------------------------------------------------
 ##Idea
