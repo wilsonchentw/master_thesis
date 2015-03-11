@@ -10,7 +10,8 @@
     - recall rate = 94%
     - severe overfitting, parameter-tuning needed
 - bvlc\_alexnet: 47%
-    - [Paper](www.cs.toronto.edu/~fritz/absps/imagenet.pdf)
+    - [Slide](http://www.image-net.org/challenges/LSVRC/2012/supervision.pdf)
+    - [Paper](http://www.cs.toronto.edu/~fritz/absps/imagenet.pdf)
     - current iteration: 12000 (max. 450000)
     - **STILL RUNNING**
 
