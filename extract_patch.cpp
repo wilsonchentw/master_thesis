@@ -36,7 +36,7 @@ int main(int argc, char **argv)
                 fout << std::endl;
             }
         }
-        std::cout << path << std::endl;
+        // std::cout << path << std::endl;
     }
     fin.close();
 

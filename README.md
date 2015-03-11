@@ -1,13 +1,36 @@
 #Master Thesis Proposal
 --------------------------------------------------------------------------------
 ##Current Progress
-- Na&iuml;ve SVM with RBF kernel: 25%
-- linear SVM: train = 94%, val = 18% (overfitting, parameter-tuning needed)
-- alexnet: 11000 iterations with top-1 accuracy = 48%
-- possible method:
-    - convolution neural network: need to survey network design
-    - hand-crafted features with SVM
-        - implementing patch based algorithm
+- raw image classified by RBF-SVM: 25%
+    - tuned by libsvm/tools/grid.py
+    - best parameter: 
+        - c=2<sup>3</sup>, g=2<sup>-15</sup>, rate=25.2537%
+        - c=2<sup>5</sup>, g=2<sup>-17</sup>, rate=24.2090%
+- raw image classified by linear-SVM: 18%
+    - recall rate = 94%
+    - severe overfitting, parameter-tuning needed
+- bvlc\_alexnet: 47%
+    - [Paper](www.cs.toronto.edu/~fritz/absps/imagenet.pdf)
+    - current iteration: 12000 (max. 450000)
+    - **STILL RUNNING**
+
+-------------------------------------------------------------------------------
+##Possible Proposed Method: 
+
+###Patch with Majority Vote
+####Algorithm
+    Train:
+        Divide training image into patches with label  
+        Learn a classifier to hard-classify patch
+    Test:
+        Divide testing image into patches
+        Classify the image with majority label of patches
+
+------------------------------------------------------------------------------
+##Idea
+- convolution neural network
+    - need to survey network design
+- hand-crafted features with SVM
 
 -------------------------------------------------------------------------------
 ##Problem
@@ -56,5 +79,4 @@ and evaluate proposed system with top-1 (and top-5 accuracy, if possible).
 - 06/07 - 06/13 (week 16) : 
 - 06/07 - 06/13 (week 17) : oral defense
 - 06/07 - 06/13 (week 18) : ???
-
 
