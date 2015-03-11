@@ -1,7 +1,23 @@
 #Master Thesis Proposal
+--------------------------------------------------------------------------------
+##Current Progress
+- Na&iuml;ve SVM with RBF kernel: 25%
+- linear SVM: train = 94%, val = 18% (overfitting, parameter-tuning needed)
+- alexnet: 11000 iterations with top-1 accuracy = 48%
+- possible method:
+    - convolution neural network: need to survey network design
+    - hand-crafted features with SVM
+        - implementing patch based algorithm
+
 -------------------------------------------------------------------------------
+##Problem
+- No baseline source code, I need to implement from scratch
+- Baseline CNN is slow, I'm afraid it may not converge in time.
+- GTX 970 ?
+
+------------------------------------------------------------------------------
 ##Related Work
-[Press Me](https://github.com/zxm20243/master_thesis/blob/master/related_work.md)
+[Press Me](doc/related_work.md)
 
 -------------------------------------------------------------------------------
 ##Motivation
@@ -24,33 +40,21 @@ and evaluate proposed system with top-1 (and top-5 accuracy, if possible).
 
 -------------------------------------------------------------------------------
 ##Schedule
-- 03/08 - 03/14 (week 03) : related work (preliminary) & implement baseline
-- 03/15 - 03/21 (week 04) : implement baseline & do expriment
-- 03/22 - 03/28 (week 05) : do expriment
-- 03/29 - 04/04 (week 06) : do expriment
-- 04/05 - 04/11 (week 07) : do expriment
-- 04/12 - 04/18 (week 08) : do expriment
-- 04/19 - 04/25 (week 09) : do expriment
-- 04/26 - 05/02 (week 10) : do expriment
-- 05/03 - 05/09 (week 11) : do expriment
-- 05/10 - 05/16 (week 12) : ???
-- 05/17 - 05/23 (week 13) : write thesis 
-- 05/24 - 05/30 (week 14) : write thesis
-- 05/31 - 06/06 (week 15) : write thesis or revise thesis
-- 06/07 - 06/13 (week 16) : revise thesis
+- 03/08 - 03/14 (week 03) : 
+- 03/15 - 03/21 (week 04) : 
+- 03/22 - 03/28 (week 05) : 
+- 03/29 - 04/04 (week 06) : 
+- 04/05 - 04/11 (week 07) : 
+- 04/12 - 04/18 (week 08) : 
+- 04/19 - 04/25 (week 09) : 
+- 04/26 - 05/02 (week 10) : 
+- 05/03 - 05/09 (week 11) : 
+- 05/10 - 05/16 (week 12) : 
+- 05/17 - 05/23 (week 13) : 
+- 05/24 - 05/30 (week 14) : 
+- 05/31 - 06/06 (week 15) : 
+- 06/07 - 06/13 (week 16) : 
 - 06/07 - 06/13 (week 17) : oral defense
 - 06/07 - 06/13 (week 18) : ???
 
--------------------------------------------------------------------------------
-##Current Progress
-- Na&iuml;ve SVM with RBF kernel: 25%
-- linear SVM: train=94.6%, val=18.4% (overfitting, parameter-tuning needed)
-- possible method:
-	- convolution neural network: need to survey network design
-	- hand-crafted features with SVM
 
--------------------------------------------------------------------------------
-##Problem
-- No baseline source code, I need to implement from scratch
-- Some parameter is unknown
-- Baseline CNN is slow, I'm afraid it may not converge in time.
