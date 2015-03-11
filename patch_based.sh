@@ -11,7 +11,6 @@ TEST=${DATASET}_test
 # Clean
 rm 50data_*
 rm extract_patch
-ls -lah --color
 
 python3 split_dataset.py ../$DATASET\
     -f ${TRAIN}.list ${VAL}.list ${TEST}.list\
@@ -25,3 +24,4 @@ ${LIBLINEAR_PATH}/train -s 2 -c 100 ${TRAIN}_patch.dat ${DATASET}_patch.model
 ${LIBLINEAR_PATH}/predict ${TRAIN}_patch.dat ${DATASET}_patch.model ${TRAIN}_patch.predict
 ${LIBLINEAR_PATH}/predict ${TEST}_patch.dat  ${DATASET}_patch.model ${TEST}_patch.predict
 
+#ls -lah --color
