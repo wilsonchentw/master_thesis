@@ -16,16 +16,14 @@
     - **STILL RUNNING**
 
 -------------------------------------------------------------------------------
-##Possible Proposed Method: 
+##Preliminary Method: 
 
-###Patch with Majority Vote
-####Algorithm
-    Train:
-        Divide training image into patches with label  
-        Learn a classifier to hard-classify patch
-    Test:
-        Divide testing image into patches
-        Classify the image with majority label of patches
+###Patch with Majority Vote (Na&iuml;ve)
+- In training phase, divide training image into patches with label,
+  then learn a classifier to hard-classify patch. 
+  For testing, divide testing image into patches,
+  and classify the image with majority label of patches.
+
 
 ------------------------------------------------------------------------------
 ##Idea
