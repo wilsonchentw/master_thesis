@@ -21,22 +21,26 @@ int main(int argc, char **argv)
         image = cv::imread(path, CV_LOAD_IMAGE_COLOR);
         cv::resize(image, norm_img, cv::Size(IMG_HEIGHT, IMG_WIDTH));
 
-        int w=4, h=4, step=2;
-        for( int i=0; i+h<=IMG_HEIGHT; i+=step ){
-            for( int j=0; j+w<=IMG_WIDTH; j+=step ){
-                norm_img(cv::Range(i, i+h), cv::Range(j, j+w)).copyTo(patch);
-                patch = patch.reshape(1,1);
+        int w=4, h=4, dx=2, dy=2;
+        for(int y=0; y+h<=IMG_HEIGHT; y+=dy){
+            for(int x=0; x+w<=IMG_WIDTH; x+=dx){
+                patch = norm_img(cv::Range(y, y+h), cv::Range(x, x+w));
 
+                // vectorize the patch
+                if(!patch.isContinuous()){ patch = patch.clone(); }
+                patch = patch.reshape(1, 1);
+
+                // output for libsvm format
                 fout << label;
-                for( int k=0; k<patch.total(); k++ ){
-                    int value = patch.at<uchar>(k);
-                    if( value!=0 )
-                        fout << " " << k+1 << ":" << (double)value/255;
+                for( int idx=0; idx<patch.total(); idx++ ){
+                    int value = patch.at<uchar>(idx);
+                    if( value!=0 ){ 
+                        fout << " " << idx+1 << ":" << (double)value/255; 
+                    }
                 }
                 fout << std::endl;
             }
         }
-        // std::cout << path << std::endl;
     }
     fin.close();
 
