@@ -22,7 +22,12 @@ def check_option(args):
         args.f = [open(f, mode="w") for f in args.f]
     return abspath(args.dataset), args.f, args.v 
 
-parser = argparse.ArgumentParser()
+def usage_msg():
+    return ("split_dataset.py dataset_folder [-f list ...] [-v portion ...]\n"
+            "If no -f & -v, print all files in dataset_folder on screen\n "
+           )
+
+parser = argparse.ArgumentParser(usage=usage_msg())
 parser.add_argument("dataset", help="path to dataset directory")
 parser.add_argument("-f", nargs="*", type=str, metavar="list_name")
 parser.add_argument("-v", nargs="*", type=int, metavar="fold")
