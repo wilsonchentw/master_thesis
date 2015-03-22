@@ -13,7 +13,7 @@ using namespace cv;
 using std::cout;
 using std::endl;
 
-Mat preprocessing(Mat image)
+Mat normalizeCrop(Mat image)
 {
     Mat norm_image;
 
@@ -35,6 +35,7 @@ Mat im2hist(Mat image)
     float rgb_range[] = {0, 256};
     const float *hist_range[] = {rgb_range, rgb_range, rgb_range};
 
+    // calculate histogram and normalize to 1 in summation
     calcHist(&image, 1, channels, Mat(), hist, dims, bins, hist_range);
     hist = hist / (IMG_WIDTH*IMG_HEIGHT);
 
@@ -64,7 +65,7 @@ int main(int argc, char **argv)
 
     while(fin >> path >> label){
         Mat image = imread(path, CV_LOAD_IMAGE_COLOR);
-        Mat norm_image = preprocessing(image);
+        Mat norm_image = normalizeCrop(image);
         Mat hist = im2hist(norm_image);
 
         matToLibsvm(label, hist, fout);
