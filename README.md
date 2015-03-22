@@ -1,5 +1,9 @@
 #Master Thesis Proposal
 --------------------------------------------------------------------------------
+##Partial Result
+
+
+--------------------------------------------------------------------------------
 ##Current Progress
 - raw image classified by RBF-SVM: 25%
     - tuned by libsvm/tools/grid.py
