@@ -10,7 +10,7 @@ TEST=${DATASET}_test
 
 python3 split_dataset.py ../$DATASET\
     -f ${TRAIN}.list ${VAL}.list ${TEST}.list\
-    -v 1 98 1
+    -v 1 4 1
 
 g++ extract_histogram.cpp $(pkg-config --cflags --libs opencv) -o extract_hist
 ./extract_hist ${TRAIN}.list ${TRAIN}_hist.dat
