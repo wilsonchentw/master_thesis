@@ -69,6 +69,7 @@ int main(int argc, char **argv)
         // normalize image
         Mat norm_image;
         resize(image, norm_image, Size(IMG_HEIGHT, IMG_WIDTH));
+        norm_image = norm_image / 255;
         //norm_image = normalizeCrop(image);
 
         // calculate histogram
