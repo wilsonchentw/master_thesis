@@ -34,12 +34,29 @@ int main(int argc, char **argv)
     std::string path;
     std::fstream fin(argv[1], std::fstream::in);
     std::fstream fout(argv[2], std::fstream::out);
-
     fout.precision(4);
+
+    std::vector<Mat> images;
     while(fin >> path >> label){
         Mat image = imread(path, CV_LOAD_IMAGE_COLOR);
-        Mat norm_image = preprocessing(image);
+        image = preprocessing(image);
+
+        Mat hist;
+        int dims=3, channels[]={0, 1, 2}, bins[]={16, 16, 16};
+        float rgb_range[] = {0, 256};
+        const float *hist_range[] = {rgb_range, rgb_range, rgb_range};
+        calcHist(&image, 1, channels, Mat(), hist, dims, bins, hist_range);
+
+        hist = hist/(IMG_WIDTH*IMG_HEIGHT);
+        fout << label;
+        for( int i=0; i<hist.total(); i++ ){
+            if( hist.at<float>(i) > 0 ){
+                fout << " " << i+1 << ":" << hist.at<float>(i);
+            }
+        }
+        fout << endl;
     }
+
 
     return 0;
 }
