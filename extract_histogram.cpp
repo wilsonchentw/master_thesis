@@ -28,6 +28,32 @@ Mat preprocessing(Mat image)
     return norm_image;
 }
 
+Mat im2hist(Mat image)
+{
+    Mat hist;
+    int dims=3, channels[]={0, 1, 2}, bins[]={16, 16, 16};
+    float rgb_range[] = {0, 256};
+    const float *hist_range[] = {rgb_range, rgb_range, rgb_range};
+
+    calcHist(&image, 1, channels, Mat(), hist, dims, bins, hist_range);
+    hist = hist / (IMG_WIDTH*IMG_HEIGHT);
+
+    return hist;
+}
+
+void matToLibsvm(int label, Mat raw, std::fstream &fout){
+    Mat m;
+    raw.convertTo(m, CV_64F);
+
+    fout << label;
+    for( int i=0; i<m.total(); i++ ){
+        if( m.at<double>(i) > 0 ){
+            fout << " " << i+1 << ":" << m.at<double>(i);
+        }
+    }
+    fout << endl;
+}
+
 int main(int argc, char **argv)
 {
     int label;
@@ -36,25 +62,12 @@ int main(int argc, char **argv)
     std::fstream fout(argv[2], std::fstream::out);
     fout.precision(4);
 
-    std::vector<Mat> images;
     while(fin >> path >> label){
         Mat image = imread(path, CV_LOAD_IMAGE_COLOR);
-        image = preprocessing(image);
+        Mat norm_image = preprocessing(image);
+        Mat hist = im2hist(norm_image);
 
-        Mat hist;
-        int dims=3, channels[]={0, 1, 2}, bins[]={16, 16, 16};
-        float rgb_range[] = {0, 256};
-        const float *hist_range[] = {rgb_range, rgb_range, rgb_range};
-        calcHist(&image, 1, channels, Mat(), hist, dims, bins, hist_range);
-
-        hist = hist/(IMG_WIDTH*IMG_HEIGHT);
-        fout << label;
-        for( int i=0; i<hist.total(); i++ ){
-            if( hist.at<float>(i) > 0 ){
-                fout << " " << i+1 << ":" << hist.at<float>(i);
-            }
-        }
-        fout << endl;
+        matToLibsvm(label, hist, fout);
     }
 
 
