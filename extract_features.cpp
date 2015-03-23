@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <vector>
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -42,14 +43,18 @@ Mat im2hist(Mat image)
     return hist;
 }
 
-void matToLibsvm(int label, Mat raw, std::fstream &fout){
+void matToLibsvm(int label, Mat &raw, std::fstream &fout){
+    CV_Assert(raw.channels()==1);
+
     Mat m;
     raw.convertTo(m, CV_64F);
+    MatIterator_<double> bgn = m.begin<double>();
+    MatIterator_<double> end = m.end<double>();
 
     fout << label;
-    for( int i=0; i<m.total(); i++ ){
-        if( m.at<double>(i) > 0 ){
-            fout << " " << i+1 << ":" << m.at<double>(i);
+    for( MatIterator_<double> it=bgn; it!=end; ++it ){
+        if( (*it) > 0 ){
+            fout << " " << (it-bgn)+1 << ":" << (*it);
         }
     }
     fout << endl;
@@ -66,16 +71,19 @@ int main(int argc, char **argv)
     while(fin >> path >> label){
         Mat image = imread(path, CV_LOAD_IMAGE_COLOR);
 
-        // normalize image
+        // Normalize image
         Mat norm_image;
         resize(image, norm_image, Size(IMG_HEIGHT, IMG_WIDTH));
-        norm_image = norm_image / 255;
+        norm_image.convertTo(norm_image, CV_32FC3, (double)1.0/255);
+        norm_image = norm_image.reshape(1);
         //norm_image = normalizeCrop(image);
 
-        // calculate histogram
+        // Calculate histogram
         //Mat hist = im2hist(norm_image);
 
+        // Output to libsvm training data file
         matToLibsvm(label, norm_image, fout);
+        //matToLibsvm(label, hist, fout);
     }
 
 
