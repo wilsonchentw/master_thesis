@@ -14,7 +14,7 @@ using namespace cv;
 using std::cout;
 using std::endl;
 
-Mat normalizeCrop(Mat image)
+Mat normalizeCrop(Mat &image)
 {
     Mat norm_image;
 
@@ -29,10 +29,10 @@ Mat normalizeCrop(Mat image)
     return norm_image;
 }
 
-Mat im2hist(Mat image)
+Mat im2hist(Mat &image)
 {
     Mat hist;
-    int dims=3, channels[]={0, 1, 2}, bins[]={16, 16, 16};
+    int dims=3, channels[]={0, 1, 2}, bins[]={32, 32, 32};
     float rgb_range[] = {0, 256};
     const float *hist_range[] = {rgb_range, rgb_range, rgb_range};
 
@@ -72,20 +72,20 @@ int main(int argc, char **argv)
         Mat image = imread(path, CV_LOAD_IMAGE_COLOR);
 
         // Normalize image
-        Mat norm_image;
-        resize(image, norm_image, Size(IMG_HEIGHT, IMG_WIDTH));
-        norm_image.convertTo(norm_image, CV_32FC3, (double)1.0/255);
-        norm_image = norm_image.reshape(1);
-        //norm_image = normalizeCrop(image);
+        Mat norm_image = image;
+        //image.convertTo(norm_image, CV_32FC3, (double)1.0/255);
+
+        resize(norm_image, norm_image, Size(IMG_HEIGHT, IMG_WIDTH));
+        //norm_image = normalizeCrop(norm_image);
+        //norm_image = norm_image.reshape(1);
 
         // Calculate histogram
-        //Mat hist = im2hist(norm_image);
+        Mat hist = im2hist(norm_image);
 
         // Output to libsvm training data file
-        matToLibsvm(label, norm_image, fout);
-        //matToLibsvm(label, hist, fout);
+        //matToLibsvm(label, norm_image, fout);
+        matToLibsvm(label, hist, fout);
     }
-
 
     return 0;
 }
