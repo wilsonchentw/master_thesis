@@ -6,13 +6,15 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#define NORM_SIZE 64
+#define NORM_SIZE 256
 #define IMG_WIDTH NORM_SIZE
 #define IMG_HEIGHT NORM_SIZE
+#define IMSHOW(m, t) {imshow(#m, m); waitKey(t);}
 
 using namespace cv;
 using std::cout;
 using std::endl;
+using std::vector;
 
 Mat normalizeCrop(Mat &image)
 {
@@ -32,7 +34,7 @@ Mat normalizeCrop(Mat &image)
 Mat im2hist(Mat &image)
 {
     Mat hist;
-    int dims=3, channels[]={0, 1, 2}, bins[]={8, 8, 8};
+    int dims=3, channels[]={0, 1, 2}, bins[]={32, 32, 32};
     float rgb_range[] = {0, 256};
     const float *hist_range[] = {rgb_range, rgb_range, rgb_range};
 
@@ -74,17 +76,29 @@ int main(int argc, char **argv)
         // Normalize image
         Mat norm_image = image;
         //image.convertTo(norm_image, CV_32FC3, (double)1.0/255);
-
         //resize(norm_image, norm_image, Size(IMG_HEIGHT, IMG_WIDTH));
         norm_image = normalizeCrop(norm_image);
         //norm_image = norm_image.reshape(1);
 
+        // Spatial Pyramid Matching
+        Mat concat_hist;
+        for(int level=2; level>=2; level--){
+            int w=IMG_WIDTH>>level, h=IMG_HEIGHT>>level;
+            for(int y=0, dy=h; y+dy<=IMG_HEIGHT; y+=dy){
+                for(int x=0, dx=w; x+dx<=IMG_WIDTH; x+=dx){
+                    Mat patch = norm_image(Range(y, y+dy), Range(x, x+dx));
+                    Mat hist = im2hist(patch);
+                    concat_hist.push_back(hist);
+                }
+            }
+        }
+
         // Calculate histogram
-        Mat hist = im2hist(norm_image);
+        //Mat hist = im2hist(norm_image);
 
         // Output to libsvm training data file
         //matToLibsvm(label, norm_image, fout);
-        matToLibsvm(label, hist, fout);
+        matToLibsvm(label, concat_hist, fout);
     }
 
     return 0;
