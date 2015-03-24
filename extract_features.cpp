@@ -6,7 +6,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#define NORM_SIZE 256
+#define NORM_SIZE 64
 #define IMG_WIDTH NORM_SIZE
 #define IMG_HEIGHT NORM_SIZE
 
@@ -32,7 +32,7 @@ Mat normalizeCrop(Mat &image)
 Mat im2hist(Mat &image)
 {
     Mat hist;
-    int dims=3, channels[]={0, 1, 2}, bins[]={32, 32, 32};
+    int dims=3, channels[]={0, 1, 2}, bins[]={8, 8, 8};
     float rgb_range[] = {0, 256};
     const float *hist_range[] = {rgb_range, rgb_range, rgb_range};
 
@@ -75,8 +75,8 @@ int main(int argc, char **argv)
         Mat norm_image = image;
         //image.convertTo(norm_image, CV_32FC3, (double)1.0/255);
 
-        resize(norm_image, norm_image, Size(IMG_HEIGHT, IMG_WIDTH));
-        //norm_image = normalizeCrop(norm_image);
+        //resize(norm_image, norm_image, Size(IMG_HEIGHT, IMG_WIDTH));
+        norm_image = normalizeCrop(norm_image);
         //norm_image = norm_image.reshape(1);
 
         // Calculate histogram
