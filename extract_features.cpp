@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <algorithm>
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -33,23 +34,25 @@ Mat normalizeCrop(Mat &image)
 
 Mat im2hist(Mat &image)
 {
-    Mat hist;
-    int dims=3, channels[]={0, 1, 2}, bins[]={32, 32, 32};
+    Mat hist, hist_64F, h;
+    int dims=1, channels[]={0}, bins[]={32};
     float rgb_range[] = {0, 256};
-    const float *hist_range[] = {rgb_range, rgb_range, rgb_range};
+    const float *hist_range[] = {rgb_range};
 
-    // calculate histogram and normalize to 1 in summation
-    calcHist(&image, 1, channels, Mat(), hist, dims, bins, hist_range);
-    hist = hist / (IMG_WIDTH*IMG_HEIGHT);
+    vector<Mat> images;
+    split(image, images);
+    for( int i=0; i<images.size(); i++ ){
+        calcHist(&images[i], 1, channels, Mat(), h, dims, bins, hist_range);
+        hist.push_back(h);
+    }
 
-    return hist;
+    hist.convertTo(hist_64F, CV_64F, 1.0/image.total());
+    return hist_64F;
 }
 
-void matToLibsvm(int label, Mat &raw, std::fstream &fout){
-    CV_Assert(raw.channels()==1);
+void matToLibsvm(int label, Mat &m, std::fstream &fout){
+    CV_Assert(m.channels()==1 && m.type()==CV_64F);
 
-    Mat m;
-    raw.convertTo(m, CV_64F);
     MatIterator_<double> bgn = m.begin<double>();
     MatIterator_<double> end = m.end<double>();
 
@@ -73,30 +76,28 @@ int main(int argc, char **argv)
     while(fin >> path >> label){
         Mat image = imread(path, CV_LOAD_IMAGE_COLOR);
 
-        // Normalize image
-        Mat norm_image = image;
-        //image.convertTo(norm_image, CV_32FC3, (double)1.0/255);
-        //resize(norm_image, norm_image, Size(IMG_HEIGHT, IMG_WIDTH));
-        norm_image = normalizeCrop(norm_image);
-        //norm_image = norm_image.reshape(1);
+        /*** Normalize Image Size ***/
+        //image = normalizeCrop(image);
+        //resize(image, image, Size(IMG_HEIGHT, IMG_WIDTH));
 
-        // Spatial Pyramid Matching
+        /*** Spatial Pyramid Matching ***/
         Mat concat_hist;
         for(int level=2; level>=2; level--){
-            int w=IMG_WIDTH>>level, h=IMG_HEIGHT>>level;
-            for(int y=0, dy=h; y+dy<=IMG_HEIGHT; y+=dy){
-                for(int x=0, dx=w; x+dx<=IMG_WIDTH; x+=dx){
-                    Mat patch = norm_image(Range(y, y+dy), Range(x, x+dx));
+            int w=image.cols>>level, h=image.rows>>level;
+            for(int y=0, dy=h; y+dy<=image.rows; y+=dy){
+                for(int x=0, dx=w; x+dx<=image.cols; x+=dx){
+                    Mat patch = image(Range(y, y+dy), Range(x, x+dx));
                     Mat hist = im2hist(patch);
                     concat_hist.push_back(hist);
                 }
             }
         }
 
-        // Calculate histogram
-        //Mat hist = im2hist(norm_image);
 
-        // Output to libsvm training data file
+        /*** Output to libsvm training data file ***/
+        //Mat norm_image;
+        //image.convertTo(norm_image, CV_64FC3, (double)1.0/255);
+        //norm_image = norm_image.reshape(1);
         //matToLibsvm(label, norm_image, fout);
         matToLibsvm(label, concat_hist, fout);
     }
