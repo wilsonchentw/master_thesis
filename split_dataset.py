@@ -15,8 +15,8 @@ def check_option(args):
     elif len(args.f) != len(args.v):
         print("mismatch number of arguments")
         exit(1)
-    elif len([e for e in args.v if e <= 0]) > 0:
-        print("number of fold must be positive")
+    elif len([e for e in args.v if e < 0]) > 0:
+        print("number of fold must be non-negative")
         exit(1)
     else:
         args.f = [open(f, mode="w") for f in args.f]
