@@ -1,10 +1,10 @@
 #Master Thesis Proposal
 --------------------------------------------------------------------------------
-##Partial Result
+##Current Result
+- color histogram(by SIGGRAPH'12): 30.5%
+	- linear SVM: 26.94% (c=0.1, need to tune parameter)
+	- RBF SVM: 30.5%(c=8, g=0.125)
 
-
---------------------------------------------------------------------------------
-##Current Progress
 - raw image classified by RBF-SVM: 25%
     - tuned by libsvm/tools/grid.py
     - best parameter: 
@@ -16,11 +16,17 @@
 - bvlc\_alexnet: 47%
     - [Slide](http://www.image-net.org/challenges/LSVRC/2012/supervision.pdf)
     - [Paper](http://www.cs.toronto.edu/~fritz/absps/imagenet.pdf)
-    - current iteration: 12000 (max. 450000)
+    - current iteration: 24000 (max. 450000)
     - **STILL RUNNING**
 
 -------------------------------------------------------------------------------
 ##Preliminary Method: 
+###(Sparse Coding) Spatial Pyramid Matching(Implementing)
+- Divide image from coarse to fine-grain
+- Extract features, compare similarity with grid penalty (course > fine-grain)
+- (Possible) Combine sparse coding for using linear kernel
+- (Possible) Use locality-constrain linear coding(LLC) to substitute sparse coding
+	- locality is important than sparsity (according to CVPR'10)
 
 ###Hard-Labeled Patch with Majority Vote (Na&iuml;ve)
 - In training phase, divide training image into patches with label,
