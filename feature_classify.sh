@@ -28,4 +28,4 @@ TEST=${DATASET}_test
 ##
 ##rm 50data* extract_features
 
-python extract_features.py ${TRAIN}.list
+python extract_features.py ${TRAIN}.list ${TRAIN}.dat

@@ -1,15 +1,13 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import sys
+import os
 import argparse
 import collections
 import cv2.cv as cv 
 import cv2
 import numpy as np
-
-parser = argparse.ArgumentParser()
-parser.add_argument("image_list", help="list with path followed by label")
-args = parser.parse_args()
 
 def show(image, time=0):
     cv2.imshow("image", image)
@@ -42,11 +40,19 @@ def normalize_image(image, norm_size, crop=True):
         return norm_image[y:y+norm_size, x:x+norm_size]
 
 
-def image_histogram(image, color="BGR", split=False):
-    ColorHist = collections.namedtuple("ColorHist", "code bins ranges")
+def image_histogram(image, color=-1, split=False):
+    ColorHist = collections.namedtuple("ColorHist", "bins ranges")
+    color_space = {
+        -1:             ColorHist([4, 4, 4], [0, 256, 0, 256, 0, 256]),
+        cv.CV_BGR2GRAY: ColorHist([4],       [0, 256]),
+        cv.CV_BGR2HSV:  ColorHist([4, 4, 4], [0, 180, 0, 256, 0, 256]),
+        cv.CV_BGR2Lab:  ColorHist([4, 4, 4], [0, 256, 1, 256, 1, 256])
+    }
 
-    bins = [4, 4, 4]
-    ranges = [0, 256, 0, 256, 0, 256]
+    # Convert image to specific color space, and prepare color model   
+    image = image if color== -1 else cv2.cvtColor(image, color)
+    bins = color_space[color].bins
+    ranges = color_space[color].ranges
     hist = []
 
     if split:
@@ -54,17 +60,29 @@ def image_histogram(image, color="BGR", split=False):
         split_channels = cv2.split(image)
         for i, c in enumerate(split_channels):
             h = cv2.calcHist([c], [0], None, bins[i:i+1], ranges[i*2:i*2+2])
-            hist.append(h)     # Concate
-        return np.array(hist).reshape(-1, 1)/np.sum(hist)
+            hist.append(h)     
+        return np.array(hist)/np.sum(hist)
     else:
         # Calculate jointly channel histogram in cubic form
         channels = range(1 if len(image.shape)==2 else image.shape[2])
         hist = cv2.calcHist([image], channels, None, bins, ranges)
-        return hist.reshape(-1, 1)/np.sum(hist)
+        return hist/np.sum(hist)
 
 
-with open(args.image_list) as image_list:
-    for line in image_list:
+def write_in_libsvm(label, ndarray, fout):
+    fout.write(label)
+    for (idx,), value in np.ndenumerate(ndarray.reshape(-1)):
+        if value != 0:
+            fout.write(" " + str(idx+1) + ":" + str(value))
+    fout.write("\n")
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("image_list", help="list with path followed by label")
+parser.add_argument("features_file", help="image features in libsvm format")
+args = parser.parse_args()
+with open(args.image_list, 'r') as fin, open(args.features_file, 'w') as fout:
+    for line in fin:
         path, label = line.strip().split(' ')
         image = cv2.imread(path, cv2.CV_LOAD_IMAGE_COLOR)
 
@@ -72,5 +90,7 @@ with open(args.image_list) as image_list:
         norm_image = normalize_image(image, 256, crop=True)
 
         # Calculate image histogram
-        hist = image_histogram(norm_image, split=False)
-        print(np.shape(hist))
+        hist = image_histogram(norm_image, color=-1, split=True)
+
+        # Output to libsvm format
+        write_in_libsvm(label, hist, fout)

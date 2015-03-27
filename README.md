@@ -1,14 +1,13 @@
 #Master Thesis Proposal
 --------------------------------------------------------------------------------
 ##Current Result
-- color histogram(by SIGGRAPH'12): 30.5%
+- color histogram(by SIGGRAPH'12)
 	- linear SVM: 26.94% (c=0.1, need to tune parameter)
 	- RBF SVM: 30.5%(c=8, g=0.125)
-- raw image classified by RBF-SVM: 25%
+- raw image classified by RBF-SVM: 26.92%(-v 5)
     - tuned by libsvm/tools/grid.py
     - best parameter: 
-        - c=2<sup>3</sup>, g=2<sup>-15</sup>, rate=25.2537%
-        - c=2<sup>5</sup>, g=2<sup>-17</sup>, rate=24.2090%
+        - c=2<sup>3</sup>, g=2<sup>-15</sup>, rate=26.92% (5-fold)
 - raw image classified by linear-SVM: 18% (14.52% with -c 0.01)
     - recall rate = 94%
     - severe overfitting, parameter-tuning needed
