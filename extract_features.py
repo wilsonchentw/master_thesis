@@ -3,6 +3,7 @@
 
 import argparse
 import collections
+import cv2.cv as cv 
 import cv2
 import numpy as np
 
@@ -41,28 +42,25 @@ def normalize_image(image, norm_size, crop=True):
         return norm_image[y:y+norm_size, x:x+norm_size]
 
 
-def image_histogram(image, color="rgb", split=False):
-    ColorHist = collections.namedtuple("ColorHist", "bins ranges")
-    gray = ColorHist([32], [0, 256])
-    rgb = ColorHist([32, 32, 32], [0, 256, 0, 256, 0, 256])
-    hsv = ColorHist([32, 32, 32], [0, 180, 0, 256, 0, 256])
-    lab = ColorHist([32, 32, 32], [0, 256, 0, 256, 0, 256])
-    models = {"gray": gray, "rgb": rgb, "hsv": hsv, "lab": lab};
+def image_histogram(image, color="BGR", split=False):
+    ColorHist = collections.namedtuple("ColorHist", "code bins ranges")
 
-    channels = range(1 if len(image.shape)==2 else image.shape[2])
-    b = models[color].bins
-    r = models[color].ranges
+    bins = [4, 4, 4]
+    ranges = [0, 256, 0, 256, 0, 256]
+    hist = []
 
     if split:
-        # Concatenate histograms of all channels
+        # Calculate channel histograms independently, then concatenate
         split_channels = cv2.split(image)
-        hists = []
         for i, c in enumerate(split_channels):
-            hists.append(cv2.calcHist([c], [0], None, b[i:i+1], r[i*2:i*2+2]))
-        return np.array(hists)
+            h = cv2.calcHist([c], [0], None, bins[i:i+1], ranges[i*2:i*2+2])
+            hist.append(h)     # Concate
+        return np.array(hist).reshape(-1, 1)/np.sum(hist)
     else:
-        # Calculate image histogram in cubic form
-        return cv2.calcHist([image], channels, None, b, r)
+        # Calculate jointly channel histogram in cubic form
+        channels = range(1 if len(image.shape)==2 else image.shape[2])
+        hist = cv2.calcHist([image], channels, None, bins, ranges)
+        return hist.reshape(-1, 1)/np.sum(hist)
 
 
 with open(args.image_list) as image_list:
@@ -71,7 +69,8 @@ with open(args.image_list) as image_list:
         image = cv2.imread(path, cv2.CV_LOAD_IMAGE_COLOR)
 
         # Normalize the image
-        norm_image = normalize_image(image, 256, True)
+        norm_image = normalize_image(image, 256, crop=True)
 
         # Calculate image histogram
         hist = image_histogram(norm_image, split=False)
+        print(np.shape(hist))
