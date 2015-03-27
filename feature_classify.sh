@@ -8,11 +8,11 @@ TRAIN=${DATASET}_train
 VAL=${DATASET}_val
 TEST=${DATASET}_test
 
-python3 split_dataset.py ../$DATASET\
-    -f ${TRAIN}.list ${VAL}.list ${TEST}.list\
-    -v 1 8 1
-
-#g++ extract_features.cpp $(pkg-config --cflags --libs opencv) -o extract_features
+#python3 split_dataset.py ../$DATASET\
+#    -f ${TRAIN}.list ${VAL}.list ${TEST}.list\
+#    -v 1 8 1
+#
+#g++ extract_features.cpp $(pkg-config --cflags --libs opencv)-o extract_features -Wall
 #./extract_features ${TRAIN}.list ${TRAIN}_raw.dat
 #./extract_features ${TEST}.list ${TEST}_raw.dat
 #
