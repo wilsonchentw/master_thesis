@@ -105,8 +105,8 @@ with open(args.fin, 'r') as fin, open(args.fout, 'w') as fout:
         norm_image = normalize_image(image, norm_size, crop=True)
 
         # Output raw image
-        write_in_libsvm(label, norm_image/255.0, fout)
-        """
+        #write_in_libsvm(label, norm_image/255.0, fout)
+        
         # Generate concatenate color histogram
         concat_hist = []
         window = (norm_size/4, norm_size/4)
@@ -116,4 +116,3 @@ with open(args.fin, 'r') as fin, open(args.fout, 'w') as fout:
             concat_hist.append(hist)
         concat_hist = np.array(concat_hist).reshape(-1)
         write_in_libsvm(label, concat_hist, fout)
-        """
