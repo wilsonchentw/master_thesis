@@ -5,9 +5,12 @@ import sys
 import os
 import argparse
 import collections
+import itertools
 import cv2.cv as cv 
 import cv2
 import numpy as np
+import scipy
+import skimage
 
 def show(image, time=0):
     cv2.imshow("image", image)
@@ -77,6 +80,16 @@ def write_in_libsvm(label, ndarray, fout):
     fout.write("\n")
 
 
+def sliding_window(image, window, step):
+    start = np.zeros(len(window), np.int8)
+    window = np.array(window)
+    stop = np.array(image.shape[0:len(window)])-window+1
+    grids = [np.array(range(a, b, c)) for a, b, c in zip(start, stop, step)]
+    for offset in itertools.product(*grids):
+        block = [slice(a, b) for a, b in zip(offset, offset+window)]
+        yield image[block]
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument("image_list", help="list with path followed by label")
 parser.add_argument("features_file", help="image features in libsvm format")
@@ -87,10 +100,18 @@ with open(args.image_list, 'r') as fin, open(args.features_file, 'w') as fout:
         image = cv2.imread(path, cv2.CV_LOAD_IMAGE_COLOR)
 
         # Normalize the image
-        norm_image = normalize_image(image, 256, crop=True)
+        norm_size = 64
+        norm_image = normalize_image(image, norm_size, crop=True)
+
+        # Generate sliding windows
+        window = (128, 128)
+        stride = (128, 128)
+        for patch in sliding_window(norm_image, window, stride):
+            show(patch, 500)
+        break
 
         # Calculate image histogram
-        hist = image_histogram(norm_image, color=-1, split=True)
+        #hist = image_histogram(norm_image, color=-1, split=True)
 
         # Output to libsvm format
-        write_in_libsvm(label, hist, fout)
+        #write_in_libsvm(label, hist, fout)

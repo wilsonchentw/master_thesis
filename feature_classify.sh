@@ -10,7 +10,7 @@ TEST=${DATASET}_test
 
 #python3 split_dataset.py ../$DATASET\
 #    -f ${TRAIN}.list ${VAL}.list ${TEST}.list\
-#    -v 1 8 1
+#    -v 1 98 1
 #
 #g++ extract_features.cpp $(pkg-config --cflags --libs opencv)-o extract_features -Wall
 #./extract_features ${TRAIN}.list ${TRAIN}_raw.dat
