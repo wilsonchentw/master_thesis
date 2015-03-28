@@ -8,24 +8,21 @@ TRAIN=${DATASET}_train
 VAL=${DATASET}_val
 TEST=${DATASET}_test
 
-#python3 split_dataset.py ../$DATASET\
-#    -f ${TRAIN}.list ${VAL}.list ${TEST}.list\
-#    -v 1 98 1
-#
-#g++ extract_features.cpp $(pkg-config --cflags --libs opencv)-o extract_features -Wall
-#./extract_features ${TRAIN}.list ${TRAIN}_raw.dat
-#./extract_features ${TEST}.list ${TEST}_raw.dat
-#
-#${LIBLINEAR_PATH}/train -c 0.05 -q ${TRAIN}_raw.dat ${DATASET}_raw.model
-#${LIBLINEAR_PATH}/predict ${TRAIN}_raw.dat ${DATASET}_raw.model ${TRAIN}.predict
-#${LIBLINEAR_PATH}/predict ${TEST}_raw.dat  ${DATASET}_raw.model ${TEST}.predict
-
-##
-##${LIBSVM_PATH}/svm-train -c 1 -g 1 -v 5 -q ${TRAIN}_raw.dat ${DATASET}_raw.model
-##${LIBSVM_PATH}/svm-predict  ${TRAIN}_raw.dat ${DATASET}_raw.model ${TRAIN}.predict
-##${LIBSVM_PATH}/svm-predict  ${TEST}_raw.dat  ${DATASET}_raw.model ${TEST}.predict
-##${LIBSVM_PATH}/tools/grid.py -gnuplot null ${TRAIN}_raw.dat 
-##
-##rm 50data* extract_features
+python3 split_dataset.py ../$DATASET\
+    -f ${TRAIN}.list ${VAL}.list ${TEST}.list\
+    -v 1 0 0
 
 python extract_features.py ${TRAIN}.list ${TRAIN}.dat
+#python extract_features.py ${TEST}.list ${TEST}.dat
+
+${LIBLINEAR_PATH}/train -c 1 -v 5 -q ${TRAIN}.dat ${DATASET}.linear.model
+${LIBLINEAR_PATH}/train -c 0.1 -v 5 -q ${TRAIN}.dat ${DATASET}.linear.model
+${LIBLINEAR_PATH}/train -c 10 -v 5 -q ${TRAIN}.dat ${DATASET}.linear.model
+#${LIBLINEAR_PATH}/predict ${TRAIN}.dat ${DATASET}.linear.model ${TRAIN}.predict
+#${LIBLINEAR_PATH}/predict ${TEST}.dat  ${DATASET}.linear.model ${TEST}.predict
+
+${LIBSVM_PATH}/svm-train -v 5 -q ${TRAIN}.dat ${DATASET}.model
+#${LIBSVM_PATH}/svm-predict ${TRAIN}.dat ${DATASET}.model ${TRAIN}.predict
+#${LIBSVM_PATH}/svm-predict ${TEST}.dat  ${DATASET}.model ${TEST}.predict
+
+#${LIBSVM_PATH}/tools/grid.py -gnuplot null ${TRAIN}.dat 

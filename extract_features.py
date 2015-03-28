@@ -46,10 +46,10 @@ def normalize_image(image, norm_size, crop=True):
 def image_histogram(image, color=-1, split=False):
     ColorHist = collections.namedtuple("ColorHist", "bins ranges")
     color_space = {
-        -1:             ColorHist([4, 4, 4], [0, 256, 0, 256, 0, 256]),
-        cv.CV_BGR2GRAY: ColorHist([4],       [0, 256]),
-        cv.CV_BGR2HSV:  ColorHist([4, 4, 4], [0, 180, 0, 256, 0, 256]),
-        cv.CV_BGR2Lab:  ColorHist([4, 4, 4], [0, 256, 1, 256, 1, 256])
+        -1:             ColorHist([32, 32, 32], [0, 256, 0, 256, 0, 256]),
+        cv.CV_BGR2GRAY: ColorHist([32],         [0, 256]                ),
+        cv.CV_BGR2HSV:  ColorHist([32, 32, 32], [0, 180, 0, 256, 0, 256]),
+        cv.CV_BGR2Lab:  ColorHist([32, 32, 32], [0, 256, 1, 256, 1, 256])
     }
 
     # Convert image to specific color space, and prepare color model   
@@ -91,27 +91,27 @@ def sliding_window(image, window, step):
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("image_list", help="list with path followed by label")
-parser.add_argument("features_file", help="image features in libsvm format")
+parser.add_argument("fin", metavar="image_list", 
+                    help="list with path followed by label")
+parser.add_argument("fout", metavar="features", 
+                    help="image features in libsvm format")
 args = parser.parse_args()
-with open(args.image_list, 'r') as fin, open(args.features_file, 'w') as fout:
+with open(args.fin, 'r') as fin, open(args.fout, 'w') as fout:
     for line in fin:
         path, label = line.strip().split(' ')
         image = cv2.imread(path, cv2.CV_LOAD_IMAGE_COLOR)
 
         # Normalize the image
-        norm_size = 64
+        norm_size = 256
         norm_image = normalize_image(image, norm_size, crop=True)
 
+        # Output raw image
+        write_in_libsvm(label, norm_image/255.0, fout)
+        """
         # Generate sliding windows
-        window = (128, 128)
-        stride = (128, 128)
+        window = (64, 64)
+        stride = (64, 64)
         for patch in sliding_window(norm_image, window, stride):
-            show(patch, 500)
-        break
-
-        # Calculate image histogram
-        #hist = image_histogram(norm_image, color=-1, split=True)
-
-        # Output to libsvm format
-        #write_in_libsvm(label, hist, fout)
+            hist = image_histogram(patch, color=-1, split=True)
+            write_in_libsvm(label, hist, fout)
+        """
