@@ -10,7 +10,6 @@ import cv2.cv as cv
 import cv2
 import numpy as np
 import scipy
-import skimage
 
 def show(image, time=0):
     cv2.imshow("image", image)
@@ -102,16 +101,19 @@ with open(args.fin, 'r') as fin, open(args.fout, 'w') as fout:
         image = cv2.imread(path, cv2.CV_LOAD_IMAGE_COLOR)
 
         # Normalize the image
-        norm_size = 256
+        norm_size = 64
         norm_image = normalize_image(image, norm_size, crop=True)
 
         # Output raw image
         write_in_libsvm(label, norm_image/255.0, fout)
         """
-        # Generate sliding windows
-        window = (64, 64)
-        stride = (64, 64)
+        # Generate concatenate color histogram
+        concat_hist = []
+        window = (norm_size/4, norm_size/4)
+        stride = (norm_size/4, norm_size/4)
         for patch in sliding_window(norm_image, window, stride):
             hist = image_histogram(patch, color=-1, split=True)
-            write_in_libsvm(label, hist, fout)
+            concat_hist.append(hist)
+        concat_hist = np.array(concat_hist).reshape(-1)
+        write_in_libsvm(label, concat_hist, fout)
         """
