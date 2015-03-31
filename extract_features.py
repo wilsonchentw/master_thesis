@@ -106,8 +106,8 @@ def extract_gabor_features(image):
     gabor_features = []
     gray_image = cv2.cvtColor(image.astype(np.float32)/255, cv.CV_BGR2GRAY)
     for param in params:
-        real = cv2.getGaborKernel(psi=0, **param)
-        imag = cv2.getGaborKernel(psi=np.pi/2, **param)
+        real = cv2.getGaborKernel(psi=0, **param)/(ksize[0]*ksize[1])
+        imag = cv2.getGaborKernel(psi=np.pi/2, **param)/(ksize[0]*ksize[1])
         response_r = cv2.filter2D(gray_image, cv.CV_64F, real)
         response_i = cv2.filter2D(gray_image, cv.CV_64F, imag)
         magnitude = np.sqrt(response_r**2+response_i**2)
