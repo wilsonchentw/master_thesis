@@ -91,6 +91,29 @@ def sliding_window(image, window, step):
         yield image[block]
 
 
+def extract_gabor_features(image):
+    ksize = np.array(image.shape[:2])/2
+    params = { 
+        "ksize": [tuple(ksize)],
+        "sigma": [min(ksize)/4], 
+        "gamma": [1.0], 
+        "theta": np.arange(0, np.pi, np.pi/6), 
+        "lambd": min(ksize)/np.arange(5, 0, -1)
+    }
+    params = [dict(zip(params, value)) 
+              for value in itertools.product(*params.values())]
+
+    gabor_features = []
+    gray_image = cv2.cvtColor(image.astype(np.float32)/255, cv.CV_BGR2GRAY)
+    for param in params:
+        real = cv2.getGaborKernel(psi=0, **param)
+        imag = cv2.getGaborKernel(psi=np.pi/2, **param)
+        response_r = cv2.filter2D(gray_image, cv.CV_64F, real)
+        response_i = cv2.filter2D(gray_image, cv.CV_64F, imag)
+        magnitude = np.sqrt(response_r**2+response_i**2)
+        gabor_features.extend([np.mean(magnitude), np.var(magnitude)])
+    return gabor_features
+
 parser = argparse.ArgumentParser()
 parser.add_argument("fin", metavar="image_list", 
                     help="list with path followed by label")
@@ -103,7 +126,7 @@ with open(args.fin, 'r') as fin, open(args.fout, 'w') as fout:
         image = cv2.imread(path, cv2.CV_LOAD_IMAGE_COLOR)
 
         # Normalize the image
-        norm_size = (64*8, 64*8)
+        norm_size = (64, 64)
         norm_image = normalize_image(image, norm_size, crop=True)
 
         """
@@ -122,27 +145,9 @@ with open(args.fin, 'r') as fin, open(args.fout, 'w') as fout:
         """
 
         # Gabor texture extractor
-        window = np.array(norm_size)
+        window = np.array(norm_image.shape[0:2])/4
         stride = window
-        params = { 
-            "ksize": [tuple(window)],
-            "sigma": [min(window)/2], 
-            "gamma": [1.0], 
-            "theta": np.arange(0, np.pi, np.pi/6), 
-            "lambd": min(window)/np.arange(5, 0, -1)
-        }
-        params = [dict(zip(params, value)) 
-                  for value in itertools.product(*params.values())]
+        gabor_features = []
         for patch in sliding_window(norm_image, window, stride):
-            for param in params:
-                print param
-                real = cv2.getGaborKernel(psi=0, **param)
-                imag = cv2.getGaborKernel(psi=np.pi/2, **param)
-
-                response_r = cv2.filter2D(patch, cv.CV_64F, real)
-                response_i = cv2.filter2D(patch, cv.CV_64F, imag)
-                magnitude = np.sqrt(response_r**2+response_i**2)
-
-            break
-        #for patch in sliding_window(norm_image, window, stride):
-        break
+            gabor_features.extend(extract_gabor_features(patch))
+        write_in_libsvm(label, np.array(gabor_features), fout)
