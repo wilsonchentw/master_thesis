@@ -18,6 +18,8 @@ python extract_features.py ${TRAIN}.list ${TRAIN}.dat
 ${LIBLINEAR_PATH}/train -c 10 -v 5 -q ${TRAIN}.dat ${DATASET}.linear.model
 ${LIBLINEAR_PATH}/train -c 1 -v 5 -q ${TRAIN}.dat ${DATASET}.linear.model
 ${LIBLINEAR_PATH}/train -c 0.1 -v 5 -q ${TRAIN}.dat ${DATASET}.linear.model
+${LIBLINEAR_PATH}/train -c 0.01 -v 5 -q ${TRAIN}.dat ${DATASET}.linear.model
+${LIBLINEAR_PATH}/train -c 0.001 -v 5 -q ${TRAIN}.dat ${DATASET}.linear.model
 
 ${LIBSVM_PATH}/svm-train -v 5 -q ${TRAIN}.dat ${DATASET}.model
 #${LIBSVM_PATH}/svm-train -c 8 -g 0.00003 -v 5 -q ${TRAIN}.dat ${DATASET}.model
