@@ -29,17 +29,19 @@ def flatten(nested_list):
 def normalize_image(image, norm_size, crop=True):
     if not crop:   
         # Directly resize the image without cropping
-        return cv2.resize(image, (norm_size, norm_size))
+        return cv2.resize(image, norm_size)
     else:           
         # Normalize shorter side to norm_size
         height, width, channels = image.shape
-        scale = max(float(norm_size)/height, float(norm_size)/width)
+        norm_height, norm_width = norm_size
+        scale = max(float(norm_height)/height, float(norm_width)/width)
+
         norm_image = cv2.resize(src=image, dsize=(0, 0), fx=scale, fy=scale)
 
         # Crop for central part image
         height, width, channels = norm_image.shape
-        y, x = (height-norm_size)//2, (width-norm_size)//2
-        return norm_image[y:y+norm_size, x:x+norm_size]
+        y, x = (height-norm_height)//2, (width-norm_width)//2
+        return norm_image[y:y+norm_height, x:x+norm_width]
 
 
 def image_histogram(image, color=-1, split=False):
@@ -101,18 +103,46 @@ with open(args.fin, 'r') as fin, open(args.fout, 'w') as fout:
         image = cv2.imread(path, cv2.CV_LOAD_IMAGE_COLOR)
 
         # Normalize the image
-        norm_size = 64
+        norm_size = (64*8, 64*8)
         norm_image = normalize_image(image, norm_size, crop=True)
 
-        # Output raw image
-        #write_in_libsvm(label, norm_image/255.0, fout)
-        
+        """
         # Generate concatenate color histogram
+        window = np.array(norm_size)/4.0
+        stride = np.array(norm_size)/4.0
         concat_hist = []
-        window = (norm_size/4, norm_size/4)
-        stride = (norm_size/4, norm_size/4)
         for patch in sliding_window(norm_image, window, stride):
             hist = image_histogram(patch, color=-1, split=True)
             concat_hist.append(hist)
         concat_hist = np.array(concat_hist).reshape(-1)
         write_in_libsvm(label, concat_hist, fout)
+
+        # Output raw image
+        write_in_libsvm(label, norm_image/255.0, fout)
+        """
+
+        # Gabor texture extractor
+        window = np.array(norm_size)
+        stride = window
+        params = { 
+            "ksize": [tuple(window)],
+            "sigma": [min(window)/2], 
+            "gamma": [1.0], 
+            "theta": np.arange(0, np.pi, np.pi/6), 
+            "lambd": min(window)/np.arange(5, 0, -1)
+        }
+        params = [dict(zip(params, value)) 
+                  for value in itertools.product(*params.values())]
+        for patch in sliding_window(norm_image, window, stride):
+            for param in params:
+                print param
+                real = cv2.getGaborKernel(psi=0, **param)
+                imag = cv2.getGaborKernel(psi=np.pi/2, **param)
+
+                response_r = cv2.filter2D(patch, cv.CV_64F, real)
+                response_i = cv2.filter2D(patch, cv.CV_64F, imag)
+                magnitude = np.sqrt(response_r**2+response_i**2)
+
+            break
+        #for patch in sliding_window(norm_image, window, stride):
+        break
