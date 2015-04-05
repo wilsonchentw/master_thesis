@@ -47,10 +47,10 @@ def normalize_image(image, norm_size, crop=True):
 def image_histogram(image, color=-1, split=False):
     ColorHist = collections.namedtuple("ColorHist", "bins ranges")
     color_space = {
-        -1:             ColorHist([32, 32, 32], [0, 256, 0, 256, 0, 256]),
-        cv.CV_BGR2GRAY: ColorHist([32],         [0, 256]                ),
-        cv.CV_BGR2HSV:  ColorHist([32, 32, 32], [0, 180, 0, 256, 0, 256]),
-        cv.CV_BGR2Lab:  ColorHist([32, 32, 32], [0, 256, 1, 256, 1, 256])
+        -1:                 ColorHist([32, 32, 32], [0, 256, 0, 256, 0, 256]),
+        cv2.COLOR_BGR2GRAY: ColorHist([32],         [0, 256]                ),
+        cv2.COLOR_BGR2HSV:  ColorHist([32, 32, 32], [0, 180, 0, 256, 0, 256]),
+        cv2.COLOR_BGR2Lab:  ColorHist([32, 32, 32], [0, 256, 1, 256, 1, 256])
     }
 
     # Convert image to specific color space, and prepare color model   
@@ -95,7 +95,7 @@ def extract_gabor_features(image):
     ksize = np.array(image.shape[:2])/2
     params = { 
         "ksize": [tuple(ksize)],
-        "sigma": [min(ksize)/4], 
+        "sigma": [min(ksize)/6], 
         "gamma": [1.0], 
         "theta": np.arange(0, np.pi, np.pi/6), 
         "lambd": min(ksize)/np.arange(5, 0, -1)
@@ -104,7 +104,7 @@ def extract_gabor_features(image):
               for value in itertools.product(*params.values())]
 
     gabor_features = []
-    gray_image = cv2.cvtColor(image.astype(np.float32)/255, cv.CV_BGR2GRAY)
+    gray_image = cv2.cvtColor(image.astype(np.float32)/255, cv2.COLOR_BGR2GRAY)
     for param in params:
         real = cv2.getGaborKernel(psi=0, **param)/(ksize[0]*ksize[1])
         imag = cv2.getGaborKernel(psi=np.pi/2, **param)/(ksize[0]*ksize[1])
@@ -126,10 +126,13 @@ with open(args.fin, 'r') as fin, open(args.fout, 'w') as fout:
         image = cv2.imread(path, cv2.CV_LOAD_IMAGE_COLOR)
 
         # Normalize the image
-        norm_size = (64, 64)
+        norm_size = (64*8, 64*8)
         norm_image = normalize_image(image, norm_size, crop=True)
 
         """
+        # Output raw image
+        write_in_libsvm(label, norm_image/255.0, fout)
+
         # Generate concatenate color histogram
         window = np.array(norm_size)/4.0
         stride = np.array(norm_size)/4.0
@@ -140,9 +143,6 @@ with open(args.fin, 'r') as fin, open(args.fout, 'w') as fout:
         concat_hist = np.array(concat_hist).reshape(-1)
         write_in_libsvm(label, concat_hist, fout)
 
-        # Output raw image
-        write_in_libsvm(label, norm_image/255.0, fout)
-        """
 
         # Gabor texture extractor
         window = np.array(norm_image.shape[0:2])/4
@@ -151,3 +151,6 @@ with open(args.fin, 'r') as fin, open(args.fout, 'w') as fout:
         for patch in sliding_window(norm_image, window, stride):
             gabor_features.extend(extract_gabor_features(patch))
         write_in_libsvm(label, np.array(gabor_features), fout)
+        """
+    
+        break
