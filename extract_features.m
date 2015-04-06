@@ -11,24 +11,28 @@ function extract_features(train_list, test_list)
     test_data = textscan(ftest, '%s %d');
     fclose('all');
 
-    % Generate codebook
-    [train_paths, train_labels] = train_data{:};
-    [dict, train_data] = generate_codebook(train_paths);
 
-    % Project testing data to dictionary
-    [test_paths, test_labels] = test_data{:};
+    % Generate codebook and encoded training data
+    [train_list, train_labels] = train_data{:};
+    features = extract_sift(train_list(1:3));
+    [dict, train_hists] = generate_codebook(features);
 
-    %[~, code] = min(vl_alldist2(sifts, dict));
+    % 
+    [test_list, test_labels] = test_data{:};
+    features = extract_sift(test_list(1:3));
+    test_hists = [];
+    for idx = 1:size(features, 2)
+        [~, encode] = min(vl_alldist2(double(features{idx}), dict)');
+        hist = vl_ikmeanshist(size(dict, 2), encode);
+        test_hists = [test_hists; hist'];
+    end
 end
 
-function features = encode_sift(dict, path_list)
-end
-
-function [dict, train_data] = generate_codebook(path_list)
+function sift_descriptors = extract_sift(image_list)
     sift_descriptors = {};
-    for idx = 1:length(path_list)/length(path_list)*3
+    for idx = 1:length(image_list)
         % Normalize image to [h w], cut for central part if crop is true
-        image = imread(path_list{idx});
+        image = imread(image_list{idx});
         norm_size = [512 512];
         norm_image = normalize_image(image, norm_size, true);
 
@@ -36,19 +40,20 @@ function [dict, train_data] = generate_codebook(path_list)
         gray_image = single(rgb2gray(norm_image));
         [f, sift_descriptors{idx}] = vl_sift(gray_image);
     end
+end
 
-    % Generate codebook using K-means clustering on SIFT
+function [dict, train_encoded] = generate_codebook(features)
+    % Generate dictionary using K-means clustering
     dict_size = 1024;
-    dict = single(cell2mat(sift_descriptors));
+    dict = double(cell2mat(features));
     [dict, encode] = vl_kmeans(dict, dict_size, 'Initialization', 'plusplus');
 
     % Generate encoded features of training data
-    train_data = [];
-    for idx = 1:1:size(sift_descriptors, 2)
-        num = size(sift_descriptors{idx}, 2);
+    train_encoded = [];
+    for idx = 1:1:size(features, 2)
+        num = size(features{idx}, 2);
         hist = vl_ikmeanshist(dict_size, encode(1:num));
-
-        train_data = [train_data hist]
+        train_encoded = [train_encoded hist];
         encode(1:num) = [];
     end
 end
