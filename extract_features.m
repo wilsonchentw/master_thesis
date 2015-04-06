@@ -17,7 +17,7 @@ function extract_features(train_list, test_list)
     features = extract_sift(train_list(1:3));
     [dict, train_hists] = generate_codebook(features);
 
-    % 
+    % Encode testing data
     [test_list, test_labels] = test_data{:};
     features = extract_sift(test_list(1:3));
     test_hists = [];
