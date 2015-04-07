@@ -1,4 +1,4 @@
-function extract_features(train_list, test_list)
+function extract_features(train_list, test_list, train_dat, test_dat)
     % Add libsvm, liblinear, vlfeat library path
     run(fullfile('../vlfeat/toolbox/vl_setup'));
     addpath(fullfile('../libsvm/matlab'));
@@ -9,52 +9,58 @@ function extract_features(train_list, test_list)
     ftest = fopen(test_list);
     train_data = textscan(ftrain, '%s %d');
     test_data = textscan(ftest, '%s %d');
+    [train_list, train_labels] = train_data{:};
+    [test_list, test_labels] = test_data{:};
     fclose('all');
 
+    %train_list = train_list(1:4); train_labels = train_labels(1:4);
+    %test_list = test_list(1:4); test_labels = test_labels(1:4);
 
     % Generate codebook and encoded training data
-    [train_list, train_labels] = train_data{:};
-    features = extract_sift(train_list(1:3));
-    [dict, train_hists] = generate_codebook(features);
+    dict_size = 10;
+    norm_size = [64 64];
+    features = extract_sift(train_list, norm_size);
+    [dict, train_hists] = generate_codebook(features, dict_size);
+    train_hists = bsxfun(@rdivide, double(train_hists), sum(train_hists))';
+    libsvmwrite(train_dat, double(train_labels), sparse(train_hists));
 
     % Encode testing data
-    [test_list, test_labels] = test_data{:};
-    features = extract_sift(test_list(1:3));
+    features = extract_sift(test_list, norm_size);
     test_hists = [];
     for idx = 1:size(features, 2)
         [~, encode] = min(vl_alldist2(double(features{idx}), dict)');
-        hist = vl_ikmeanshist(size(dict, 2), encode);
-        test_hists = [test_hists; hist'];
+        hist = vl_ikmeanshist(dict_size, encode);
+        test_hists = [test_hists hist];
+    end
+    test_hists = bsxfun(@rdivide, double(test_hists), sum(test_hists))';
+    libsvmwrite(test_dat, double(test_labels), sparse(test_hists));
+end
+
+function [dict, train_hists] = generate_codebook(features, dict_size)
+    % Generate dictionary using K-means clustering
+    dict = double(cell2mat(features));
+    [dict, encode] = vl_kmeans(dict, dict_size, 'Initialization', 'plusplus');
+
+    % Generate encoded features of training data
+    train_hists = [];
+    for idx = 1:size(features, 2)
+        num = size(features{idx}, 2);
+        hist = vl_ikmeanshist(dict_size, encode(1:num));
+        train_hists = [train_hists hist];
+        encode(1:num) = [];
     end
 end
 
-function sift_descriptors = extract_sift(image_list)
+function sift_descriptors = extract_sift(image_list, norm_size)
     sift_descriptors = {};
     for idx = 1:length(image_list)
         % Normalize image to [h w], cut for central part if crop is true
         image = imread(image_list{idx});
-        norm_size = [512 512];
         norm_image = normalize_image(image, norm_size, true);
 
         % Extract SIFT descriptors
         gray_image = single(rgb2gray(norm_image));
         [f, sift_descriptors{idx}] = vl_sift(gray_image);
-    end
-end
-
-function [dict, train_encoded] = generate_codebook(features)
-    % Generate dictionary using K-means clustering
-    dict_size = 1024;
-    dict = double(cell2mat(features));
-    [dict, encode] = vl_kmeans(dict, dict_size, 'Initialization', 'plusplus');
-
-    % Generate encoded features of training data
-    train_encoded = [];
-    for idx = 1:1:size(features, 2)
-        num = size(features{idx}, 2);
-        hist = vl_ikmeanshist(dict_size, encode(1:num));
-        train_encoded = [train_encoded hist];
-        encode(1:num) = [];
     end
 end
 
