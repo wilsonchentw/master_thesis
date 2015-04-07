@@ -8,6 +8,10 @@ TRAIN=${DATASET}_train
 VAL=${DATASET}_val
 TEST=${DATASET}_test
 
+
+
+
+
 #python3 split_dataset.py ../$DATASET\
 #    -f ${TRAIN}.list ${VAL}.list ${TEST}.list\
 #    -v 1 0 0
