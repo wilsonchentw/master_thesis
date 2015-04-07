@@ -1,8 +1,8 @@
 function extract_features(train_list, test_list, train_dat, test_dat)
     % Add libsvm, liblinear, vlfeat library path
     run(fullfile('../vlfeat/toolbox/vl_setup'));
-    addpath(fullfile('../libsvm/matlab'));
     addpath(fullfile('../liblinear/matlab'));
+    addpath(fullfile('../libsvm/matlab'));
 
     % Parse training/testing path list
     [train_images, train_labels] = parse_image_list(train_list);
@@ -19,17 +19,11 @@ function extract_features(train_list, test_list, train_dat, test_dat)
     % Encode testing data with codebook
     features = extract_sift(test_images, norm_size);
     [~, assignment] = min(vl_alldist2(dict, double(features.descriptors)));
-    test_encode = [];
-    for idx = 1:length(features.num)
-        encode = assignment(1:features.num(idx));
-        hist = vl_ikmeanshist(dict_size, encode);
-        test_encode = [test_encode double(hist)/sum(hist)];
-        assignment(1:features.num(idx)) = [];
-    end
+    test_encode = instances_histogram(features.num, assignment, dict_size);
 
     % Write in libsvm format
-    libsvmwrite(train_dat, double(train_labels), sparse(train_encode'));
-    libsvmwrite(test_dat, double(test_labels), sparse(test_encode'));
+    libsvmwrite(train_dat, double(train_labels), sparse(train_encode));
+    libsvmwrite(test_dat, double(test_labels), sparse(test_encode));
 end
 
 function [paths, labels] = parse_image_list(image_list)
@@ -39,19 +33,23 @@ function [paths, labels] = parse_image_list(image_list)
     fclose(fd);
 end
 
+function encodes = instances_histogram(num_descriptors, assignment, dict_size)
+    encodes = [];
+    for idx = 1:length(num_descriptors)
+        encode = assignment(1:num_descriptors(idx));
+        hist = vl_ikmeanshist(dict_size, encode)';
+        encodes = [encodes; double(hist)/sum(hist)];
+        assignment(1:num_descriptors(idx)) = [];
+    end
+end
+
 function [dict, train_encode] = generate_codebook(features, dict_size)
     % Generate dictionary using K-means clustering
     vocabs = double(features.descriptors);
     [dict, asgn] = vl_kmeans(vocabs, dict_size, 'Initialization', 'plusplus');
 
     % Generate encoded features of training data
-    train_encode = [];
-    for idx = 1:length(features.num)
-        encode = asgn(1:features.num(idx));
-        hist = vl_ikmeanshist(dict_size, encode);
-        train_encode = [train_encode double(hist)/sum(hist)];
-        asgn(1:features.num(idx)) = [];
-    end
+    train_encode = instances_histogram(features.num, asgn, dict_size);
 end
 
 function features = extract_sift(image_list, norm_size)

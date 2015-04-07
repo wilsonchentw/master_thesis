@@ -44,4 +44,4 @@ for idx, label in enumerate(listdir(rootpath)):
     acc = list(accumulate(num))
     for i, f in enumerate(filelist):
         for image in pathlist[acc[i]-num[i]:acc[i]]:
-            print(join(dirpath, image) + " " + str(idx), file=f)
+            print(join(dirpath, image) + " " + str(idx+1), file=f)

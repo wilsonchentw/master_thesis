@@ -152,5 +152,3 @@ with open(args.fin, 'r') as fin, open(args.fout, 'w') as fout:
             gabor_features.extend(extract_gabor_features(patch))
         write_in_libsvm(label, np.array(gabor_features), fout)
         """
-    
-        break
