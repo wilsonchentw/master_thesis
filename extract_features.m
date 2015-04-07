@@ -5,51 +5,58 @@ function extract_features(train_list, test_list, train_dat, test_dat)
     addpath(fullfile('../liblinear/matlab'));
 
     % Parse training/testing path list
-    ftrain = fopen(train_list);
-    ftest = fopen(test_list);
-    train_data = textscan(ftrain, '%s %d');
-    test_data = textscan(ftest, '%s %d');
-    [train_list, train_labels] = train_data{:};
-    [test_list, test_labels] = test_data{:};
-    fclose('all');
+    [train_images, train_labels] = parse_image_list(train_list);
+    [test_images, test_labels] = parse_image_list(test_list);
+    train_images = train_images(1:5); train_labels = train_labels(1:5);
+    test_images = test_images(1:3);   test_labels = test_labels(1:3);
 
-    % Generate codebook and encoded training data
-    dict_size = 10;
+    % Generate codebook and encode training data
     norm_size = [64 64];
-    features = extract_sift(train_list, norm_size);
-    [dict, train_hists] = generate_codebook(features, dict_size);
-    train_hists = bsxfun(@rdivide, double(train_hists), sum(train_hists))';
-    libsvmwrite(train_dat, double(train_labels), sparse(train_hists));
+    dict_size = 1024/128;
+    features = extract_sift(train_images, norm_size);
+    [dict, train_encode] = generate_codebook(features, dict_size);
 
-    % Encode testing data
-    features = extract_sift(test_list, norm_size);
-    test_hists = [];
-    for idx = 1:size(features, 2)
-        [~, encode] = min(vl_alldist2(double(features{idx}), dict)');
+    % Encode testing data with codebook
+    features = extract_sift(test_images, norm_size);
+    [~, assignment] = min(vl_alldist2(dict, double(features.descriptors)));
+    test_encode = [];
+    for idx = 1:length(features.num)
+        encode = assignment(1:features.num(idx));
         hist = vl_ikmeanshist(dict_size, encode);
-        test_hists = [test_hists hist];
+        test_encode = [test_encode double(hist)/sum(hist)];
+        assignment(1:features.num(idx)) = [];
     end
-    test_hists = bsxfun(@rdivide, double(test_hists), sum(test_hists))';
-    libsvmwrite(test_dat, double(test_labels), sparse(test_hists));
+
+    % Write in libsvm format
+    libsvmwrite(train_dat, double(train_labels), sparse(train_encode'));
+    libsvmwrite(test_dat, double(test_labels), sparse(test_encode'));
 end
 
-function [dict, train_hists] = generate_codebook(features, dict_size)
+function [paths, labels] = parse_image_list(image_list)
+    fd = fopen(image_list);
+    data = textscan(fd, '%s %d');
+    [paths labels] = data{:};
+    fclose(fd);
+end
+
+function [dict, train_encode] = generate_codebook(features, dict_size)
     % Generate dictionary using K-means clustering
-    dict = double(cell2mat(features));
-    [dict, encode] = vl_kmeans(dict, dict_size, 'Initialization', 'plusplus');
+    vocabs = double(features.descriptors);
+    [dict, asgn] = vl_kmeans(vocabs, dict_size, 'Initialization', 'plusplus');
 
     % Generate encoded features of training data
-    train_hists = [];
-    for idx = 1:size(features, 2)
-        num = size(features{idx}, 2);
-        hist = vl_ikmeanshist(dict_size, encode(1:num));
-        train_hists = [train_hists hist];
-        encode(1:num) = [];
+    train_encode = [];
+    for idx = 1:length(features.num)
+        encode = asgn(1:features.num(idx));
+        hist = vl_ikmeanshist(dict_size, encode);
+        train_encode = [train_encode double(hist)/sum(hist)];
+        asgn(1:features.num(idx)) = [];
     end
 end
 
-function sift_descriptors = extract_sift(image_list, norm_size)
-    sift_descriptors = {};
+function features = extract_sift(image_list, norm_size)
+    features.num = [];
+    features.descriptors = [];
     for idx = 1:length(image_list)
         % Normalize image to [h w], cut for central part if crop is true
         image = imread(image_list{idx});
@@ -57,7 +64,9 @@ function sift_descriptors = extract_sift(image_list, norm_size)
 
         % Extract SIFT descriptors
         gray_image = single(rgb2gray(norm_image));
-        [f, sift_descriptors{idx}] = vl_sift(gray_image);
+        [f, d] = vl_sift(gray_image);
+        features.num = [features.num size(d, 2)];
+        features.descriptors = [features.descriptors d];
     end
 end
 
