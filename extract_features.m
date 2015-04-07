@@ -13,9 +13,6 @@ function extract_features(train_list, test_list, train_dat, test_dat)
     [test_list, test_labels] = test_data{:};
     fclose('all');
 
-    %train_list = train_list(1:4); train_labels = train_labels(1:4);
-    %test_list = test_list(1:4); test_labels = test_labels(1:4);
-
     % Generate codebook and encoded training data
     dict_size = 10;
     norm_size = [64 64];
