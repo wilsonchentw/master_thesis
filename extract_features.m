@@ -1,23 +1,17 @@
-function extract_features(train_list, test_list)
+function [train_encode, test_encode] = extract_features(dataset)
     % Add libsvm, liblinear, vlfeat library path
     run(fullfile('../vlfeat/toolbox/vl_setup'));
     addpath(fullfile('../liblinear/matlab'));
     addpath(fullfile('../libsvm/matlab'));
 
-    % Parse training/testing path list
-    [train_images, train_labels] = parse_image_list(train_list);
-    [test_images, test_labels] = parse_image_list(test_list);
-    train_images = train_images(1:5); train_labels = train_labels(1:5);
-    test_images = test_images(1:3);   test_labels = test_labels(1:3);
-
     % Generate codebook and encode training data
     norm_size = [64 64];
     dict_size = 1024/128;
-    features = extract_sift(train_images, norm_size);
+    features = extract_sift(dataset.train.path, norm_size);
     [dict, train_encode] = generate_codebook(features, dict_size);
 
     % Encode testing data with codebook
-    features = extract_sift(test_images, norm_size);
+    features = extract_sift(dataset.test.path, norm_size);
     [~, assignment] = min(vl_alldist2(dict, double(features.descriptors)));
     test_encode = calc_instances_hist(features.num, assignment, dict_size);
 
