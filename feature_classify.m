@@ -4,11 +4,18 @@ function feature_classify(image_list)
     fold = 2;
     datasets = cross_validation(data, fold);
     for idx = 1:fold
-        dataset.train.path = datasets(idx).train(:, 2);
-        dataset.test.path = datasets(idx).test(:, 2);
+        train_path = datasets(idx).train(:, 2);
+        test_path = datasets(idx).test(:, 2);
+        train_label = double(cell2mat(datasets(idx).train(:, 1)));
+        test_label = double(cell2mat(datasets(idx).test(:, 1)));
+        [train_feature, test_feature] = extract_features(train_path, test_path);
 
-        [train_features, test_features] = extract_features(dataset);
-
+        % Classify by liblinear & libsvm
+        for c = -3:1
+            c_str = num2str(10^c);
+            model = train(train_label, train_feature, ['-c ', c_str, ' -q']);
+            [guess, acc, ~] = predict(test_label, test_feature, model);
+        end
     end;
 end
 
