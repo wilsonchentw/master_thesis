@@ -15,7 +15,6 @@ function feature_classify(image_list)
             c_str = num2str(10^c);
             model = train(train_label, train_insts, ['-c ', c_str, ' -q']);
             [guess, acc, ~] = predict(test_label, test_insts, model);
-            acc_list(c+4, idx) = acc;
         end
     end;
 end
@@ -38,7 +37,9 @@ function lists = cross_validation(data, fold)
 
         % Generate #testing_instance and ensure #training_instance > 0
         test_nums = floor(list_len/fold)*ones(1, fold);
-        test_nums = test_nums + randerr(1, fold, mod(list_len, fold));
+        remains = zeros(1, fold);
+        remains(randsample(fold, mod(list_len, fold))) = 1;
+        test_nums = test_nums + remains;
         test_nums = test_nums - (test_nums>=list_len);
         for v = 1:fold
             lists(v).test = [lists(v).test;  list(1:test_nums(v), :)];
