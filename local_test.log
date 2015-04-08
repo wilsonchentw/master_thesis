@@ -37,14 +37,14 @@ best rbf grid       -> 27.40%    30.52%    32.58%
 
 color-histogram(8x8x8), NORM_SIZE=64, block=4x4
                        RGB       HSV       Lab
-linear -c 1e+01     ->           21.40%    23.12%
-linear -c 1e+00     ->           25.36%    27.96%
-linear -c 1e-01     ->           26.68%    29.98%
-linear -c 1e-02     ->           21.68%    25.90%
-linear -c 1e-03     ->           16.18%    19.02%
-rbf default         ->           14.90%    21.68%
-best rbf grid       ->           32.10%    37.10%
-(log2c, log2g)                   3, -1     3, -3
+linear -c 1e+01     -> 26.40%    21.40%    23.12%
+linear -c 1e+00     -> 30.68%    25.36%    27.96%
+linear -c 1e-01     -> 32.02%    26.68%    29.98%
+linear -c 1e-02     -> 25.40%    21.68%    25.90%
+linear -c 1e-03     -> 18.68%    16.18%    19.02%
+rbf default         -> 17.28%    14.90%    21.68%
+best rbf grid       -> 37.00%    32.10%    37.10%
+(log2c, log2g)         3, -4     3, -1     3, -3
 
 
 
@@ -1217,4 +1217,115 @@ log2c=13 log2g=1 rate=23.38
 log2c=13 log2g=-9 rate=28.24
 log2c=13 log2g=-3 rate=31.4
 log2c=13 log2g=3 rate=9.78
-
+-----------------------------------
+grid RGB(8x8x8)
+log2c=11 log2g=-13 rate=33.24
+log2c=-1 log2g=-1 rate=29.92
+log2c=11 log2g=-7 rate=34.54
+log2c=11 log2g=-1 rate=37.0
+log2c=5 log2g=-13 rate=17.28
+log2c=-1 log2g=-13 rate=17.28
+log2c=-3 log2g=-7 rate=17.52
+log2c=-1 log2g=-7 rate=17.52
+log2c=5 log2g=-1 rate=37.0
+log2c=5 log2g=-7 rate=34.04
+log2c=-3 log2g=-1 rate=23.14
+log2c=9 log2g=-7 rate=34.54
+log2c=-3 log2g=-13 rate=17.28
+log2c=5 log2g=1 rate=26.74
+log2c=9 log2g=-1 rate=37.0
+log2c=-1 log2g=1 rate=11.28
+log2c=11 log2g=1 rate=26.74
+log2c=-3 log2g=1 rate=10.1
+log2c=9 log2g=-13 rate=27.06
+log2c=9 log2g=1 rate=26.74
+log2c=9 log2g=-11 rate=33.28
+log2c=11 log2g=-11 rate=34.9
+log2c=5 log2g=-11 rate=17.82
+log2c=-1 log2g=-11 rate=17.24
+log2c=3 log2g=-7 rate=27.2
+log2c=-3 log2g=-11 rate=17.24
+log2c=3 log2g=-1 rate=37.0
+log2c=3 log2g=-13 rate=17.28
+log2c=3 log2g=1 rate=26.74
+log2c=5 log2g=-5 rate=36.22
+log2c=11 log2g=-5 rate=35.44
+log2c=3 log2g=-11 rate=17.24
+log2c=3 log2g=-5 rate=34.92
+log2c=9 log2g=-5 rate=35.44
+log2c=-1 log2g=-5 rate=18.2
+log2c=15 log2g=-7 rate=34.54
+log2c=-3 log2g=-5 rate=17.74
+log2c=15 log2g=-1 rate=37.0
+log2c=15 log2g=-13 rate=33.9
+log2c=15 log2g=-11 rate=33.96
+log2c=15 log2g=-5 rate=35.44
+log2c=15 log2g=1 rate=26.74
+log2c=11 log2g=-15 rate=27.06
+log2c=5 log2g=-15 rate=17.26
+log2c=-1 log2g=-15 rate=17.26
+log2c=-3 log2g=-15 rate=17.26
+log2c=9 log2g=-15 rate=17.84
+log2c=3 log2g=-15 rate=17.26
+log2c=15 log2g=-15 rate=34.88
+log2c=-5 log2g=-7 rate=17.52
+log2c=-5 log2g=-1 rate=22.92
+log2c=-5 log2g=-13 rate=17.28
+log2c=-5 log2g=1 rate=10.1
+log2c=-5 log2g=-11 rate=17.24
+log2c=-5 log2g=-5 rate=17.74
+log2c=-5 log2g=-15 rate=17.26
+log2c=5 log2g=3 rate=10.84
+log2c=-1 log2g=3 rate=5.02
+log2c=11 log2g=3 rate=10.84
+log2c=-3 log2g=3 rate=5.02
+log2c=9 log2g=3 rate=10.84
+log2c=7 log2g=-7 rate=35.62
+log2c=3 log2g=3 rate=10.84
+log2c=15 log2g=3 rate=10.84
+log2c=-5 log2g=3 rate=5.02
+log2c=7 log2g=-1 rate=37.0
+log2c=7 log2g=-13 rate=17.86
+log2c=7 log2g=1 rate=26.74
+log2c=7 log2g=-11 rate=27.14
+log2c=7 log2g=-5 rate=35.42
+log2c=7 log2g=-15 rate=17.26
+log2c=5 log2g=-9 rate=27.18
+log2c=11 log2g=-9 rate=34.14
+log2c=7 log2g=3 rate=10.84
+log2c=-1 log2g=-9 rate=17.34
+log2c=9 log2g=-9 rate=35.12
+log2c=-3 log2g=-9 rate=17.34
+log2c=15 log2g=-9 rate=34.14
+log2c=3 log2g=-9 rate=17.92
+log2c=7 log2g=-9 rate=33.44
+log2c=-5 log2g=-9 rate=17.34
+log2c=1 log2g=-7 rate=18.1
+log2c=1 log2g=-1 rate=36.66
+log2c=1 log2g=-13 rate=17.28
+log2c=1 log2g=1 rate=26.74
+log2c=1 log2g=-11 rate=17.24
+log2c=1 log2g=-5 rate=27.22
+log2c=1 log2g=-15 rate=17.26
+log2c=1 log2g=3 rate=10.84
+log2c=5 log2g=-3 rate=36.68
+log2c=1 log2g=-9 rate=17.34
+log2c=11 log2g=-3 rate=36.68
+log2c=-1 log2g=-3 rate=25.92
+log2c=9 log2g=-3 rate=36.68
+log2c=3 log2g=-3 rate=36.8
+log2c=-3 log2g=-3 rate=19.62
+log2c=15 log2g=-3 rate=36.68
+log2c=7 log2g=-3 rate=36.68
+log2c=-5 log2g=-3 rate=19.56
+log2c=1 log2g=-3 rate=34.8
+log2c=13 log2g=-7 rate=34.54
+log2c=13 log2g=-13 rate=34.98
+log2c=13 log2g=-15 rate=33.26
+log2c=13 log2g=-1 rate=37.0
+log2c=13 log2g=-11 rate=33.96
+log2c=13 log2g=-5 rate=35.44
+log2c=13 log2g=1 rate=26.74
+log2c=13 log2g=-9 rate=34.14
+log2c=13 log2g=-3 rate=36.68
+log2c=13 log2g=3 rate=10.84
