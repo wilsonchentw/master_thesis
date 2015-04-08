@@ -1,29 +1,39 @@
 function feature_classify(image_list)
-    [paths, labels] = parse_image_list(image_list);
-    [train_lists test_lists] = cross_validation(paths, labels, 5)
+    data = parse_image_list(image_list);
+
+    fold = 3;
+    datasets = cross_validation(data, fold);
+    for idx = 1:fold 
+        %[size(datasets(idx).train, 1) size(datasets(idx).test, 1)]
+        extract_features(dataset);
+    end;
 end
 
-function [paths, labels] = parse_image_list(image_list)
+function data = parse_image_list(image_list)
     fd = fopen(image_list);
-    data = textscan(fd, '%s %d');
-    [paths labels] = data{:};
+    raw = textscan(fd, '%s %d');
+    data = cell2struct(raw, {'path', 'label'}, 2);
     fclose(fd);
 end
 
-function [train_lists test_lists] = cross_validation(paths, labels, fold)
-    train_lists = cell(1, fold);
-    test_lists = cell(1, fold);
-    categories = unique(labels);
-    for c = 1:length(categories)
-        list = paths(labels==categories(c));
-        num = length(list);
+function lists = cross_validation(data, fold)
+    lists(1:fold) = struct('train', [], 'test', []);
 
-        % Calculate #testing_instance, and ensure #training_instance > 0
-        test_nums = floor(num/fold)*ones(1, fold)+ ([1:fold]<=mod(num, fold));
-        test_nums = test_nums - (test_nums==num);
+    categories = unique(data.label);
+    for c = 1:length(categories)
+        % Generate list of specific category
+        select = (data.label == categories(c));
+        list = [data.path(select) num2cell(data.label(select))];
+        list = cell2struct(list, {'path', 'label'}, 2);
+        list_len = length(list);
+
+        % Generate #testing_instance and ensure #training_instance > 0
+        test_nums = floor(list_len/fold) * ones(1, fold);
+        test_nums = test_nums + randerr(1, fold, mod(list_len, fold));
+        test_nums = test_nums - (test_nums>=list_len);
         for v = 1:fold
-            test_lists{v} = [test_lists{v}; list(1:test_nums(v))];
-            train_lists{v} = [train_lists{v}; list(test_nums(v)+1:end)];
+            lists(v).test = [lists(v).test; list(1:test_nums(v))];
+            lists(v).train = [lists(v).train; list(test_nums(v)+1:end)];
             list = [list(test_nums(v)+1:end); list(1:test_nums(v))];
         end
     end
