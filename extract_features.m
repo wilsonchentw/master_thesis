@@ -6,7 +6,6 @@ function features = extract_features(train_images, test_images)
     norm_size = [64 64];
     descriptors(1).sift = extract_sift(train_images, norm_size);
     descriptors(2).sift = extract_sift(test_images, norm_size);
-    %size()
 
     % Generate codebook and encode training image
     dict_size = 1024/256;
