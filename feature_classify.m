@@ -1,9 +1,13 @@
 function feature_classify(image_list)
-    data = parse_image_list(image_list);
+    [labels paths] = parse_image_list(image_list);
 
-    fold = 5;
-    datasets = cross_validation(data, fold);
-    for idx = 1:fold
+    fold = 3;
+    datasets = cross_validation(labels, paths, fold);
+    for v = 1:fold
+        features = extract_features(datasets(v).train.p, datasets(v).test.p);
+
+
+%{
         train_path = datasets(idx).train(:, 2);
         test_path = datasets(idx).test(:, 2);
         train_label = double(cell2mat(datasets(idx).train(:, 1)));
@@ -16,35 +20,40 @@ function feature_classify(image_list)
             model = train(train_label, train_insts, ['-c ', c_str, ' -q']);
             [guess, acc, ~] = predict(test_label, test_insts, model);
         end
+%}
     end;
 end
 
-function data = parse_image_list(image_list)
+function [labels paths] = parse_image_list(image_list)
     fd = fopen(image_list);
     raw = textscan(fd, '%s %d');
-    data = cell2struct(raw, {'path', 'label'}, 2);
+    [paths labels] = raw{:};
     fclose(fd);
 end
 
-function lists = cross_validation(data, fold)
-    lists(1:fold) = struct('train', [], 'test', []);
-    categories = unique(data.label);
+function datasets = cross_validation(labels, paths, fold)
+    datasets(1:fold) = struct('train', struct('l', [], 'p', []), ...
+                              'test',  struct('l', [], 'p', []));
+    categories = unique(labels);
     for c = 1:length(categories)
-        % Generate list of specific category
-        select = (data.label == categories(c));
-        list = [num2cell(data.label(select)), data.path(select)];
-        list_len = length(find(select));
+        select = (labels == categories(c));
+        list = [num2cell(labels(select)) paths(select)];
+        len = length(find(select));
 
-        % Generate #testing_instance and ensure #training_instance > 0
-        test_nums = floor(list_len/fold)*ones(1, fold);
-        remains = zeros(1, fold);
-        remains(randsample(fold, mod(list_len, fold))) = 1;
-        test_nums = test_nums + remains;
-        test_nums = test_nums - (test_nums>=list_len);
+        % Generate list of #testing_instance for each fold
+        test_nums(1:fold) = floor(len/fold);
+        test_nums(randsample(fold, mod(len, fold))) = floor(len/fold)+1;
+        test_nums = test_nums - (test_nums==len);  % Ensure #train_instance > 0
+
         for v = 1:fold
-            lists(v).test = [lists(v).test;  list(1:test_nums(v), :)];
-            lists(v).train = [lists(v).train; list(test_nums(v)+1:end, :)];
-            list = [list(test_nums(v)+1:end, :); list(1:test_nums(v), :)];
+            train = list(test_nums(v)+1:end, :);
+            test = list(1:test_nums(v), :);
+
+            datasets(v).train.l = [datasets(v).train.l; cell2mat(train(:, 1))];
+            datasets(v).train.p = [datasets(v).train.p; train(:, 2)];
+            datasets(v).test.l = [datasets(v).test.l; cell2mat(test(:, 1))];
+            datasets(v).test.p = [datasets(v).test.p; test(:, 2)];
+            list = [train; test];
         end
     end
 end
