@@ -1,9 +1,4 @@
 function features = extract_features(train_images, test_images)
-    % Add libsvm, liblinear, vlfeat library path
-    run(fullfile('../vlfeat/toolbox/vl_setup'));
-    addpath(fullfile('../liblinear/matlab'));
-    addpath(fullfile('../libsvm/matlab'));
-
     features = struct('train', [], 'test', []);
     descriptors(1:2) = struct('sift', []);
 
@@ -11,18 +6,19 @@ function features = extract_features(train_images, test_images)
     norm_size = [64 64];
     descriptors(1).sift = extract_sift(train_images, norm_size);
     descriptors(2).sift = extract_sift(test_images, norm_size);
+    %size()
 
     % Generate codebook and encode training image
     dict_size = 1024/256;
-    [dict, assignment] = vl_ikmeans(descriptors(1).sift.d, dict_size);
-    %[dict, assignment] = vl_kmeans(double(descriptors(1).sift.d), ...
+    [dict, assignment] = vl_ikmeans([descriptors(1).sift.d], dict_size);
+    %[dict, assignment] = vl_kmeans(double([descriptors(1).sift.d]), ...
     %                               dict_size, 'Initialization', 'plusplus');
-    features.train = calc_hists(assignment, descriptors(1).sift.n, dict_size);
+    features.train = calc_hists(assignment, [descriptors(1).sift.n], dict_size);
 
     % Encode training image and testing image
-    assignment = vl_ikmeanspush(descriptors(2).sift.d, dict);
+    assignment = vl_ikmeanspush([descriptors(2).sift.d], dict);
     %[~, assignment] = min(vl_alldist2(dict, double(descriptors(2).sift.d)));
-    features.test = calc_hists(assignment, descriptors(2).sift.n, dict_size);
+    features.test = calc_hists(assignment, [descriptors(2).sift.n], dict_size);
 
     % Write in libsvm format
     %libsvmwrite(train_dat, double(train_labels), sparse(train_encode));
@@ -30,26 +26,26 @@ function features = extract_features(train_images, test_images)
 end
 
 function descriptors = extract_sift(image_list, norm_size)
-    descriptors = struct('f', [], 'd', [], 'n', zeros(length(image_list), 1));
-    for idx = 1:length(image_list)
+    descriptors(length(image_list)) = struct('f', [], 'd', [], 'n', 0);
+    parfor idx = 1:length(image_list)
         image = imread(image_list{idx});
         norm_image = normalize_image(image, norm_size, true);
         gray_image = single(rgb2gray(norm_image));
 
         % Extract SIFT descriptors
         [frames, local_descriptors] = vl_sift(gray_image);
-        descriptors.f = [descriptors.f frames];
-        descriptors.d = [descriptors.d local_descriptors];
-        descriptors.n(idx) = size(frames, 2);
+        descriptors(idx).f = frames;
+        descriptors(idx).d = local_descriptors;
+        descriptors(idx).n = 0;
     end
 end
 
 function hists = calc_hists(assignment, num_descriptors, dict_size)
     hists = zeros(dict_size, length(num_descriptors));
-    for idx = 1:length(num_descriptors)
-        v = assignment(1:num_descriptors(idx));
+    offset = cumsum(num_descriptors)-num_descriptors;
+    parfor idx = 1:length(num_descriptors)
+        v = assignment(offset(idx):offset(idx)+num_descriptors(idx)-1);
         hists(:, idx) = vl_ikmeanshist(dict_size, v);
-        assignment = assignment(num_descriptors(idx)+1:end);
     end
 end
 
