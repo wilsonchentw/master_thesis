@@ -7,33 +7,34 @@ function feature_classify(image_list)
     % Parameters setting
     num_fold = 3;
     c = 10.^[1:-1:-3];
-    acc_liblinear = zeros(num_fold, 5);
 
-    % Preprocessing
+    % Split data for cross validation
     dataset = parse_image_list(image_list);
     folds = cross_validation(dataset, num_fold);
-    parfor v = 1:num_fold
-        tic
-        features = extract_features(folds(v).train.path, folds(v).test.path);
-        toc
-        for log_c = -3:1
-            model = num2str(10^log_c);
-        end
-%{
-        %train_path = datasets(idx).train(:, 2);
-        %test_path = datasets(idx).test(:, 2);
-        %train_label = double(cell2mat(datasets(idx).train(:, 1)));
-        %test_label = double(cell2mat(datasets(idx).test(:, 1)));
-        %[train_insts, test_insts] = extract_features(train_path, test_path);
 
-        %% Classify by liblinear & libsvm
-        %for c = -3:1
-        %    c_str = num2str(10^c);
-        %    model = train(train_label, train_insts, ['-c ', c_str, ' -q']);
-        %    [guess, acc, ~] = predict(test_label, test_insts, model);
-        %end
-%}
+    % Classify
+    train_accs = zeros(num_fold, length(c));
+    test_accs = zeros(num_fold, length(c));
+    for v = 1:num_fold
+        features = extract_features(folds(v));
+
+        % Train by liblinear
+        parfor idx = 1:length(c)
+            model = train(double(folds(v).train.label), ...
+                          sparse(features.train), ...
+                          ['-c ', num2str(c(idx)), ' -q'], 'col');
+            [~, train_acc, ~] = predict(double(folds(v).train.label), ...
+                                        sparse(features.train), model, ...
+                                        '-q', 'col');
+            [~, test_acc, ~] = predict(double(folds(v).test.label), ...
+                                       sparse(features.test), model, ...
+                                       '-q', 'col');
+            train_accs(v, idx) = train_acc(1);
+            test_accs(v, idx) = test_acc(1);
+        end
     end;
+    train_acc = sum(train_accs)/num_fold
+    test_acc = sum(test_accs)/num_fold
 end
 
 function dataset = parse_image_list(image_list)

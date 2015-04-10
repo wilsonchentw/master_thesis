@@ -1,17 +1,18 @@
-function features = extract_features(train_images, test_images)
+function features = extract_features(dataset)
     features = struct('train', [], 'test', []);
-    descriptors(1:2) = struct('sift', []);
 
     % Extract image descriptors
     norm_size = [64 64];
-    descriptors(1).sift = extract_sift(train_images, norm_size);
-    descriptors(2).sift = extract_sift(test_images, norm_size);
+    descriptors(1).sift = extract_sift(dataset.train.path, norm_size);
+    descriptors(2).sift = extract_sift(dataset.test.path, norm_size);
 
     % Generate codebook and encode training image
-    dict_size = 1024/256;
-    [dict, assignment] = vl_ikmeans([descriptors(1).sift.d], dict_size);
+    dict_size = 1024;
+    [dict, assignment] = vl_ikmeans([descriptors(1).sift.d], dict_size, ...
+                                    'method', 'elkan');
     %[dict, assignment] = vl_kmeans(double([descriptors(1).sift.d]), ...
-    %                               dict_size, 'Initialization', 'plusplus');
+    %                               dict_size, 'Initialization', 'plusplus', ...
+    %                               'method', 'elkan');
     features.train = calc_hists(assignment, [descriptors(1).sift.n], dict_size);
 
     % Encode training image and testing image
@@ -33,9 +34,10 @@ function descriptors = extract_sift(image_list, norm_size)
 
         % Extract SIFT descriptors
         [frames, local_descriptors] = vl_sift(gray_image);
+
         descriptors(idx).f = frames;
         descriptors(idx).d = local_descriptors;
-        descriptors(idx).n = 0;
+        descriptors(idx).n = size(frames, 2);
     end
 end
 
@@ -43,7 +45,7 @@ function hists = calc_hists(assignment, num_descriptors, dict_size)
     hists = zeros(dict_size, length(num_descriptors));
     offset = cumsum(num_descriptors)-num_descriptors;
     parfor idx = 1:length(num_descriptors)
-        v = assignment(offset(idx):offset(idx)+num_descriptors(idx)-1);
+        v = assignment(offset(idx)+1:offset(idx)+num_descriptors(idx));
         hists(:, idx) = vl_ikmeanshist(dict_size, v);
     end
 end
