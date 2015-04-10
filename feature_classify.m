@@ -15,9 +15,8 @@ function feature_classify(image_list)
     % Classify
     train_accs = zeros(num_fold, length(c));
     test_accs = zeros(num_fold, length(c));
-    features = extract_features(folds(v));
     for v = 1:num_fold
-
+        features = extract_features(folds(v));
         % Train by liblinear
         parfor idx = 1:length(c)
             model = train(double(folds(v).train.label), ...
