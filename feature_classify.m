@@ -10,7 +10,7 @@ function feature_classify(image_list)
     % Extract image descriptors
     norm_size = [64 64];
     dataset(length(dataset)).sift = struct('sift', []);
-    parfor idx = 1:length(dataset)
+    for idx = 1:length(dataset)
         % Read and preprocessing image
         image = imread(dataset(idx).path);
         norm_image = normalize_image(image, norm_size, true);
@@ -21,41 +21,51 @@ function feature_classify(image_list)
 
     % For each fold, generate features by descriptors
     num_fold = 5;
-    folds = cross_validation(dataset, num_fold);
-    c = 10.^[-3:1];
-    acc_list = cell(num_fold, length(c));
-    parfor v = 1:num_fold
+    datasets = cross_validation(dataset, num_fold);
+    for v = 1:num_fold
+        train_list = datasets(v).train;
+        test_list = datasets(v).test;
+
+        labels = struct('train', [], 'test', []);
+        labels.train = double([train_list.label]');
+        labels.test = double([test_list.label]');
+
         % Generate SIFT features
         dict_size = 1024/512;
-        train_sift = [folds(v).train.sift]';
-        test_sift = [folds(v).test.sift]';
-        sift = encode_sift(train_sift, test_sift, dict_size);
+        sift = encode_sift([train_list.sift]', [test_list.sift]', dict_size);
 
-        % Classify by SVM
-        train_label = double([folds(v).train.label]');
-        test_label = double([folds(v).test.label]');
-
-        for idx = 1:length(c)
-            model = train(train_label, sparse(sift.train), ...
-                          ['-c ', num2str(c(idx)), ' -q'], 'col');
-            [~, acc, ~] = predict(test_label, ...
-                                  sparse(sift.test), model, '-q', 'col');
-            acc_list{v}(idx) = acc(1);
-        end
+        % Classify by linear SVM
+        c = 10.^[1:-1:-3];
+        %acc_list(1, :) = c;
+        sift_acc(v+1, :) = linear_classify(sift, labels, c);
     end
-    acc_list = [c; sum(cell2mat(acc_list))]
+
+    sift_acc = [sum(sift_acc)]
     %save('sift.mat');
+end
+
+function acc_list = linear_classify(features, labels, c)
+    acc_list = zeros(1, length(c));
+    parfor idx = 1:length(c)
+        model = train(labels.train, sparse(features.train), ...
+                      ['-c ', num2str(c(idx)), ' -q'], 'col');
+        [~, acc, ~] = predict(labels.test, ...
+                              sparse(features.test), model, '-q', 'col');
+        acc_list(idx) = acc(1);
+    end
 end
 
 function features = encode_sift(train_sift, test_sift, dict_size);
     % Generate codebook by K-means
-    [dict, train_asgn] = vl_ikmeans([train_sift.d], ...
-                                    dict_size, 'method', 'elkan');
+    [dict, asgn] = vl_ikmeans([train_sift.d], dict_size, 'method', 'elkan');
+    train_enc = calc_kmeans_hists(asgn, [train_sift.n], dict_size);
 
-    % Encode image by codebook histogram
-    test_asgn = vl_ikmeanspush([test_sift.d], dict);
-    features.train = calc_kmeans_hists(train_asgn, [train_sift.n], dict_size);
-    features.test = calc_kmeans_hists(test_asgn, [test_sift.n], dict_size);
+    % Encode testing image by codebook histogram
+    asgn = vl_ikmeanspush([test_sift.d], dict);
+    test_enc = calc_kmeans_hists(asgn, [test_sift.n], dict_size);
+
+    features.train = train_enc;
+    features.test = test_enc;
 end
 
 function norm_image = normalize_image(image, norm_size, crop)
