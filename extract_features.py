@@ -114,6 +114,8 @@ def extract_gabor_features(image):
         gabor_features.extend([np.mean(magnitude), np.var(magnitude)])
     return gabor_features
 
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument("fin", metavar="image_list", 
                     help="list with path followed by label")

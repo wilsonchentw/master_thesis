@@ -10,7 +10,7 @@ function feature_classify(image_list)
     % Extract image descriptors
     norm_size = [64 64];
     dataset(length(dataset)).sift = struct('sift', []);
-    for idx = 1:length(dataset)
+    parfor idx = 1:length(dataset)
         % Read and preprocessing image
         image = imread(dataset(idx).path);
         norm_image = normalize_image(image, norm_size, true);
@@ -20,9 +20,9 @@ function feature_classify(image_list)
     end
 
     % For each fold, generate features by descriptors
-    num_fold = 5;
+    num_fold = 3;
     datasets = cross_validation(dataset, num_fold);
-    for v = 1:num_fold
+    parfor v = 1:num_fold
         train_list = datasets(v).train;
         test_list = datasets(v).test;
 
@@ -36,11 +36,10 @@ function feature_classify(image_list)
 
         % Classify by linear SVM
         c = 10.^[1:-1:-3];
-        %acc_list(1, :) = c;
         sift_acc(v+1, :) = linear_classify(sift, labels, c);
     end
 
-    sift_acc = [sum(sift_acc)]
+    sift_acc = [10.^[1:-1:-3]; sum(sift_acc)]
     %save('sift.mat');
 end
 
@@ -58,14 +57,27 @@ end
 function features = encode_sift(train_sift, test_sift, dict_size);
     % Generate codebook by K-means
     [dict, asgn] = vl_ikmeans([train_sift.d], dict_size, 'method', 'elkan');
-    train_enc = calc_kmeans_hists(asgn, [train_sift.n], dict_size);
+    train_encode = calc_kmeans_hists(asgn, [train_sift.n], dict_size);
 
     % Encode testing image by codebook histogram
     asgn = vl_ikmeanspush([test_sift.d], dict);
-    test_enc = calc_kmeans_hists(asgn, [test_sift.n], dict_size);
+    test_encode = calc_kmeans_hists(asgn, [test_sift.n], dict_size);
 
-    features.train = train_enc;
-    features.test = test_enc;
+    % Normalize quantized SIFT descriptor histogram
+    %train_encode = bsxfun(@rdivide, train_encode, sum(train_encode));
+    %test_encode = bsxfun(@rdivide,test_encode, sum(test_encode));
+
+    features.train = train_encode;
+    features.test = test_encode;
+end
+
+function hists = calc_kmeans_hists(assignment, num_descriptors, dict_size)
+    hists = zeros(dict_size, length(num_descriptors));
+    offset = cumsum(num_descriptors)-num_descriptors;
+    parfor idx = 1:length(num_descriptors)
+        v = assignment(offset(idx)+1:offset(idx)+num_descriptors(idx));
+        hists(:, idx) = vl_ikmeanshist(dict_size, v);
+    end
 end
 
 function norm_image = normalize_image(image, norm_size, crop)
@@ -127,15 +139,6 @@ function folds = cross_validation(dataset, num_fold)
             folds(v).test = [folds(v).test; test_list];
             list = [train_list; test_list];
         end
-    end
-end
-
-function hists = calc_kmeans_hists(assignment, num_descriptors, dict_size)
-    hists = zeros(dict_size, length(num_descriptors));
-    offset = cumsum(num_descriptors)-num_descriptors;
-    parfor idx = 1:length(num_descriptors)
-        v = assignment(offset(idx)+1:offset(idx)+num_descriptors(idx));
-        hists(:, idx) = vl_ikmeanshist(dict_size, v);
     end
 end
 
