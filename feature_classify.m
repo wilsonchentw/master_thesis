@@ -9,17 +9,18 @@ function feature_classify(image_list)
 
     % Extract image descriptors
     norm_size = [64 64];
-    dataset(length(dataset)).sift = struct('sift', [], 'lbp', []);
-    for idx = 1:length(dataset)
+    dataset(length(dataset)).sift = [];
+    dataset(length(dataset)).lbp = [];
+    parfor idx = 1:length(dataset)
         % Read and preprocessing image
         image = imread(dataset(idx).path);
         norm_image = normalize_image(image, norm_size, true);
 
         % Extract SIFT descriptors
-        %dataset(idx).sift = extract_sift(norm_image);
+        dataset(idx).sift = extract_sift(norm_image);
 
         % Extract LBP descriptors
-        %dataset(idx).lbp = extract_lbp(norm_image);
+        dataset(idx).lbp = extract_lbp(norm_image);
     end
 
     % For each fold, generate features by descriptors
@@ -44,8 +45,8 @@ function feature_classify(image_list)
         lbp_acc(v, :) = linear_classify(lbp, labels, c);
     end
 
-    sift_acc = [10.^[1:-1:-3]; sum(sift_acc)]
-    lbp_acc = [10.^[1:-1:-3]; sum(lbp_acc)]
+    sift_acc = [10.^[1:-1:-3]; mean(sift_acc)]
+    lbp_acc = [10.^[1:-1:-3]; mean(lbp_acc)]
     %save('sift.mat');
 end
 
