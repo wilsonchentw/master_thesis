@@ -11,7 +11,7 @@ function feature_classify(image_list)
     norm_size = [64 64];
     dataset(length(dataset)).sift = [];
     dataset(length(dataset)).lbp = [];
-    parfor idx = 1:length(dataset)
+    for idx = 1:length(dataset)
         % Read and preprocessing image
         image = imread(dataset(idx).path);
         norm_image = normalize_image(image, norm_size, true);
@@ -26,7 +26,7 @@ function feature_classify(image_list)
     % For each fold, generate features by descriptors
     num_fold = 5;
     folds = cross_validation(dataset, num_fold);
-    parfor v = 1:num_fold
+    for v = 1:num_fold
         train_list = dataset(folds(v).train);
         test_list = dataset(folds(v).test);
 
@@ -40,13 +40,13 @@ function feature_classify(image_list)
         lbp = kmeans_encode([train_list.lbp]', [test_list.lbp]', dict_size);
 
         % Classify by linear SVM
-        c = 10.^[1:-1:-3];
+        c = 10.^[2:-1:-7];
         sift_acc(v, :) = linear_classify(sift, labels, c);
         lbp_acc(v, :) = linear_classify(lbp, labels, c);
     end
 
-    sift_acc = [10.^[1:-1:-3]; mean(sift_acc)]
-    lbp_acc = [10.^[1:-1:-3]; mean(lbp_acc)]
+    sift_acc = [c; mean(sift_acc)]
+    lbp_acc = [c; mean(lbp_acc)]
     %save('sift.mat');
 end
 
@@ -99,7 +99,7 @@ end
 function hists = kmeans_hists(assignment, num_descriptors, dict_size)
     hists = zeros(dict_size, length(num_descriptors));
     offset = cumsum(num_descriptors)-num_descriptors;
-    parfor idx = 1:length(num_descriptors)
+    for idx = 1:length(num_descriptors)
         v = assignment(offset(idx)+1:offset(idx)+num_descriptors(idx));
         hists(:, idx) = vl_ikmeanshist(dict_size, v);
     end
@@ -157,7 +157,7 @@ end
 
 function acc_list = linear_classify(features, labels, c)
     acc_list = zeros(1, length(c));
-    parfor idx = 1:length(c)
+    for idx = 1:length(c)
         model = train(labels.train, sparse(features.train), ...
                       ['-c ', num2str(c(idx)), ' -q'], 'col');
         [~, acc, ~] = predict(labels.test, ...
