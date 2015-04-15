@@ -101,35 +101,45 @@ def gabor_magnitude(image, kernel_size=(16, 16)):
         
 
 if __name__ == "__main__":
-    # Add path to matlab engine package
-    matlab_engine = "../matlab_engine/install_dir/lib/python2.7/site-packages"
-    sys.path.append(os.path.abspath(matlab_engine))
-    import matlab.engine
-
-    engine = matlab.engine.start_matlab()
-    engine.quit()
-
-    """
-    # Parse argument
+   # Parse argument
     parser = argparse.ArgumentParser()
     parser.add_argument("fin", metavar="image_list", 
                         help="list with path followed by label")
     args = parser.parse_args()
 
+    """
+    # Add path to matlab engine package
+    matlab_engine = "../matlab_engine/install_dir/lib/python2.7/site-packages"
+    sys.path.append(os.path.abspath(matlab_engine))
+    import matlab.engine
+
+    # Start matlab engine and setup for libsvm, liblinear, and vlfeat
+    vlfeat_setup = os.path.abspath("../vlfeat/toolbox/vl_setup")
+    liblinear_path = os.path.abspath("../liblinear/matlab")
+    libsvm_path = os.path.abspath("../libsvm/matlab")
+    engine = matlab.engine.start_matlab()
+    engine.run(vlfeat_setup, nargout = 0)
+    engine.addpath(liblinear_path, libsvm_path, nargout = 0)
+    """
+ 
     with open(args.fin, 'r') as fin:
         for line in fin:
             path, label = line.strip().split(' ')
             raw_image = cv2.imread(path, cv2.CV_LOAD_IMAGE_COLOR)
 
             # Normalize the image
-            norm_size = (512, 512)
+            norm_size = (32, 32)
             image = normalize_image(raw_image, norm_size, crop=True)
 
             # Calculate color histogram
             color = cv2.COLOR_BGR2LAB
-            color_hist = color_histogram(image, color, split=True)
+            #color_hist = color_histogram(image, color, split=True)
 
             # Gabor filter bank magnitude
-            gabor_magnitude(image, kernel_size=(16, 16))
+            #gabor_magnitude(image, kernel_size=(16, 16))
+
+            # SIFT features
+            image_matlab = matlab.uint8(image.tolist())
+            sift = engine.extract_sift(image_matlab)
             break
-    """
+
