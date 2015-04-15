@@ -5,11 +5,12 @@ import os
 import sys
 import argparse
 import itertools
+import importlib
 import collections
 import scipy
 import numpy as np
 import cv2
-import cv2.cv as cv 
+import cv2.cv as cv
 
 def imshow(image, time=0):
     cv2.imshow("image", image)
@@ -99,12 +100,22 @@ def gabor_magnitude(image, kernel_size=(16, 16)):
     return gabor_features
         
 
-
 if __name__ == "__main__":
+    # Add path to matlab engine package
+    matlab_engine = "../matlab_engine/install_dir/lib/python2.7/site-packages"
+    sys.path.append(os.path.abspath(matlab_engine))
+    import matlab.engine
+
+    engine = matlab.engine.start_matlab()
+    engine.quit()
+
+    """
+    # Parse argument
     parser = argparse.ArgumentParser()
     parser.add_argument("fin", metavar="image_list", 
                         help="list with path followed by label")
     args = parser.parse_args()
+
     with open(args.fin, 'r') as fin:
         for line in fin:
             path, label = line.strip().split(' ')
@@ -121,3 +132,4 @@ if __name__ == "__main__":
             # Gabor filter bank magnitude
             gabor_magnitude(image, kernel_size=(16, 16))
             break
+    """
