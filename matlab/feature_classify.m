@@ -1,16 +1,11 @@
 function feature_classify(image_list)
-    % Add libsvm, liblinear, vlfeat library path
-    run(fullfile('../vlfeat/toolbox/vl_setup'));
-    addpath(fullfile('../liblinear/matlab'));
-    addpath(fullfile('../libsvm/matlab'));
+    setup_3rdparty();
 
     % Parse image list into structure array    
     dataset = parse_image_list(image_list);
 
     % Extract image descriptors
     norm_size = [64 64];
-    dataset(length(dataset)).sift = [];
-    dataset(length(dataset)).lbp = [];
     for idx = 1:length(dataset)
         % Read and preprocessing image
         image = imread(dataset(idx).path);
@@ -36,18 +31,51 @@ function feature_classify(image_list)
 
         % Generate features by descriptors
         dict_size = 1024/512;
-        sift = kmeans_encode([train_list.sift]', [test_list.sift]', dict_size);
-        lbp = kmeans_encode([train_list.lbp]', [test_list.lbp]', dict_size);
+        %sift = kmeans_encode([train_list.sift]', [test_list.sift]', dict_size);
+        %lbp = kmeans_encode([train_list.lbp]', [test_list.lbp]', dict_size);
+        sift = sparse_encode([train_list.sift]', [test_list.sift]', dict_size);
 
         % Classify by linear SVM
         c = 10.^[2:-1:-7];
         sift_acc(v, :) = linear_classify(sift, labels, c);
-        lbp_acc(v, :) = linear_classify(lbp, labels, c);
+        %lbp_acc(v, :) = linear_classify(lbp, labels, c);
     end
 
     sift_acc = [c; mean(sift_acc)]
-    lbp_acc = [c; mean(lbp_acc)]
-    %save('sift.mat');
+    %lbp_acc = [c; mean(lbp_acc)]
 end
 
+function setup_3rdparty()
+    % Add libsvm, liblinear, vlfeat library path
+    run(fullfile('../vlfeat/toolbox/vl_setup'));
+    addpath(fullfile('../liblinear/matlab'));
+    addpath(fullfile('../libsvm/matlab'));
+
+    % Add SPAMS(SPArse Modeling Software) path
+    addpath('../spams/spams-matlab/test_release');
+    addpath('../spams/spams-matlab/src_release');
+    addpath('../spams/spams-matlab/build');
+end
+
+function features = sparse_encode(train_list, test_list, dict_size)
+    features = struct('train', zeros(dict_size, length(train_list)), ...
+                      'test', zeros(dict_size, length(test_list)));
+    param = struct('K', dict_size, 'lambda', 1, 'iter', 100);
+
+    train_vocabs = double([train_list.d]);
+    test_vocabs = double([test_list.d]);
+    dict = mexTrainDL_Memory(train_vocabs, param);
+
+    for idx = 1:length(train_list)
+        alpha = mexLasso(double(train_list(idx).d), dict, param);
+        hist = mean(alpha, 2);    % Mean pooling
+        features.train(:, idx) = hist;
+    end
+
+    for idx = 1:length(test_list)
+        alpha = mexLasso(double(test_list(idx).d), dict, param);
+        hist = mean(alpha, 2);    % Mean pooling
+        features.test(:, idx) = hist;
+    end
+end
 

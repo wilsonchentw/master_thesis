@@ -132,14 +132,14 @@ if __name__ == "__main__":
             image = normalize_image(raw_image, norm_size, crop=True)
 
             # Calculate color histogram
-            color = cv2.COLOR_BGR2LAB
+            #color = cv2.COLOR_BGR2LAB
             #color_hist = color_histogram(image, color, split=True)
 
             # Gabor filter bank magnitude
             #gabor_magnitude(image, kernel_size=(16, 16))
 
             # SIFT features
-            image_matlab = matlab.uint8(image.tolist())
-            sift = engine.extract_sift(image_matlab)
+            #image_matlab = matlab.uint8(image.tolist())
+            #sift = engine.extract_sift(image_matlab)
             break
 
