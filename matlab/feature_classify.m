@@ -22,12 +22,12 @@ function feature_classify(image_list)
 
         % Extract Gabor filter banks response
         dataset(idx).gabor = extract_gabor(norm_image);
-   end
+    end
+    save('feature_64x64.mat', dataset, '-v7.3');
 
     % For each fold, generate features by descriptors
     num_fold = 5;
     folds = cross_validation(dataset, num_fold);
-    save('feature_64x64.mat', dataset, folds, '-v7.3');
     for v = 1:num_fold
         train_list = dataset(folds(v).train);
         test_list = dataset(folds(v).test);
@@ -53,10 +53,10 @@ function feature_classify(image_list)
         color_acc(v, :) = linear_classify(color, labels, c);
         gabor_acc(v, :) = linear_classify(gabor, labels, c);
     end
+    save('feature_64x64.mat', '-v7.3');
+
     sift_acc = [c; mean(sift_acc)]
     lbp_acc = [c; mean(lbp_acc)]
     color_acc = [c; mean(color_acc)]
     gabor_acc = [c; mean(gabor_acc)]
 end
-
-
