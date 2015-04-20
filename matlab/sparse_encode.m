@@ -2,7 +2,7 @@ function features = sparse_encode(train_list, test_list, dict_size)
     features = struct('train', zeros(dict_size, length(train_list)), ...
                       'test', zeros(dict_size, length(test_list)));
     param = struct('K', dict_size, 'lambda', 1, ...
-                   'iter', 1000, 'verbose', false);
+                   'iter', 1000, 'verbose', false, 'numThreads', 12);
 
     train_vocabs = double([train_list.d]);
     test_vocabs = double([test_list.d]);
