@@ -11,19 +11,12 @@ function feature_classify(image_list)
         image = imread(dataset(idx).path);
         norm_image = normalize_image(image, norm_size, true);
 
-        % Extract SIFT descriptors
         dataset(idx).sift = extract_sift(norm_image);
-
-        % Extract LBP descriptors
         dataset(idx).lbp = extract_lbp(norm_image);
-
-        % Extract color histograms
         dataset(idx).color = extract_color(norm_image);
-
-        % Extract Gabor filter banks response
         dataset(idx).gabor = extract_gabor(norm_image);
     end
-    save('feature_64x64.mat', dataset, '-v7.3');
+    save('feature_64x64.mat', '-v7.3');
 
     % For each fold, generate features by descriptors
     num_fold = 5;
@@ -40,8 +33,8 @@ function feature_classify(image_list)
         sift_size = 1024;
         lbp_size = 2048;
         %sift = kmeans_encode([train_list.sift]', [test_list.sift]', sift_size);
-        sift = sparse_encode([train_list.sift]', [test_list.sift]', sift_size);
         %lbp = kmeans_encode([train_list.lbp]', [test_list.lbp]', lbp_size);
+        sift = sparse_encode([train_list.sift]', [test_list.sift]', sift_size);
         lbp = sparse_encode([train_list.lbp]', [test_list.lbp]', lbp_size);
         color = struct('train', [train_list.color], 'test', [test_list.color]);
         gabor = struct('train', [train_list.gabor], 'test', [test_list.gabor]);
@@ -54,7 +47,6 @@ function feature_classify(image_list)
         gabor_acc(v, :) = linear_classify(gabor, labels, c);
     end
     save('feature_64x64.mat', '-v7.3');
-
     sift_acc = [c; mean(sift_acc)]
     lbp_acc = [c; mean(lbp_acc)]
     color_acc = [c; mean(color_acc)]
