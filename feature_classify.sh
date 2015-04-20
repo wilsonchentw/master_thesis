@@ -17,7 +17,8 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/gcc/x86_64-linux-gnu/4.8/:/
 export LD_PRELOAD=$LIB_GCC/libgfortran.so:$LIB_GCC/libgcc_s.so
 export LD_PRELOAD=$LD_PRELOAD:$LIB_GCC/libstdc++.so:/$LIB_GCC/libgomp.so
 
-MATLAB_CMD="addpath(fullfile('./matlab')); setup_3rdparty.m"'; feature_classify '${TRAIN}.list'; '
+MATLAB_CMD="addpath(fullfile('./matlab')); setup_3rdparty"
+MATLAB_CMD=$MATLAB_CMD'; feature_classify '${TRAIN}.list'; '
 matlab -nodesktop -nosplash -singleCompThread -r "$MATLAB_CMD"
 
 

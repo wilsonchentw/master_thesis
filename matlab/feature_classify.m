@@ -16,7 +16,7 @@ function feature_classify(image_list)
         dataset(idx).color = extract_color(norm_image);
         dataset(idx).gabor = extract_gabor(norm_image);
     end
-    save('feature_64x64.mat', '-v7.3');
+    save('descriptor.mat', '-v7.3');
 
     % For each fold, generate features by descriptors
     num_fold = 5;
@@ -46,7 +46,7 @@ function feature_classify(image_list)
         color_acc(v, :) = linear_classify(color, labels, c);
         gabor_acc(v, :) = linear_classify(gabor, labels, c);
     end
-    save('feature_64x64.mat', '-v7.3');
+    save('descriptor.mat', '-v7.3');
     sift_acc = [c; mean(sift_acc)]
     lbp_acc = [c; mean(lbp_acc)]
     color_acc = [c; mean(color_acc)]
