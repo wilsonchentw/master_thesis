@@ -5,7 +5,6 @@ import os
 import sys
 import argparse
 import itertools
-import importlib
 import collections
 import scipy
 import numpy as np
@@ -107,21 +106,6 @@ if __name__ == "__main__":
                         help="list with path followed by label")
     args = parser.parse_args()
 
-    """
-    # Add path to matlab engine package
-    matlab_engine = "../matlab_engine/install_dir/lib/python2.7/site-packages"
-    sys.path.append(os.path.abspath(matlab_engine))
-    import matlab.engine
-
-    # Start matlab engine and setup for libsvm, liblinear, and vlfeat
-    vlfeat_setup = os.path.abspath("../vlfeat/toolbox/vl_setup")
-    liblinear_path = os.path.abspath("../liblinear/matlab")
-    libsvm_path = os.path.abspath("../libsvm/matlab")
-    engine = matlab.engine.start_matlab()
-    engine.run(vlfeat_setup, nargout = 0)
-    engine.addpath(liblinear_path, libsvm_path, nargout = 0)
-    """
- 
     with open(args.fin, 'r') as fin:
         for line in fin:
             path, label = line.strip().split(' ')

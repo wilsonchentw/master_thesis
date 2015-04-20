@@ -19,7 +19,10 @@ function feature_classify(image_list)
 
         % Extract color histograms
         %dataset(idx).color = extract_color(norm_image);
-    end
+
+        % Extract Gabor filter banks response
+        dataset(idx).gabor = extract_gabor(norm_image);
+   end
 
     % For each fold, generate features by descriptors
     num_fold = 5;
@@ -50,4 +53,5 @@ function feature_classify(image_list)
     %lbp_acc = [c; mean(lbp_acc)]
     %color_acc = [c; mean(color_acc)]
 end
+
 
