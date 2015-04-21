@@ -13,4 +13,5 @@ function descriptor = extract_color(image)
             descriptor(:, idx, color) = hist/norm(hist);
         end
     end
+    descriptor = reshape(descriptor, [], 1);
 end

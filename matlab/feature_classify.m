@@ -10,10 +10,26 @@ function feature_classify(image_list)
     num_fold = 5;
     folds = cross_validation(dataset, num_fold);
     for v = 1:num_fold
-        train_list = dataset(folds(v).train);
-        test_list = dataset(folds(v).test);
+        train_set = dataset(folds(v).train);
+        test_set = dataset(folds(v).test);
+        sc = @(x, d, p) mean(mexLasso(double(x), d, p), 2);
 
+        % Encode SIFT descriptor
+        param = struct('K', 1024/512, 'lambda', 1, 'lambda2', 0, 'iter', 1000/1000, 'numThreads', -1);
+        sift_dict = mexTrainDL_Memory(double([train_set.sift]), param);
+        sift = arrayfun(@(x) {sc(x.sift, sift_dict, param)}, dataset);
 
+        % Encode LBP descriptor
+        param = struct('K', 2048/1024, 'lambda', 1, 'lambda2', 0, 'iter', 1000/1000, 'numThreads', -1);
+        lbp_dict = mexTrainDL_Memory(double([train_set.lbp]), param);
+        lbp = arrayfun(@(x) {sc(x.lbp, lbp_dict, param)}, dataset);
+        
+        % Encode color histogram
+        color = [dataset.color];
+
+        % Encode Gabor filter bank response
+        gabor = [dataset.gabor];
+        break
 %{
         labels = struct('train', [], 'test', []);
         labels.train = double([train_list.label]');
@@ -22,8 +38,6 @@ function feature_classify(image_list)
         % Generate features by descriptors
         sift_size = 1024/512;
         lbp_size = 2048/1024;
-        %sift = kmeans_encode([train_list.sift]', [test_list.sift]', sift_size);
-        %lbp = kmeans_encode([train_list.lbp]', [test_list.lbp]', lbp_size);
         sift = sparse_encode([train_list.sift]', [test_list.sift]', sift_size);
         lbp = sparse_encode([train_list.lbp]', [test_list.lbp]', lbp_size);
         color = struct('train', [train_list.color], 'test', [test_list.color]);
@@ -42,3 +56,4 @@ function feature_classify(image_list)
     %color_acc = [c; mean(color_acc)]
     %gabor_acc = [c; mean(gabor_acc)]
 end
+

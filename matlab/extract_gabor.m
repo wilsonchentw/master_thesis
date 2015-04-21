@@ -21,4 +21,5 @@ function descriptor = extract_gabor(image)
         magnitude = abs(blocks);
         descriptor(idx, :) = [mean(magnitude) var(magnitude)];
     end
+    descriptor = reshape(descriptor, [], 1);
 end
