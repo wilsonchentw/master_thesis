@@ -9,7 +9,7 @@ function feature_classify(image_list)
     % For each fold, generate features by descriptors
     num_fold = 5;
     folds = cross_validation(dataset, num_fold);
-    for v = 1:num_fold
+    for v = 1:num_fold/num_fold
         train_set = dataset(folds(v).train);
         test_set = dataset(folds(v).test);
         sc = @(x, d, p) mean(mexLasso(double(x), d, p), 2);
@@ -17,7 +17,7 @@ function feature_classify(image_list)
         % Encode SIFT descriptor
         param = struct('K', 1024/512, 'lambda', 1, 'lambda2', 0, 'iter', 1000/1000, 'numThreads', -1);
         sift_dict = mexTrainDL_Memory(double([train_set.sift]), param);
-        sift = arrayfun(@(x) {sc(x.sift, sift_dict, param)}, dataset);
+        sift = arrayfun(@(x) {sc(x.sift, sift_dict, param)}, dataset');
 
         % Encode LBP descriptor
         param = struct('K', 2048/1024, 'lambda', 1, 'lambda2', 0, 'iter', 1000/1000, 'numThreads', -1);
@@ -29,31 +29,31 @@ function feature_classify(image_list)
 
         % Encode Gabor filter bank response
         gabor = [dataset.gabor];
-        break
-%{
-        labels = struct('train', [], 'test', []);
-        labels.train = double([train_list.label]');
-        labels.test = double([test_list.label]');
-
-        % Generate features by descriptors
-        sift_size = 1024/512;
-        lbp_size = 2048/1024;
-        sift = sparse_encode([train_list.sift]', [test_list.sift]', sift_size);
-        lbp = sparse_encode([train_list.lbp]', [test_list.lbp]', lbp_size);
-        color = struct('train', [train_list.color], 'test', [test_list.color]);
-        gabor = struct('train', [train_list.gabor], 'test', [test_list.gabor]);
 
         % Classify by linear SVM
         c = 10.^[2:-1:-7];
+%{
+        model = train(labels.train, sparse(features.train), ...
+                      ['-c ', num2str(c(idx)), ' -q'], 'col');
+        [~, acc, ~] = predict(labels.test, ...
+                              sparse(features.test), model, '-q', 'col');
+        acc_list(idx) = acc(1);
+%}
+ 
+
+%{
         sift_acc(v, :) = linear_classify(sift, labels, c);
         lbp_acc(v, :) = linear_classify(lbp, labels, c);
         color_acc(v, :) = linear_classify(color, labels, c);
         gabor_acc(v, :) = linear_classify(gabor, labels, c);
 %}
     end
-    %sift_acc = [c; mean(sift_acc)]
-    %lbp_acc = [c; mean(lbp_acc)]
-    %color_acc = [c; mean(color_acc)]
-    %gabor_acc = [c; mean(gabor_acc)]
+%{
+    %save('baseline.mat', '-v7.3');
+    sift_acc = [c; mean(sift_acc)]
+    lbp_acc = [c; mean(lbp_acc)]
+    color_acc = [c; mean(color_acc)]
+    gabor_acc = [c; mean(gabor_acc)]
+%}
 end
 
