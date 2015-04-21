@@ -76,17 +76,17 @@ best rbf grid       ->
 (log2c, log2g)         
 
 LBP->K-means NORM_SIZE=64
-dict_size           ->    512      1024      2048
-linear -c 1e+02     ->  9.22%    11.40%    12.38%
-linear -c 1e+01     ->  9.24%    11.42%    12.42%
-linear -c 1e+00     ->  9.36%    11.52%    12.52%
-linear -c 1e-01     -> 11.02%    12.20%    12.94%
-linear -c 1e-02     -> 14.62%    14.74%    14.62%
-linear -c 1e-03     -> 16.62%    17.22%    17.90%
-linear -c 1e-04     -> 16.68%    17.76%    17.32%
-linear -c 1e-05     -> 14.02%    15.12%    16.04%
-linear -c 1e-06     -> 12.94%    11.84%    15.72%
-linear -c 1e-07     -> 12.84%    14.30%    15.70%
+dict_size           -> 
+linear -c 1e+02     -> 
+linear -c 1e+01     -> 
+linear -c 1e+00     -> 
+linear -c 1e-01     -> 
+linear -c 1e-02     -> 
+linear -c 1e-03     -> 
+linear -c 1e-04     -> 
+linear -c 1e-05     -> 
+linear -c 1e-06     -> 
+linear -c 1e-07     -> 
 rbf default         -> 
 best rbf grid       -> 
 (log2c, log2g)         

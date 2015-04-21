@@ -1,11 +1,16 @@
-function descriptor = extract_lbp(image)
-    descriptor = struct('d', [], 'n', 0);
+function descriptor = extract_lbp(gray_image)
+    step_size = 8;
+    window_size = 16;
 
-    gray_image = single(rgb2gray(image));
-    d = vl_lbp(gray_image, 8);
-    descriptor.d = reshape(permute(d, [3 1 2]), size(d, 3), []);
-    descriptor.d = [descriptor.d; 1-sum(descriptor.d)];
-    descriptor.n = size(descriptor.d, 2);
+    image = single(gray_image);
+    block = @(y, x) image(y:y+window_size-1, x:x+window_size-1);
+    y = [1:step_size:size(image, 1)-window_size+1];
+    x = [1:step_size:size(image, 2)-window_size+1];
+    [ys, xs] = meshgrid(y, x); 
+    descriptor = zeros(58, length(y)*length(x));
+    for idx = 1:length(x)*length(y)
+        patch = block(ys(idx), xs(idx));
+        patch_lbp = vl_lbp(patch, window_size);
+        descriptor(:, idx) = permute(patch_lbp, [3 1 2]);
+    end
 end
-
-
