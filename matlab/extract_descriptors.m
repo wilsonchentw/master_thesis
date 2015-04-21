@@ -1,6 +1,6 @@
 function dataset = extract_descriptors(dataset)
     % Extract image descriptors
-    norm_size = [256 256]/8;
+    norm_size = [256 256];
    for idx = 1:length(dataset)
         % Read and preprocessing image
         image = imread(dataset(idx).path);
