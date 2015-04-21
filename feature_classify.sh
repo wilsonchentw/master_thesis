@@ -18,7 +18,7 @@ export LD_PRELOAD=$LIB_GCC/libgfortran.so:$LIB_GCC/libgcc_s.so
 export LD_PRELOAD=$LD_PRELOAD:$LIB_GCC/libstdc++.so:/$LIB_GCC/libgomp.so
 
 MATLAB_CMD="addpath(fullfile('./matlab')); setup_3rdparty"
-MATLAB_CMD=$MATLAB_CMD'; feature_classify '${TRAIN}.list'; '
+MATLAB_CMD=$MATLAB_CMD'; feature_classify '${TRAIN}.list'; quit'
 matlab -nodesktop -nosplash -singleCompThread -r "$MATLAB_CMD"
 
 
