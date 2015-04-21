@@ -3,7 +3,8 @@ function feature_classify(image_list)
     dataset = parse_image_list(image_list);
 
     % Extract descriptors
-    dataset = extract_descriptors(dataset);
+    norm_size = [256 256];
+    dataset = extract_descriptors(dataset, norm_size);
     save('baseline.mat', '-v7.3');
 
     % For each fold, generate features by descriptors
@@ -16,13 +17,13 @@ function feature_classify(image_list)
 
         % Encode SIFT descriptor
         param = struct('K', 1024, 'lambda', 1, 'lambda2', 0, ...
-                       'iter', 1000, 'verbose', false, 'numThreads', -1);
+                       'iter', 1000, 'verbose', false, 'numThreads', 17);
         sift_dict = mexTrainDL_Memory(double([dataset(train_set).sift]), param);
         sift = arrayfun(@(x) {sc(x.sift, sift_dict, param)}, dataset');
 
         % Encode LBP descriptor
         param = struct('K', 2048, 'lambda', 1, 'lambda2', 0, ...
-                       'iter', 1000, 'verbose', false, 'numThreads', -1);
+                       'iter', 1000, 'verbose', false, 'numThreads', 17);
         lbp_dict = mexTrainDL_Memory(double([dataset(train_set).lbp]), param);
         lbp = arrayfun(@(x) {sc(x.lbp, lbp_dict, param)}, dataset);
         
