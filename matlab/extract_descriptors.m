@@ -12,11 +12,11 @@ function dataset = extract_descriptors(dataset, norm_size)
 
         % Extract SIFT features
         dataset(idx).sift = extract_sift(gray_image);
+        dataset(idx).sift_num = size(dataset(idx).sift, 2);
 
         % Extract LBP pyramid
-        scale = 1/2;
-        num_level = 3;
-        dataset(idx).lbp = extract_lbp_pyramid(gray_image, scale, num_level);
+        dataset(idx).lbp = extract_lbp_pyramid(gray_image);
+        dataset(idx).lbp_num = size(dataset(idx).lbp, 2);
 
         % Extract color histogram
         dataset(idx).color = extract_color(norm_image);

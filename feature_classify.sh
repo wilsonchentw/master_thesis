@@ -4,9 +4,14 @@ DATASET=50data
 LIBSVM_PATH=../libsvm
 LIBLINEAR_PATH=../liblinear
 
-TRAIN=${DATASET}_train
-VAL=${DATASET}_val
-TEST=${DATASET}_test
+SMALL=${DATASET}_small
+MEDIUM=${DATASET}_medium
+LARGE=${DATASET}_large
+FULL=${DATASET}_full
+
+python3 split_dataset.py ../$DATASET -f ${FULL}.list -v 100
+python3 split_dataset.py ../$DATASET\
+        -f ${SMALL}.list ${MEDIUM}.list ${LARGE}.list -v 2 20 78
 
 # Export environment variable for SPAMS(SPArse Modeling Software) path
 export LIB_GCC=/usr/lib/gcc/x86_64-linux-gnu/4.8
@@ -17,15 +22,13 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/gcc/x86_64-linux-gnu/4.8/:/
 export LD_PRELOAD=$LIB_GCC/libgfortran.so:$LIB_GCC/libgcc_s.so
 export LD_PRELOAD=$LD_PRELOAD:$LIB_GCC/libstdc++.so:/$LIB_GCC/libgomp.so
 
-MATLAB_CMD="addpath(fullfile('./matlab')); setup_3rdparty"
-MATLAB_CMD=$MATLAB_CMD'; feature_classify '${TRAIN}.list'; '
-#MATLAB_CMD=$MATLAB_CMD'; feature_classify '${DATASET}_small.list'; '
-matlab -nodesktop -nosplash -singleCompThread -r "$MATLAB_CMD"
+SETUP_PATH="addpath(fullfile('./matlab')); setup_3rdparty();"
+MATLAB_COMMAND=${SETUP_PATH}"feature_classify ${FULL}.list"
+matlab -nodesktop -nosplash -singleCompThread -r "$MATLAB_COMMAND; quit"
 
 
-#python3 split_dataset.py ../$DATASET\
-#    -f ${TRAIN}.list ${VAL}.list ${TEST}.list\
-#    -v 1 0 0
+
+
 #python extract_features.py ${TRAIN}.list ${TRAIN}.dat
 #python extract_features.py ${TEST}.list ${TEST}.dat
 #
