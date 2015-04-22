@@ -11,7 +11,8 @@ FULL=${DATASET}_full
 
 python3 split_dataset.py ../$DATASET -f ${FULL}.list -v 100
 python3 split_dataset.py ../$DATASET\
-        -f ${SMALL}.list ${MEDIUM}.list ${LARGE}.list -v 2 20 78
+        -f ${SMALL}.list ${MEDIUM}.list ${LARGE}.list no.list -v 2 20 50 28
+rm no.list
 
 # Export environment variable for SPAMS(SPArse Modeling Software) path
 export LIB_GCC=/usr/lib/gcc/x86_64-linux-gnu/4.8
