@@ -1,8 +1,8 @@
 function dataset = extract_descriptors(dataset, norm_size)
     % Extract image descriptors
     for idx = 1:length(dataset)
-        if mod(idx, 50) == 0
-            fprintf(1, '%d images done.\n', idx);
+        if mod(idx, 100) == 0
+            fprintf(1, '%4d images done.\n', idx);
         end
 
         % Read and preprocessing image

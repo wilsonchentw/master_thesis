@@ -24,24 +24,12 @@ export LD_PRELOAD=$LD_PRELOAD:$LIB_GCC/libstdc++.so:/$LIB_GCC/libgomp.so
 
 SETUP_PATH="addpath(fullfile('./matlab')); setup_3rdparty();"
 MATLAB_COMMAND=${SETUP_PATH}"feature_classify ${FULL}.list"
-matlab -nodesktop -nosplash -singleCompThread -r "$MATLAB_COMMAND; quit"
+matlab -nodesktop -nosplash -singleCompThread -r "$MATLAB_COMMAND; "
 
 
 
 
-#python extract_features.py ${TRAIN}.list ${TRAIN}.dat
-#python extract_features.py ${TEST}.list ${TEST}.dat
-#
-#${LIBLINEAR_PATH}/train -c 10 -v 5 -q ${TRAIN}.dat ${DATASET}.linear.model
-#${LIBLINEAR_PATH}/train -c 1 -v 5 -q ${TRAIN}.dat ${DATASET}.linear.model
-#${LIBLINEAR_PATH}/train -c 0.1 -v 5 -q ${TRAIN}.dat ${DATASET}.linear.model
-#${LIBLINEAR_PATH}/train -c 0.01 -v 5 -q ${TRAIN}.dat ${DATASET}.linear.model
-#${LIBLINEAR_PATH}/train -c 0.001 -v 5 -q ${TRAIN}.dat ${DATASET}.linear.model
-#
+
+
 #${LIBSVM_PATH}/svm-train -v 5 -q ${TRAIN}.dat ${DATASET}.model
 #${LIBSVM_PATH}/tools/grid.py -gnuplot null ${TRAIN}.dat 
-#
-#${LIBLINEAR_PATH}/predict ${TRAIN}.dat ${DATASET}.linear.model ${TRAIN}.predict
-#${LIBLINEAR_PATH}/predict ${TEST}.dat  ${DATASET}.linear.model ${TEST}.predict
-#${LIBSVM_PATH}/svm-predict ${TRAIN}.dat ${DATASET}.model ${TRAIN}.predict
-#${LIBSVM_PATH}/svm-predict ${TEST}.dat  ${DATASET}.model ${TEST}.predict
