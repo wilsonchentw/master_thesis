@@ -3,9 +3,9 @@ function feature_classify(image_list)
     dataset = parse_image_list(image_list);
 
     % Extract descriptors if mat-file of dataset doesn't exist
-    norm_size = [256 256];
     dataset_mat = [strrep(image_list, '.list', ''), '.mat'];
     if exist(dataset_mat, 'file') ~= 2
+        norm_size = [256 256];
         dataset = extract_descriptors(dataset, norm_size);
         save(dataset_mat, '-v7.3');
     else
@@ -22,7 +22,7 @@ function feature_classify(image_list)
         % SIFT descriptors with sparse coding
         sift = struct('dim', 1024, 'p', [], 'dict', [], 'alpha', [], 'n', []);
         sift.p = struct('K', sift.dim, 'lambda', 1, 'lambda2', 0, ...
-                        'iter', 200, 'numThreads', 17);
+                        'iter', 200, 'numThreads', 17, 'verbose', true);
         sift.dict = mexTrainDL_Memory(double([dataset(f.train).sift]), sift.p);
         sift.alpha = mexLasso(double([dataset.sift]), sift.dict, sift.p);
         sift.n = [dataset.sift_num];
@@ -31,7 +31,7 @@ function feature_classify(image_list)
         % LBP descriptors with sparse coding
         lbp = struct('dim', 2048, 'p', [], 'dict', [], 'alpha', [], 'n', []);
         lbp.p = struct('K', lbp.dim, 'lambda', 1, 'lambda2', 0, ...
-                       'iter', 200, 'numThreads', 17);
+                       'iter', 200, 'numThreads', 17, 'verbose', true);
         lbp.dict = mexTrainDL_Memory(double([dataset(f.train).lbp]), lbp.p);
         lbp.alpha = mexLasso(double([dataset.lbp]), lbp.dict, lbp.p);
         lbp.n = [dataset.lbp_num];
@@ -41,11 +41,15 @@ function feature_classify(image_list)
         color_encode = [dataset.color];
         gabor_encode = [dataset.gabor];
 
-        % Write problem for furthur usage
-        write_problem(['sift_', num2str(v)], label, sift_encode, f);
-        write_problem(['lbp_', num2str(v)], label, lbp_encode, f);
-        write_problem(['color_', num2str(v)], label, color_encode, f);
-        write_problem(['gabor_', num2str(v)], label, gabor_encode, f);
+
+
+
+
+
+        %write_problem(['sift_', num2str(v)], label, sift_encode, f);
+        %write_problem(['lbp_', num2str(v)], label, lbp_encode, f);
+        %write_problem(['color_', num2str(v)], label, color_encode, f);
+        %write_problem(['gabor_', num2str(v)], label, gabor_encode, f);
 
         % Learned by liblinear
         %c = 10.^[2:-1:-7];
