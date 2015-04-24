@@ -7,7 +7,7 @@ function feature_classify(image_list)
     if exist(dataset_mat, 'file') ~= 2
         norm_size = [256 256];
         dataset = extract_descriptors(dataset, norm_size);
-        %save(dataset_mat, '-v7.3');
+        save(dataset_mat, '-v7.3');
     else
         load(dataset_mat);
     end
@@ -22,18 +22,18 @@ function feature_classify(image_list)
         % SIFT descriptors with sparse coding
         sift = struct('dim', 1024, 'p', [], 'dict', [], 'alpha', [], 'n', []);
         sift.p = struct('K', sift.dim, 'lambda', 1, 'lambda2', 0, ...
-                        'iter', 200/200, 'mode', 2, 'modeD', 0, ...
-                        'modeParam', 0, 'clean', true, 'numThreads', 1);
+                        'iter', 1000, 'mode', 2, 'modeD', 0, ...
+                        'modeParam', 0, 'clean', true, 'numThreads', 4);
         sift.dict = mexTrainDL_Memory([dataset(f.train).sift], sift.p);
         sift.alpha = mexLasso([dataset.sift], sift.dict, sift.p);
         sift.n = [dataset.sift_num];
         sift_encode = pooling(sift.alpha, sift.n);
 
         % LBP descriptors with sparse coding
-        lbp = struct('dim', 2048/512, 'p', [], 'dict', [], 'alpha', [], 'n', []);
+        lbp = struct('dim', 2048, 'p', [], 'dict', [], 'alpha', [], 'n', []);
         lbp.p = struct('K', lbp.dim, 'lambda', 1, 'lambda2', 0, ...
-                       'iter', 200/200, 'mode', 2, 'modeD', 0, ...
-                       'modeParam', 0, 'clean', true, 'numThreads', 1);
+                       'iter', 1000, 'mode', 2, 'modeD', 0, ...
+                       'modeParam', 0, 'clean', true, 'numThreads', 4);
         lbp.dict = mexTrainDL_Memory(double([dataset(f.train).lbp]), lbp.p);
         lbp.alpha = mexLasso(double([dataset.lbp]), lbp.dict, lbp.p);
         lbp.n = [dataset.lbp_num];
@@ -48,7 +48,7 @@ function feature_classify(image_list)
         samme(info, sift_encode, lbp_encode, color_encode, gabor_encode);
         break
 
-        % Write partial problem to disk
+        % Write partial problem to disk for grid.py
         %write_problem(['sift_', num2str(v)], label, sift_encode, f);
         %write_problem(['lbp_', num2str(v)], label, lbp_encode, f);
         %write_problem(['color_', num2str(v)], label, color_encode, f);
@@ -68,24 +68,41 @@ function feature_classify(image_list)
 end
 
 function samme(varargin)
-    label = varargin{1}.label;
+    label = double(varargin{1}.label);
+    inst = varargin(2:end);
     train_list = varargin{1}.train;
     test_list = varargin{1}.test;
-    num_fold = varargin{1}.v;
-    features = varargin(2:end);
-    
+
+    % Write subproblem for grid.py to search best parameter
+    for idx = 1:length(insts)
+        filename = ['feature_', num2str(idx), '.train'];
+        libsvmwrite(filename, label(train_list), inst{idx}(:, train_list)');
+    end
+    train_option = {'-c 1 -g 0.0010 -b 1 -q', '-c 1 -g 0.0005 -b 1 -q', ...
+                    '-c 1 -g 0.0007 -b 1 -q', '-c 1 -g 0.0010 -b 1 -q', };
+    val_option = '-b 1 -q';
+
     % Extract validation set for boosting
-    categories = unique(label);
-    val_list = [];
-    for c = 1:length(categories)
-        category_list = train_list(label(train_list)==categories(c));
-        category_len = length(category_list);
-        val_num = floor(category_len/num_fold);
-        val_samples = category_list(randsample(category_len, val_num));
-        val_list = [val_list val_samples];
-        train_list = setdiff(train_list, val_samples);
+    num_fold = 4;
+    val_list = extract_val_list(label, train_list, num_fold);
+    train_list = setdiff(train_list, val_list);
+
+    % Generate base learner
+    for idx = 1:length(inst)
+        train_inst = inst{idx}(:, train_list)';
+        train_label = label(train_list)';
+        val_inst = inst{idx}(:, val_list)';
+        val_label = label(val_list)';
+
+        base(idx) = svmtrain(train_label, train_inst, train_option{idx});
+        [g, acc, p] = svmpredict(val_label, val_inst, base(idx), val_option);
+        prob(:, :, idx) = p;
     end
 
-    for idx = 1:length(features)
-    end
+    % Generate linear blending coefficient by SAMME
+    
+
+
+
 end
+
