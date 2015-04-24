@@ -15,7 +15,7 @@ function descriptor = extract_gabor(image)
         kernel = get_gabor_kernel(ksize, lambd, theta, psi, sigma, gamma);
         %response = imfilter(double(image), kernel);
         %response = filter2(kernel, double(image), 'same');
-        response = conv2(double(image), rot90(kernel, 2), 'same');
+        response = conv2(double(image)/255, rot90(kernel, 2), 'same');
 
         blocks = im2col(response, size(image)./num_block, 'distinct');
         magnitude = abs(blocks);

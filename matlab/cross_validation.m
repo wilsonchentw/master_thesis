@@ -3,7 +3,7 @@ function folds = cross_validation(dataset, num_fold)
     categories = unique([dataset.label]);
     for c = 1:length(categories)
         % Select particular category
-        list = find([dataset.label] == categories(c))';
+        list = find([dataset.label] == categories(c));
         len = length(list);
 
         % Calculate #test_case on each fold, exactly cover all instances
@@ -18,9 +18,9 @@ function folds = cross_validation(dataset, num_fold)
             test_list = list(1:test_nums(v));
             train_list = list(test_nums(v)+1:end);
 
-            folds(v).train = [folds(v).train; train_list];
-            folds(v).test = [folds(v).test; test_list];
-            list = [train_list; test_list];
+            folds(v).train = [folds(v).train train_list];
+            folds(v).test = [folds(v).test test_list];
+            list = [train_list test_list];
         end
     end
 end
