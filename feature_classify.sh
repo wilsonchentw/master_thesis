@@ -17,9 +17,6 @@ FULL=${DATASET}_full
 
 # Export environment variable for SPAMS(SPArse Modeling Software) path
 export LIB_GCC=/usr/lib/gcc/x86_64-linux-gnu/4.8
-export MKL_NUM_THREADS=1
-export MKL_SERIAL=YES
-export MKL_DYNAMIC=NO
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/gcc/x86_64-linux-gnu/4.8/:/
 export LD_PRELOAD=$LIB_GCC/libgfortran.so:$LIB_GCC/libgcc_s.so
 export LD_PRELOAD=$LD_PRELOAD:$LIB_GCC/libstdc++.so:/$LIB_GCC/libgomp.so
