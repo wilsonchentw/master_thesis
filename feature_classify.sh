@@ -27,8 +27,5 @@ matlab -nodesktop -nosplash -singleCompThread -r "$MATLAB_COMMAND; "
 
 
 
-
-
-
 #${LIBSVM_PATH}/svm-train -v 5 -q ${TRAIN}.dat ${DATASET}.model
 #${LIBSVM_PATH}/tools/grid.py -gnuplot null ${TRAIN}.dat 

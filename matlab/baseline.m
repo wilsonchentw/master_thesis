@@ -63,7 +63,7 @@ function samme(label, inst, fold)
     %end
     train_option = {'-c 1 -g 0.0010 -b 1 -q', '-c 1 -g 0.0005 -b 1 -q', ...
                     '-c 1 -g 0.0007 -b 1 -q', '-c 1 -g 0.0010 -b 1 -q', };
-    val_option = '-b 0';
+    val_option = '-b 0 -q';
     test_option = '-b 1 -q';
 
     % Extract validation set for boosting
@@ -80,51 +80,24 @@ function samme(label, inst, fold)
 
         base(idx) = svmtrain(train_label, train_inst, train_option{idx});
         [g, acc, p] = svmpredict(val_label, val_inst, base(idx), val_option);
-        prob_est(:, :, idx) = p;
-        guess_label(:, idx) = g;
         is_correct(:, idx) = (g == val_label);
     end
 
-    % Generate fake probability by predict label (FOR DEBUG PURPOSE)
-    prob_est = zeros(length(val_label), length(unique(label)), length(inst));
-    for base_idx = 1:length(base)
-        for inst_idx = 1:length(val_label)
-            prob_est(inst_idx, guess_label(inst_idx, base_idx), base_idx) = 1;
-        end
-    end
-
     % Generate linear blending coefficient (alpha) by SAMME
-    t_max = 5000/5000;
+    t_max = 5000;
     num_category = length(unique(label));
     num_val = length(val_label);
     w = ones(num_val, 1)/num_val;
-    vote = zeros(length(base), 1);
+    vote = zeros(1, length(base));
     for t = 1:t_max
-        
-    end
+        % Select weak learner by greedily choose best learner
+        score = w' * is_correct;
+        [err, weak] = min(1-score);
 
-%{
-    % Generate linear blending coefficient (alpha) by SAMME
-    t_max = 5000;
-    vote = zeros(1, length(inst));
-    num_category = length(unique(label));
-    w = ones(length(val_label), 1)/length(val_label);
-    for t = 1:t_max
-        % Select weak learner
-        score = w'*is_correct;
-        [~, weak] = max(vote*score);
-
-        % Update
-        err = w'*(is_correct(:, weak)~=true)/sum(w);
-        if err >= (num_category-1)/num_category
-            break;
-        end
-        alpha = log((1-err)/err)+log(num_category-1);
-        w = w.*exp(alpha*(is_correct(:, weak)~=true));
-        w = w/sum(w);
-
+        alpha = log((1-err)/err) + log(num_category);
+        w_new = w.*exp(alpha*(is_correct(:, weak) ~= true));
+        w = w_new/sum(w_new);
         vote(weak) = vote(weak)+alpha;
     end
-%}
 end
 
