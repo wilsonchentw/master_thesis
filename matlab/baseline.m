@@ -20,26 +20,22 @@ function baseline(image_list)
         label = [dataset.label];
 
         % SIFT descriptors with sparse coding
-        sift = struct('dim', 1024, 'p', [], 'dict', [], 'alpha', [], 'n', []);
+        sift = struct('dim', 1024/512, 'p', [], 'dict', [], 'alpha', [], 'n', []);
         sift.p = struct('K', sift.dim, 'lambda', 1, 'lambda2', 0, ...
-                        'iter', 1000, 'mode', 2, 'modeD', 0, ...
+                        'iter', 1000/1000, 'mode', 2, 'modeD', 0, ...
                         'modeParam', 0, 'clean', true, 'numThreads', 4);
         sift.dict = mexTrainDL_Memory([dataset(f.train).sift], sift.p);
-tic
         sift.alpha = mexLasso([dataset.sift], sift.dict, sift.p);
-toc
         sift.n = [dataset.sift_num];
         sift_encode = pooling(sift.alpha, sift.n);
 
         % LBP descriptors with sparse coding
-        lbp = struct('dim', 2048, 'p', [], 'dict', [], 'alpha', [], 'n', []);
+        lbp = struct('dim', 2048/512, 'p', [], 'dict', [], 'alpha', [], 'n', []);
         lbp.p = struct('K', lbp.dim, 'lambda', 1, 'lambda2', 0, ...
-                       'iter', 1000, 'mode', 2, 'modeD', 0, ...
+                       'iter', 1000/1000, 'mode', 2, 'modeD', 0, ...
                        'modeParam', 0, 'clean', true, 'numThreads', 4);
         lbp.dict = mexTrainDL_Memory([dataset(f.train).lbp], lbp.p);
-tic
         lbp.alpha = mexLasso([dataset.lbp], lbp.dict, lbp.p);
-toc
         lbp.n = [dataset.lbp_num];
         lbp_encode = pooling(lbp.alpha, lbp.n);
 
@@ -49,22 +45,25 @@ toc
 
         % Multi-class Adaboost by SAMME
         inst = {sift_encode, lbp_encode, color_encode, gabor_encode};
-        samme(label, inst, f)
+        [vote, base, top_acc] = samme(label, inst, f);
+
+        vote
+        top_acc
         break
     end
 end
 
-function samme(label, inst, fold)
+function [vote, base, top_acc] = samme(label, inst, fold)
     label = double(label);
     train_list = fold.train;
     test_list = fold.test;
 
     % Write subproblem for grid.py to search best parameter
-    for idx = 1:length(inst)
-        filename = ['feature_', num2str(idx), '.train'];
-        train_inst = sparse(inst{idx}(:, train_list)')
-        libsvmwrite(filename, label(train_list), train_inst);
-    end
+    %for idx = 1:length(inst)
+    %    filename = ['feature_', num2str(idx), '.train'];
+    %    train_inst = sparse(inst{idx}(:, train_list)')
+    %    libsvmwrite(filename, label(train_list), train_inst);
+    %end
     train_option = {'-c 1 -g 0.0010 -b 1 -q', '-c 1 -g 0.0005 -b 1 -q', ...
                     '-c 1 -g 0.0007 -b 1 -q', '-c 1 -g 0.0010 -b 1 -q', };
     val_option = '-b 1 -q';
@@ -98,11 +97,32 @@ function samme(label, inst, fold)
         score = w' * is_correct;
         [err, weak] = min(1-score);
 
-        alpha = log((1-err)/err) + log(num_category);
-        w_new = w.*exp(alpha*(is_correct(:, weak) ~= true));
-        w = w_new/sum(w_new);
-        vote(weak) = vote(weak)+alpha;
+        alpha = log((1-err)/err) + log(num_category-1);
+        if abs(alpha) < 1e-10
+            break
+        else
+            w_new = w.*exp(alpha*(is_correct(:, weak) ~= true));
+            w = w_new/sum(w_new);
+            vote(weak) = vote(weak)+alpha;
+        end
     end
-    vote
+
+    % Testing with weight
+    num_test = length(test_list);
+    prob_est = zeros(num_test, num_category);
+    test_label = label(test_list)';
+    for base_idx = 1:length(base)
+        test_inst = sparse(inst{base_idx}(:, test_list)');
+        [g, ac, p] = svmpredict(test_label, test_inst, base(idx), test_option);
+        prob_est = prob_est + vote(base_idx)*p;
+    end
+
+    % Calculate top-N accuracy
+    [~, rank] = sort(prob_est, 2, 'descend');
+    acc = zeros(1, num_test);
+    for rank_idx = 1:size(rank, 2)
+        acc(rank_idx) = sum(rank(:, rank_idx) == test_label)/num_test;
+    end
+    top_acc = cumsum(acc);
 end
 
