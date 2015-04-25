@@ -20,6 +20,7 @@ function baseline(image_list)
         f = struct('train', folds(v).train, 'test', folds(v).test, 'val', []);
         label = double([dataset.label]');
         encode = struct('sift', [], 'lbp', [], 'color', [], 'gabor', []);
+        encode_name = fieldnames(encode);
 
         % SIFT descriptors with sparse coding
         sift = struct('dim', 1024/512, 'p', [], 'dict', [], 'alpha', [], 'n', []);
@@ -41,12 +42,11 @@ function baseline(image_list)
         lbp.n = [dataset.lbp_num];
         encode.lbp = sparse(pooling(lbp.alpha, lbp.n)');
 
-        % Encode color histogram & Gabor filter bank response
+        % Color histogram & Gabor filter bank response
         encode.color = sparse([dataset.color]');
         encode.gabor = sparse([dataset.gabor]');
 
         % Write subproblem for grid.py to search best parameter
-        %encode_name = fieldnames(encode);
         %for idx = 1:numel(encode_name)
         %    name = encode_name{idx};
         %    filename = [dataset_name, '_', name, '.train'];
@@ -59,26 +59,25 @@ function baseline(image_list)
         f.train = setdiff(f.train, f.val);
 
         % Learn RBF-SVM classifier as base learner
-        train_option = struct('sift', '-c 2048 -g 2 -b 1 -q', ...
-                              'lpb', '-c 2048 -g 0.5 -b 1 -q', ...
-                              'color', '-c 32 -g 0.008 -b 1 -q', ...
-                              'gabor', '-c 32 -g 0.0005 -b 1 -q');
+        option = struct('sift', '-c 32 -g 8 -b 1 -q', ...
+                        'lbp', '-c 32768 -g 0.5 -b 1 -q', ...
+                        'color', '-c 8 -g 0.003 -b 1 -q', ...
+                        'gabor', '-c 8 -g 0.002 -b 1 -q');
         train_label = label(f.train);
         for idx = 1:numel(encode_name)
             name = encode_name{idx};
             train_inst = encode.(name)(f.train, :);
-            base(idx) = svmtrain(train_label, train_inst, train_option.(name));
+            base.(name) = svmtrain(train_label, train_inst, option.(name));
         end
 
-        % Multi-class Adaboost by SAMME
-        %inst = {sift_encode, lbp_encode, color_encode, gabor_encode};
-        %[vote, base, top_acc(v, :)] = samme(label, inst, f);
+        % Linear blending by multi-class Adaboost with SAMME
+        t_max = 5000/500;
+        ballot = linear_blend(t_max, base, label, encode, f);
+
         break
     end
     %[top_acc(:, 1:5); mean(top_acc(:, 1:5))]
 end
-
-function samme_new
 
 
 function [vote, base, top_acc] = samme(label, inst, fold)
