@@ -4,6 +4,8 @@ function val_list = extract_val_list(label, train_list, num_fold)
     for c = 1:length(categories)
         category_list = train_list(label(train_list)==categories(c));
         category_len = length(category_list);
+
+        % Ensure training set and validation set is not empty if possible
         val_num = floor(category_len/num_fold);
         if val_num == 0 && category_len > 1
             val_num = 1;

@@ -3,11 +3,12 @@ function baseline(image_list)
     dataset = parse_image_list(image_list);
 
     % Extract descriptors if mat-file of dataset doesn't exist
-    dataset_mat = [strrep(image_list, '.list', ''), '.mat'];
+    dataset_name = strrep(image_list, '.list', '');
+    dataset_mat = [dataset_name, '.mat'];
     if exist(dataset_mat, 'file') ~= 2
         norm_size = [256 256];
         dataset = extract_descriptors(dataset, norm_size);
-        save(dataset_mat, '-v7.3');
+        %save(dataset_mat, '-v7.3');
     else
         load(dataset_mat);
     end
@@ -16,58 +17,81 @@ function baseline(image_list)
     num_fold = 5;
     folds = cross_validation(dataset, num_fold);
     for v = 1:num_fold
-        f = struct('train', folds(v).train, 'test', folds(v).test, 'v', v);
-        label = [dataset.label];
+        f = struct('train', folds(v).train, 'test', folds(v).test, 'val', []);
+        label = double([dataset.label]');
+        encode = struct('sift', [], 'lbp', [], 'color', [], 'gabor', []);
 
         % SIFT descriptors with sparse coding
-        sift = struct('dim', 1024, 'p', [], 'dict', [], 'alpha', [], 'n', []);
+        sift = struct('dim', 1024/512, 'p', [], 'dict', [], 'alpha', [], 'n', []);
         sift.p = struct('K', sift.dim, 'lambda', 0.5, 'lambda2', 0, ...
-                        'iter', 1000, 'mode', 2, 'modeD', 0, ...
+                        'iter', 1000/1000, 'mode', 2, 'modeD', 0, ...
                         'modeParam', 0, 'clean', true, 'numThreads', 4);
         sift.dict = mexTrainDL_Memory([dataset(f.train).sift], sift.p);
         sift.alpha = mexLasso([dataset.sift], sift.dict, sift.p);
         sift.n = [dataset.sift_num];
-        sift_encode = pooling(sift.alpha, sift.n);
+        encode.sift = sparse(pooling(sift.alpha, sift.n)');
 
         % LBP descriptors with sparse coding
-        lbp = struct('dim', 2048, 'p', [], 'dict', [], 'alpha', [], 'n', []);
+        lbp = struct('dim', 2048/512, 'p', [], 'dict', [], 'alpha', [], 'n', []);
         lbp.p = struct('K', lbp.dim, 'lambda', 0.25, 'lambda2', 0, ...
-                       'iter', 1000, 'mode', 2, 'modeD', 0, ...
+                       'iter', 1000/1000, 'mode', 2, 'modeD', 0, ...
                        'modeParam', 0, 'clean', true, 'numThreads', 4);
         lbp.dict = mexTrainDL_Memory([dataset(f.train).lbp], lbp.p);
         lbp.alpha = mexLasso([dataset.lbp], lbp.dict, lbp.p);
         lbp.n = [dataset.lbp_num];
-        lbp_encode = pooling(lbp.alpha, lbp.n)
+        encode.lbp = sparse(pooling(lbp.alpha, lbp.n)');
 
         % Encode color histogram & Gabor filter bank response
-        color_encode = [dataset.color];
-        gabor_encode = [dataset.gabor];
+        encode.color = sparse([dataset.color]');
+        encode.gabor = sparse([dataset.gabor]');
+
+        % Write subproblem for grid.py to search best parameter
+        %encode_name = fieldnames(encode);
+        %for idx = 1:numel(encode_name)
+        %    name = encode_name{idx};
+        %    filename = [dataset_name, '_', name, '.train'];
+        %    libsvmwrite(filename, label(f.train), encode.(name)(f.train, :));
+        %end
+
+        % Extract validation set for linear blending on base learner
+        num_fold_val = 4;
+        f.val = extract_val_list(label, f.train, num_fold_val);
+        f.train = setdiff(f.train, f.val);
+
+        % Learn RBF-SVM classifier as base learner
+        train_option = struct('sift', '-c 2048 -g 2 -b 1 -q', ...
+                              'lpb', '-c 2048 -g 0.5 -b 1 -q', ...
+                              'color', '-c 32 -g 0.008 -b 1 -q', ...
+                              'gabor', '-c 32 -g 0.0005 -b 1 -q');
+        train_label = label(f.train);
+        for idx = 1:numel(encode_name)
+            name = encode_name{idx};
+            train_inst = encode.(name)(f.train, :);
+            base(idx) = svmtrain(train_label, train_inst, train_option.(name));
+        end
 
         % Multi-class Adaboost by SAMME
-        inst = {sift_encode, lbp_encode, color_encode, gabor_encode};
-        [vote, base, top_acc] = samme(label, inst, f);
-
-        vote
-        top_acc
+        %inst = {sift_encode, lbp_encode, color_encode, gabor_encode};
+        %[vote, base, top_acc(v, :)] = samme(label, inst, f);
         break
     end
+    %[top_acc(:, 1:5); mean(top_acc(:, 1:5))]
 end
+
+function samme_new
+
 
 function [vote, base, top_acc] = samme(label, inst, fold)
     label = double(label);
     train_list = fold.train;
     test_list = fold.test;
 
-    % Write subproblem for grid.py to search best parameter
-    for idx = 1:length(inst)
-        filename = ['subproblem_', num2str(idx), '.train'];
-        train_inst = sparse(inst{idx}(:, train_list)');
-        libsvmwrite(filename, label(train_list)', train_inst);
-    end
-    train_option = {'-c 1 -g 0.0010 -b 1 -q', '-c 1 -g 0.0005 -b 1 -q', ...
-                    '-c 1 -g 0.0007 -b 1 -q', '-c 1 -g 0.0010 -b 1 -q', };
-    val_option = '-b 1 ';
-    test_option = '-b 1 ';
+    train_option = {'-c 2048 -g 2      -b 1 -q', ...
+                    '-c 2048 -g 0.5    -b 1 -q', ...
+                    '-c 32   -g 0.008  -b 1 -q', ...
+                    '-c 32   -g 0.0005 -b 1 -q'};
+    val_option = '-b 1';
+    test_option = '-b 1';
 
     % Extract validation set for boosting
     num_fold = 4;
