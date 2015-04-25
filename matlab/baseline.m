@@ -7,7 +7,7 @@ function baseline(image_list)
     if exist(dataset_mat, 'file') ~= 2
         norm_size = [256 256];
         dataset = extract_descriptors(dataset, norm_size);
-        save(dataset_mat, '-v7.3');
+        %save(dataset_mat, '-v7.3');
     else
         load(dataset_mat);
     end
@@ -66,8 +66,8 @@ function [vote, base, top_acc] = samme(label, inst, fold)
     end
     train_option = {'-c 1 -g 0.0010 -b 1 -q', '-c 1 -g 0.0005 -b 1 -q', ...
                     '-c 1 -g 0.0007 -b 1 -q', '-c 1 -g 0.0010 -b 1 -q', };
-    val_option = '-b 1 -q';
-    test_option = '-b 1 -q';
+    val_option = '-b 1 ';
+    test_option = '-b 1 ';
 
     % Extract validation set for boosting
     num_fold = 4;
