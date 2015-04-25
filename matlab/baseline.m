@@ -7,7 +7,7 @@ function baseline(image_list)
     if exist(dataset_mat, 'file') ~= 2
         norm_size = [256 256];
         dataset = extract_descriptors(dataset, norm_size);
-        %save(dataset_mat, '-v7.3');
+        save(dataset_mat, '-v7.3');
     else
         load(dataset_mat);
     end
@@ -60,9 +60,9 @@ function [vote, base, top_acc] = samme(label, inst, fold)
 
     % Write subproblem for grid.py to search best parameter
     for idx = 1:length(inst)
-        filename = ['feature_', num2str(idx), '.train'];
+        filename = ['subproblem_', num2str(idx), '.train'];
         train_inst = sparse(inst{idx}(:, train_list)');
-        libsvmwrite(filename, label(train_list), train_inst);
+        libsvmwrite(filename, label(train_list)', train_inst);
     end
     train_option = {'-c 1 -g 0.0010 -b 1 -q', '-c 1 -g 0.0005 -b 1 -q', ...
                     '-c 1 -g 0.0007 -b 1 -q', '-c 1 -g 0.0010 -b 1 -q', };
