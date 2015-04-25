@@ -20,22 +20,26 @@ function baseline(image_list)
         label = [dataset.label];
 
         % SIFT descriptors with sparse coding
-        sift = struct('dim', 1024/512, 'p', [], 'dict', [], 'alpha', [], 'n', []);
+        sift = struct('dim', 1024, 'p', [], 'dict', [], 'alpha', [], 'n', []);
         sift.p = struct('K', sift.dim, 'lambda', 1, 'lambda2', 0, ...
-                        'iter', 1000/1000, 'mode', 2, 'modeD', 0, ...
+                        'iter', 1000, 'mode', 2, 'modeD', 0, ...
                         'modeParam', 0, 'clean', true, 'numThreads', 4);
         sift.dict = mexTrainDL_Memory([dataset(f.train).sift], sift.p);
+tic
         sift.alpha = mexLasso([dataset.sift], sift.dict, sift.p);
+toc
         sift.n = [dataset.sift_num];
         sift_encode = pooling(sift.alpha, sift.n);
 
         % LBP descriptors with sparse coding
-        lbp = struct('dim', 2048/512, 'p', [], 'dict', [], 'alpha', [], 'n', []);
-        lbp.p = struct('K', lbp.dim, 'lambda', 0.1, 'lambda2', 0, ...
-                       'iter', 1000/1000, 'mode', 2, 'modeD', 0, ...
+        lbp = struct('dim', 2048, 'p', [], 'dict', [], 'alpha', [], 'n', []);
+        lbp.p = struct('K', lbp.dim, 'lambda', 1, 'lambda2', 0, ...
+                       'iter', 1000, 'mode', 2, 'modeD', 0, ...
                        'modeParam', 0, 'clean', true, 'numThreads', 4);
         lbp.dict = mexTrainDL_Memory([dataset(f.train).lbp], lbp.p);
+tic
         lbp.alpha = mexLasso([dataset.lbp], lbp.dict, lbp.p);
+toc
         lbp.n = [dataset.lbp_num];
         lbp_encode = pooling(lbp.alpha, lbp.n);
 
@@ -56,14 +60,14 @@ function samme(label, inst, fold)
     test_list = fold.test;
 
     % Write subproblem for grid.py to search best parameter
-    %for idx = 1:length(inst)
-    %    filename = ['feature_', num2str(idx), '.train'];
-    %    train_inst = sparse(inst{idx}(:, train_list)')
-    %    libsvmwrite(filename, label(train_list), train_inst);
-    %end
+    for idx = 1:length(inst)
+        filename = ['feature_', num2str(idx), '.train'];
+        train_inst = sparse(inst{idx}(:, train_list)')
+        libsvmwrite(filename, label(train_list), train_inst);
+    end
     train_option = {'-c 1 -g 0.0010 -b 1 -q', '-c 1 -g 0.0005 -b 1 -q', ...
                     '-c 1 -g 0.0007 -b 1 -q', '-c 1 -g 0.0010 -b 1 -q', };
-    val_option = '-b 0 -q';
+    val_option = '-b 1 -q';
     test_option = '-b 1 -q';
 
     % Extract validation set for boosting
@@ -99,5 +103,6 @@ function samme(label, inst, fold)
         w = w_new/sum(w_new);
         vote(weak) = vote(weak)+alpha;
     end
+    vote
 end
 
