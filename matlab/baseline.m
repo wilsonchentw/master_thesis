@@ -21,7 +21,7 @@ function baseline(image_list)
 
         % SIFT descriptors with sparse coding
         sift = struct('dim', 1024, 'p', [], 'dict', [], 'alpha', [], 'n', []);
-        sift.p = struct('K', sift.dim, 'lambda', 1, 'lambda2', 0, ...
+        sift.p = struct('K', sift.dim, 'lambda', 0.5, 'lambda2', 0, ...
                         'iter', 1000, 'mode', 2, 'modeD', 0, ...
                         'modeParam', 0, 'clean', true, 'numThreads', 4);
         sift.dict = mexTrainDL_Memory([dataset(f.train).sift], sift.p);
@@ -31,13 +31,13 @@ function baseline(image_list)
 
         % LBP descriptors with sparse coding
         lbp = struct('dim', 2048, 'p', [], 'dict', [], 'alpha', [], 'n', []);
-        lbp.p = struct('K', lbp.dim, 'lambda', 1, 'lambda2', 0, ...
+        lbp.p = struct('K', lbp.dim, 'lambda', 0.25, 'lambda2', 0, ...
                        'iter', 1000, 'mode', 2, 'modeD', 0, ...
                        'modeParam', 0, 'clean', true, 'numThreads', 4);
         lbp.dict = mexTrainDL_Memory([dataset(f.train).lbp], lbp.p);
         lbp.alpha = mexLasso([dataset.lbp], lbp.dict, lbp.p);
         lbp.n = [dataset.lbp_num];
-        lbp_encode = pooling(lbp.alpha, lbp.n);
+        lbp_encode = pooling(lbp.alpha, lbp.n)
 
         % Encode color histogram & Gabor filter bank response
         color_encode = [dataset.color];
