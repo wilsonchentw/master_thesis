@@ -8,7 +8,7 @@ function baseline(image_list)
     if exist(dataset_mat, 'file') ~= 2
         norm_size = [256 256];
         dataset = extract_descriptors(dataset, norm_size);
-        %save(dataset_mat, '-v7.3');
+        save(dataset_mat, '-v7.3');
     else
         load(dataset_mat);
     end
@@ -23,9 +23,9 @@ function baseline(image_list)
         encode_name = fieldnames(encode);
 
         % SIFT descriptors with sparse coding
-        sift = struct('dim', 1024/512, 'p', [], 'dict', [], 'alpha', [], 'n', []);
+        sift = struct('dim', 1024, 'p', [], 'dict', [], 'alpha', [], 'n', []);
         sift.p = struct('K', sift.dim, 'lambda', 0.5, 'lambda2', 0, ...
-                        'iter', 1000/10, 'mode', 2, 'modeD', 0, ...
+                        'iter', 1000, 'mode', 2, 'modeD', 0, ...
                         'modeParam', 0, 'clean', true, 'numThreads', 4);
         sift.dict = mexTrainDL_Memory([dataset(f.train).sift], sift.p);
 tic
@@ -37,9 +37,9 @@ tic
 toc
 
         % LBP descriptors with sparse coding
-        lbp = struct('dim', 2048/512, 'p', [], 'dict', [], 'alpha', [], 'n', []);
+        lbp = struct('dim', 2048, 'p', [], 'dict', [], 'alpha', [], 'n', []);
         lbp.p = struct('K', lbp.dim, 'lambda', 0.25, 'lambda2', 0, ...
-                       'iter', 1000/1000, 'mode', 2, 'modeD', 0, ...
+                       'iter', 1000, 'mode', 2, 'modeD', 0, ...
                        'modeParam', 0, 'clean', true, 'numThreads', 4);
         lbp.dict = mexTrainDL_Memory([dataset(f.train).lbp], lbp.p);
 tic
@@ -55,12 +55,12 @@ toc
         encode.gabor = sparse([dataset.gabor]');
 
         % Write subproblem for grid.py to search best parameter
-        %mkdir(dataset_name);
-        %for idx = 1:numel(encode_name)
-        %    name = encode_name{idx};
-        %    filename = [dataset_name, '_', name, '.train'];
-        %    libsvmwrite(filename, label(f.train), encode.(name)(f.train, :));
-        %end
+        mkdir(dataset_name);
+        for idx = 1:numel(encode_name)
+            name = encode_name{idx};
+            filename = [dataset_name, '_', name, '.train'];
+            libsvmwrite(filename, label(f.train), encode.(name)(f.train, :));
+        end
 
         % Extract validation set for linear blending on base learner
         num_fold_val = 4;
@@ -80,7 +80,7 @@ toc
         end
 
         % Linear blending by multi-class Adaboost with SAMME
-        t_max = 5000/500;
+        t_max = 5000;
         ballot = linear_blend(t_max, base, label, encode, f);
 
         % Testing with weighted ballot & probability estimation by libsvm
