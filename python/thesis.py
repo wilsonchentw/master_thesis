@@ -16,16 +16,6 @@ def imshow(image, time=0):
     cv2.waitKey(time)
 
 
-def flatten(nested_list):
-    for element in nested_list:
-        is_iterable = isinstance(element, collections.Iterable)
-        if is_iterable and not isinstance(element, (str, bytes)):
-            for unit in flatten(element):
-                    yield unit
-        else:
-            yield element
-
-
 def normalize_image(image, norm_size, crop=True):
     if not crop:   
         # Directly resize the image without cropping
@@ -112,8 +102,9 @@ if __name__ == "__main__":
             raw_image = cv2.imread(path, cv2.CV_LOAD_IMAGE_COLOR)
 
             # Normalize the image
-            norm_size = (32, 32)
+            norm_size = (320, 320)
             image = normalize_image(raw_image, norm_size, crop=True)
+            imshow(image)
 
             # Calculate color histogram
             #color = cv2.COLOR_BGR2LAB
@@ -122,8 +113,5 @@ if __name__ == "__main__":
             # Gabor filter bank magnitude
             #gabor_magnitude(image, kernel_size=(16, 16))
 
-            # SIFT features
-            #image_matlab = matlab.uint8(image.tolist())
-            #sift = engine.extract_sift(image_matlab)
             break
 
