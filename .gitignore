@@ -1,4 +1,6 @@
-# Ignore dataset-dependent file
+# Ignore dataset-dependent file and directory
+encode_feature
 *.list
 *.mat
-log
+*.train
+*.test

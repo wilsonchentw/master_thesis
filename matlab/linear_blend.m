@@ -25,7 +25,7 @@ function alpha = linear_blend(t_max, base, label, inst, fold)
         score = w'*is_correct;
         [err, weak] = min(1-score);
         alpha = log((1-err)/err) + log(num_category-1);
-        if abs(alpha) < 1e-9
+        if abs(alpha) < 1e-15
             break;
         else
             w = w.*exp(alpha*(is_correct(:, weak) == false));

@@ -8,9 +8,9 @@ function baseline(image_list)
     if exist(dataset_mat, 'file') ~= 2
         norm_size = [256 256];
         dataset = extract_descriptors(dataset, norm_size);
-        save(dataset_mat, '-v7.3');
+        save([dataset_name, '.mat'], '-v7.3');
     else
-        load(dataset_mat);
+        load([dataset_name, '.mat']);
     end
 
     % For each fold, generate features by descriptors
@@ -31,8 +31,8 @@ function baseline(image_list)
 tic
         sift.alpha = mexLasso([dataset.sift], sift.dict, sift.p); 
 toc
-        sift.n = [dataset.sift_num];
 tic
+        sift.n = [dataset.sift_num];
         encode.sift = sparse(pooling(sift.alpha, sift.n)');
 toc
 
@@ -45,8 +45,8 @@ toc
 tic
         lbp.alpha = mexLasso([dataset.lbp], lbp.dict, lbp.p);
 toc
-        lbp.n = [dataset.lbp_num];
 tic
+        lbp.n = [dataset.lbp_num];
         encode.lbp = sparse(pooling(lbp.alpha, lbp.n)');
 toc
 
@@ -54,11 +54,13 @@ toc
         encode.color = sparse([dataset.color]');
         encode.gabor = sparse([dataset.gabor]');
 
-        % Write subproblem for grid.py to search best parameter
+        % Write subproblem for grid.py & warm start
         for idx = 1:numel(encode_name)
             name = encode_name{idx};
-            filename = [dataset_name, '/', name, '_', num2str(v), '.train'];
-            libsvmwrite(filename, label(f.train), encode.(name)(f.train, :));
+            trainfile = [dataset_name, '_', name, '_', num2str(v), '.train'];
+            testfile = [dataset_name, '_', name, '_', num2str(v), '.test'];
+            libsvmwrite(trainfile, label(f.train), encode.(name)(f.train, :));
+            libsvmwrite(testfile, label(f.test), encode.(name)(f.test, :));
         end
 
         % Extract validation set for linear blending on base learner
@@ -67,7 +69,7 @@ toc
         f.train = setdiff(f.train, f.val);
 
         % Learn RBF-SVM classifier as base learner
-        option = struct('sift', '-c 32 -g 8 -b 1 -q', ...
+        option = struct('sift', '-c 2048 -g 8 -b 1 -q', ...
                         'lbp', '-c 2048 -g 8 -b 1 -q', ...
                         'color', '-c 8 -g 0.003 -b 1 -q', ...
                         'gabor', '-c 8 -g 0.002 -b 1 -q');
@@ -81,6 +83,7 @@ toc
         % Linear blending by multi-class Adaboost with SAMME
         t_max = 5000;
         ballot = linear_blend(t_max, base, label, encode, f);
+        ballot_list(v, :) = ballot;
 
         % Testing with weighted ballot & probability estimation by libsvm
         prob_est = zeros(numel(f.test), length(unique(label)));
@@ -102,6 +105,8 @@ toc
         end
         top_acc(v, :) = cumsum(acc);
     end
+
+    % Show experiment result
     top_acc(:, 1:5)
     mean(top_acc(:, 1:5))
 end
