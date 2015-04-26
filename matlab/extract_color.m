@@ -3,7 +3,7 @@ function descriptor = extract_color(image)
     num_bin = 32;
     descriptor = zeros(num_bin, prod(num_block), size(image, 3));
 
-    edges = linspace(0, 255, num_bin+1);
+    edges = linspace(0, 256, num_bin+1);
     for color = 1:size(image, 3)
         channel_image = image(:, :, color);
         block_size = size(channel_image)./num_block;
@@ -14,4 +14,5 @@ function descriptor = extract_color(image)
         end
     end
     descriptor = reshape(descriptor, [], 1);
+    descriptor = descriptor/norm(descriptor);
 end

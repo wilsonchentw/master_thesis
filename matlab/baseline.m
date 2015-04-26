@@ -24,12 +24,12 @@ function baseline(image_list)
 
         % SIFT descriptors with sparse coding
         sift = struct('dim', 1024, 'p', [], 'dict', [], 'alpha', [], 'n', []);
-        sift.p = struct('K', sift.dim, 'lambda', 0.5, 'lambda2', 0, ...
+        sift.p = struct('K', sift.dim, 'lambda', 1, 'lambda2', 0, ...
                         'iter', 1000, 'mode', 2, 'modeD', 0, ...
                         'modeParam', 0, 'clean', true, 'numThreads', 4);
         sift.dict = mexTrainDL_Memory([dataset(f.train).sift], sift.p);
 tic
-        sift.alpha = mexLasso([dataset.sift], sift.dict, sift.p);
+        sift.alpha = mexLasso([dataset.sift], sift.dict, sift.p); 
 toc
         sift.n = [dataset.sift_num];
 tic
@@ -55,10 +55,9 @@ toc
         encode.gabor = sparse([dataset.gabor]');
 
         % Write subproblem for grid.py to search best parameter
-        mkdir(dataset_name);
         for idx = 1:numel(encode_name)
             name = encode_name{idx};
-            filename = [dataset_name, '_', name, '.train'];
+            filename = [dataset_name, '/', name, '_', num2str(v), '.train'];
             libsvmwrite(filename, label(f.train), encode.(name)(f.train, :));
         end
 
@@ -87,7 +86,7 @@ toc
         prob_est = zeros(numel(f.test), length(unique(label)));
         test_label = label(f.test);
         for base_idx = 1:numel(encode_name)
-            name = encode_name{idx};
+            name = encode_name{base_idx};
             test_inst = encode.(name)(f.test, :);
             model = base.(name);
             [g, acc, p] = svmpredict(test_label, test_inst, model, '-b 1');
