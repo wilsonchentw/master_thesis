@@ -4,7 +4,6 @@ function alpha = linear_blend(t_max, base, label, inst, fold)
     inst_name = fieldnames(inst);
     num_inst = numel(inst_name);
 
-    % Only choose validation set
     label = label(fold.val);
     for idx = 1:num_inst
         inst.(inst_name{idx}) = inst.(inst_name{idx})(fold.val, :);

@@ -1,3 +1,4 @@
 # Ignore dataset-dependent file
 *.list
 *.mat
+log
