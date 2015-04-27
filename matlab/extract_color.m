@@ -10,9 +10,9 @@ function descriptor = extract_color(image)
         block = im2col(channel_image, block_size, 'distinct');
         for idx = 1:size(block, 2)
             hist = histcounts(block(:, idx), edges)';
-            descriptor(:, idx, color) = hist/norm(hist);
+            descriptor(:, idx, color) = hist;
         end
     end
     descriptor = reshape(descriptor, [], 1);
-    descriptor = descriptor/norm(descriptor);
+    descriptor = descriptor/sum(descriptor);
 end
