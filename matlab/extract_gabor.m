@@ -1,6 +1,6 @@
 function descriptor = extract_gabor(image)
     num_block = [4 4];
-    ksize = [15 15];
+    ksize = [9 9];
     theta = [0:5]*pi/6;
     gamma = 1.0;
     lambd = min(ksize)./[1:5];

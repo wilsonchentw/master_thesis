@@ -1,5 +1,5 @@
 # Ignore dataset-dependent file and directory
-encode_feature
+legacy
 *.list
 *.mat
 *.train

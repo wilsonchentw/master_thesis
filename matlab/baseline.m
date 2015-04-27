@@ -24,7 +24,7 @@ function baseline(image_list)
 
         % SIFT descriptors with sparse coding
         sift = struct('dim', 1024, 'p', [], 'dict', [], 'alpha', [], 'n', []);
-        sift.p = struct('K', sift.dim, 'lambda', 1, 'lambda2', 0, ...
+        sift.p = struct('K', sift.dim, 'lambda', 0.25, 'lambda2', 0, ...
                         'iter', 1000, 'mode', 2, 'modeD', 0, ...
                         'modeParam', 0, 'clean', true, 'numThreads', 4);
         sift.dict = mexTrainDL_Memory([dataset(f.train).sift], sift.p);
@@ -104,10 +104,9 @@ toc
             acc(rank_idx) = sum(rank(:, rank_idx) == test_label)/num_test;
         end
         top_acc(v, :) = cumsum(acc);
-    end
 
-    % Show experiment result
-    top_acc(:, 1:5)
-    mean(top_acc(:, 1:5))
+        % Show experiment result
+        [top_acc(:, 1:5); mean(top_acc(:, 1:5), 1)]
+    end
 end
 
