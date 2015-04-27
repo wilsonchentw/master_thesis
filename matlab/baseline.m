@@ -68,6 +68,7 @@ toc
         f.val = extract_val_list(label, f.train, num_fold_val);
         f.train = setdiff(f.train, f.val);
 
+tic
         % Learn RBF-SVM classifier as base learner
         option = struct('sift', '-c 2048 -g 8 -b 1 -q', ...
                         'lbp', '-c 2048 -g 8 -b 1 -q', ...
@@ -79,12 +80,14 @@ toc
             train_inst = encode.(name)(f.train, :);
             base.(name) = svmtrain(train_label, train_inst, option.(name));
         end
-
+toc
+tic
         % Linear blending by multi-class Adaboost with SAMME
         t_max = 5000;
         ballot = linear_blend(t_max, base, label, encode, f);
         ballot_list(v, :) = ballot;
-
+toc
+tic
         % Testing with weighted ballot & probability estimation by libsvm
         prob_est = zeros(numel(f.test), length(unique(label)));
         test_label = label(f.test);
@@ -95,6 +98,7 @@ toc
             [g, acc, p] = svmpredict(test_label, test_inst, model, '-b 1');
             prob_est = prob_est + ballot.(name)*p;
         end
+toc
 
         % Calculate top-N accuracy
         num_test = numel(f.test);
@@ -107,6 +111,8 @@ toc
 
         % Show experiment result
         [top_acc(:, 1:5); mean(top_acc(:, 1:5), 1)]
+break
     end
+
 end
 
