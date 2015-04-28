@@ -28,13 +28,9 @@ function baseline(image_list)
                         'iter', 1000, 'mode', 2, 'modeD', 0, ...
                         'modeParam', 0, 'clean', true, 'numThreads', 4);
         sift.dict = mexTrainDL_Memory([dataset(f.train).sift], sift.p);
-tic
         sift.alpha = mexLasso([dataset.sift], sift.dict, sift.p); 
-toc
-tic
         sift.n = [dataset.sift_num];
         encode.sift = sparse(pooling(sift.alpha, sift.n)');
-toc
 
         % LBP descriptors with sparse coding
         lbp = struct('dim', 2048, 'p', [], 'dict', [], 'alpha', [], 'n', []);
@@ -42,13 +38,9 @@ toc
                        'iter', 1000, 'mode', 2, 'modeD', 0, ...
                        'modeParam', 0, 'clean', true, 'numThreads', 4);
         lbp.dict = mexTrainDL_Memory([dataset(f.train).lbp], lbp.p);
-tic
         lbp.alpha = mexLasso([dataset.lbp], lbp.dict, lbp.p);
-toc
-tic
         lbp.n = [dataset.lbp_num];
         encode.lbp = sparse(pooling(lbp.alpha, lbp.n)');
-toc
 
         % Color histogram & Gabor filter bank response
         encode.color = sparse([dataset.color]');
@@ -68,11 +60,10 @@ toc
         f.val = extract_val_list(label, f.train, num_fold_val);
         f.train = setdiff(f.train, f.val);
 
-tic
         % Learn RBF-SVM classifier as base learner
-        option = struct('sift', '-c 2048 -g 8 -b 1 -q', ...
+        option = struct('sift', '-c 32 -g 8 -b 1 -q', ...
                         'lbp', '-c 2048 -g 8 -b 1 -q', ...
-                        'color', '-c 8 -g 0.003 -b 1 -q', ...
+                        'color', '-c 128 -g 8 -b 1 -q', ...
                         'gabor', '-c 8 -g 0.002 -b 1 -q');
         train_label = label(f.train);
         for idx = 1:numel(encode_name)
@@ -80,14 +71,12 @@ tic
             train_inst = encode.(name)(f.train, :);
             base.(name) = svmtrain(train_label, train_inst, option.(name));
         end
-toc
-tic
+
         % Linear blending by multi-class Adaboost with SAMME
         t_max = 5000;
         ballot = linear_blend(t_max, base, label, encode, f);
         ballot_list(v, :) = ballot;
-toc
-tic
+
         % Testing with weighted ballot & probability estimation by libsvm
         prob_est = zeros(numel(f.test), length(unique(label)));
         test_label = label(f.test);
@@ -98,7 +87,6 @@ tic
             [g, acc, p] = svmpredict(test_label, test_inst, model, '-b 1');
             prob_est = prob_est + ballot.(name)*p;
         end
-toc
 
         % Calculate top-N accuracy
         num_test = numel(f.test);
@@ -110,9 +98,6 @@ toc
         top_acc(v, :) = cumsum(acc);
 
         % Show experiment result
-        [top_acc(:, 1:5); mean(top_acc(:, 1:5), 1)]
-break
+        [top_acc(:, 1:10); mean(top_acc(:, 1:10), 1)]
     end
-
 end
-
