@@ -1,5 +1,6 @@
 # Ignore dataset-dependent file and directory
 legacy
+
 *.list
 *.mat
 *.train

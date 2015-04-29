@@ -10,6 +10,10 @@ import scipy
 import numpy as np
 import cv2
 import cv2.cv as cv
+import spams
+from svmutil import *
+from liblinearutil import *
+
 
 def imshow(image, time=0):
     cv2.imshow("image", image)
@@ -87,15 +91,17 @@ def gabor_magnitude(image, kernel_size=(16, 16)):
         magnitude = np.sqrt(response_r**2+response_i**2)
         gabor_features.extend([np.mean(magnitude), np.var(magnitude)])
     return gabor_features
-        
+
 
 if __name__ == "__main__":
-   # Parse argument
+
+    # Parse argument
     parser = argparse.ArgumentParser()
     parser.add_argument("fin", metavar="image_list", 
                         help="list with path followed by label")
-    args = parser.parse_args()
 
+    # Start parsing image list
+    args = parser.parse_args()
     with open(args.fin, 'r') as fin:
         for line in fin:
             path, label = line.strip().split(' ')
@@ -104,7 +110,6 @@ if __name__ == "__main__":
             # Normalize the image
             norm_size = (320, 320)
             image = normalize_image(raw_image, norm_size, crop=True)
-            imshow(image)
 
             # Calculate color histogram
             #color = cv2.COLOR_BGR2LAB

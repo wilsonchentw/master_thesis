@@ -1,0 +1,219 @@
+r02922088@linux4:/tmp2/r02922088/master_thesis$ ./experiment.sh ../50data/
+Generate image list with different size ... done !
+r02922088@linux4:/tmp2/r02922088/master_thesis$ ./experiment.sh 50data_full.list
+MATLAB is selecting SOFTWARE OPENGL rendering.
+
+                                              < M A T L A B (R) >
+                                    Copyright 1984-2015 The MathWorks, Inc.
+                                    R2015a (8.5.0.197613) 64-bit (glnxa64)
+                                               February 12, 2015
+
+
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+
+
+        This is a Classroom License for instructional use only.
+        Research and commercial use is prohibited.
+
+ 100 images done.
+ 200 images done.
+ 300 images done.
+ 400 images done.
+ 500 images done.
+ 600 images done.
+ 700 images done.
+ 800 images done.
+ 900 images done.
+1000 images done.
+1100 images done.
+1200 images done.
+1300 images done.
+1400 images done.
+1500 images done.
+1600 images done.
+1700 images done.
+1800 images done.
+1900 images done.
+2000 images done.
+2100 images done.
+2200 images done.
+2300 images done.
+2400 images done.
+2500 images done.
+2600 images done.
+2700 images done.
+2800 images done.
+2900 images done.
+3000 images done.
+3100 images done.
+3200 images done.
+3300 images done.
+3400 images done.
+3500 images done.
+3600 images done.
+3700 images done.
+3800 images done.
+3900 images done.
+4000 images done.
+4100 images done.
+4200 images done.
+4300 images done.
+4400 images done.
+4500 images done.
+4600 images done.
+4700 images done.
+4800 images done.
+4900 images done.
+5000 images done.
+*****Offline Dictionary Learning*****
+num param iterD: 1
+batch size: 1280
+lambda: 0.25
+X: 128 x 1123225
+D: 128 x 1024
+Time elapsed : 610.607
+*****Offline Dictionary Learning*****
+num param iterD: 1
+batch size: 1280
+lambda: 0.25
+X: 58 x 4940000
+D: 58 x 2048
+Time elapsed : 3055.91
+Accuracy = 39.4% (394/1000) (classification)
+Accuracy = 44.8% (448/1000) (classification)
+Accuracy = 25.4% (254/1000) (classification)
+Accuracy = 17.2% (172/1000) (classification)
+Accuracy = 41.3% (413/1000) (classification)
+Accuracy = 44.2% (442/1000) (classification)
+Accuracy = 25.3% (253/1000) (classification)
+Accuracy = 16.8% (168/1000) (classification)
+
+ans =
+
+    0.5790    0.7150    0.7890    0.8450    0.8660    0.8880    0.9050    0.9180    0.9310    0.9410
+    0.5790    0.7150    0.7890    0.8450    0.8660    0.8880    0.9050    0.9180    0.9310    0.9410
+
+*****Offline Dictionary Learning*****
+num param iterD: 1
+batch size: 1280
+lambda: 0.25
+X: 128 x 1124224
+D: 128 x 1024
+Time elapsed : 798.827
+*****Offline Dictionary Learning*****
+num param iterD: 1
+batch size: 1280
+lambda: 0.25
+X: 58 x 4940000
+D: 58 x 2048
+Time elapsed : 4139.42
+Accuracy = 40.4% (404/1000) (classification)
+Accuracy = 46.8% (468/1000) (classification)
+Accuracy = 25.1% (251/1000) (classification)
+Accuracy = 16.9% (169/1000) (classification)
+Accuracy = 39.2% (392/1000) (classification)
+Accuracy = 45.9% (459/1000) (classification)
+Accuracy = 27.1% (271/1000) (classification)
+Accuracy = 15.9% (159/1000) (classification)
+
+ans =
+
+    0.5790    0.7150    0.7890    0.8450    0.8660    0.8880    0.9050    0.9180    0.9310    0.9410
+    0.5880    0.7250    0.7900    0.8310    0.8610    0.8830    0.9010    0.9130    0.9250    0.9370
+    0.5835    0.7200    0.7895    0.8380    0.8635    0.8855    0.9030    0.9155    0.9280    0.9390
+
+*****Offline Dictionary Learning*****
+num param iterD: 1
+batch size: 1280
+lambda: 0.25
+X: 128 x 1121251
+D: 128 x 1024
+Time elapsed : 845.968
+*****Offline Dictionary Learning*****
+num param iterD: 1
+batch size: 1280
+lambda: 0.25
+X: 58 x 4940000
+D: 58 x 2048
+Time elapsed : 4040.14
+Accuracy = 39.2% (392/1000) (classification)
+Accuracy = 47.8% (478/1000) (classification)
+Accuracy = 28.3% (283/1000) (classification)
+Accuracy = 17.9% (179/1000) (classification)
+Accuracy = 39% (390/1000) (classification)
+Accuracy = 46.9% (469/1000) (classification)
+Accuracy = 28.4% (284/1000) (classification)
+Accuracy = 15.5% (155/1000) (classification)
+
+ans =
+
+    0.5790    0.7150    0.7890    0.8450    0.8660    0.8880    0.9050    0.9180    0.9310    0.9410
+    0.5880    0.7250    0.7900    0.8310    0.8610    0.8830    0.9010    0.9130    0.9250    0.9370
+    0.5810    0.7200    0.7900    0.8270    0.8570    0.8870    0.9050    0.9170    0.9300    0.9420
+    0.5827    0.7200    0.7897    0.8343    0.8613    0.8860    0.9037    0.9160    0.9287    0.9400
+
+*****Offline Dictionary Learning*****
+num param iterD: 1
+batch size: 1280
+lambda: 0.25
+X: 128 x 1123104
+D: 128 x 1024
+Time elapsed : 675.518
+*****Offline Dictionary Learning*****
+num param iterD: 1
+batch size: 1280
+lambda: 0.25
+X: 58 x 4940000
+D: 58 x 2048
+Time elapsed : 3544.17
+Accuracy = 39% (390/1000) (classification)
+Accuracy = 46.4% (464/1000) (classification)
+Accuracy = 27.2% (272/1000) (classification)
+Accuracy = 18.1% (181/1000) (classification)
+Accuracy = 37.9% (379/1000) (classification)
+Accuracy = 46.4% (464/1000) (classification)
+Accuracy = 26.1% (261/1000) (classification)
+Accuracy = 18.6% (186/1000) (classification)
+
+ans =
+
+    0.5790    0.7150    0.7890    0.8450    0.8660    0.8880    0.9050    0.9180    0.9310    0.9410
+    0.5880    0.7250    0.7900    0.8310    0.8610    0.8830    0.9010    0.9130    0.9250    0.9370
+    0.5810    0.7200    0.7900    0.8270    0.8570    0.8870    0.9050    0.9170    0.9300    0.9420
+    0.5750    0.7150    0.7940    0.8470    0.8750    0.8900    0.9120    0.9280    0.9360    0.9440
+    0.5807    0.7188    0.7907    0.8375    0.8648    0.8870    0.9058    0.9190    0.9305    0.9410
+
+*****Offline Dictionary Learning*****
+num param iterD: 1
+batch size: 1280
+lambda: 0.25
+X: 128 x 1124428
+D: 128 x 1024
+Time elapsed : 721.696
+*****Offline Dictionary Learning*****
+num param iterD: 1
+batch size: 1280
+lambda: 0.25
+X: 58 x 4940000
+D: 58 x 2048
+Time elapsed : 3677.85
+Accuracy = 36.6% (366/1000) (classification)
+Accuracy = 46.1% (461/1000) (classification)
+Accuracy = 26.8% (268/1000) (classification)
+Accuracy = 16.7% (167/1000) (classification)
+Accuracy = 40% (400/1000) (classification)
+Accuracy = 47.1% (471/1000) (classification)
+Accuracy = 24.9% (249/1000) (classification)
+Accuracy = 17.1% (171/1000) (classification)
+
+ans =
+
+    0.5790    0.7150    0.7890    0.8450    0.8660    0.8880    0.9050    0.9180    0.9310    0.9410
+    0.5880    0.7250    0.7900    0.8310    0.8610    0.8830    0.9010    0.9130    0.9250    0.9370
+    0.5810    0.7200    0.7900    0.8270    0.8570    0.8870    0.9050    0.9170    0.9300    0.9420
+    0.5750    0.7150    0.7940    0.8470    0.8750    0.8900    0.9120    0.9280    0.9360    0.9440
+    0.5770    0.7150    0.8040    0.8380    0.8610    0.8800    0.8970    0.9170    0.9270    0.9370
+    0.5800    0.7180    0.7934    0.8376    0.8640    0.8856    0.9040    0.9186    0.9298    0.9402
+
+
