@@ -1,23 +1,31 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import argparse
+import collections
+import inspect
+import itertools
+import operator
 import os
 import sys
-import argparse
-import itertools
-import collections
-import scipy
-import numpy as np
 import cv2
 import cv2.cv as cv
+import numpy as np
+import scipy
 import spams
 from svmutil import *
 from liblinearutil import *
 
 
 def imshow(image, time=0):
-    cv2.imshow("image", image)
-    cv2.waitKey(time)
+    cv2.namedWindow("image", cv2.WINDOW_NORMAL)
+    if inspect.isgenerator(image):
+        for block in image:
+            cv2.imshow("image", block)
+            cv2.waitKey(time) & 0xFF
+    else:
+        cv2.imshow("image", image)
+        cv2.waitKey(time) & 0xFF
 
 
 def normalize_image(image, norm_size, crop=True):
@@ -72,9 +80,9 @@ def color_histogram(image, color=-1, split=False):
     return hists
 
 
-def gabor_magnitude(image, kernel_size=(16, 16)):
+def gabor_magnitude(image, kernel_size=(9, 9)):
     ksize = tuple(np.array(kernel_size))
-    sigma = [min(ksize)/6*12]
+    sigma = [min(ksize)/6]
     theta = np.linspace(0, np.pi, num=6, endpoint=False)
     lambd = min(ksize)/np.arange(5, 0, -1)
     gamma = [1.0]
@@ -86,11 +94,27 @@ def gabor_magnitude(image, kernel_size=(16, 16)):
         real = cv2.getGaborKernel(ksize, sigma, theta, lambd, gamma, 0)
         imag = cv2.getGaborKernel(ksize, sigma, theta, lambd, gamma, np.pi/2)
 
-        response_r = cv2.filter2D(gray_image, cv.CV_64F, real)
-        response_i = cv2.filter2D(gray_image, cv.CV_64F, imag)
-        magnitude = np.sqrt(response_r**2+response_i**2)
+        response_real = cv2.filter2D(gray_image, cv.CV_64F, real)
+        response_imag = cv2.filter2D(gray_image, cv.CV_64F, imag)
+        magnitude = np.sqrt(response_real**2+response_imag**2)
         gabor_features.extend([np.mean(magnitude), np.var(magnitude)])
     return gabor_features
+
+
+def im2col(image, window, step):
+    shape = image.shape[:2]
+    num_channel = 1 if len(image.shape) == 2 else image.shape[2]
+
+    window, step = np.array(window), np.array(step)
+    num_block = (shape - window) // step + (1, 1)
+    if all(num_block > 0):
+        num_element = window[0] * window[1] * num_channel
+        num_window = num_block[0] * num_block[1]
+
+        col = np.empty([num_window, num_element], dtype=np.uint8, order='C')
+        for idx, block in enumerate(sliding_window(image, window, step)):
+            col[idx] = np.reshape(block, -1, order='A')
+        return col
 
 
 if __name__ == "__main__":
@@ -108,8 +132,16 @@ if __name__ == "__main__":
             raw_image = cv2.imread(path, cv2.CV_LOAD_IMAGE_COLOR)
 
             # Normalize the image
-            norm_size = (320, 320)
+            norm_size = np.array((256, 256))
             image = normalize_image(raw_image, norm_size, crop=True)
+
+            
+            window = (128, 128)
+            step = (128, 128)
+            col = im2col(image, window, step)
+            for idx in range(col.shape[0]):
+                imshow(np.reshape(col.T[:, idx], window + (3,)))
+
 
             # Calculate color histogram
             #color = cv2.COLOR_BGR2LAB
@@ -118,5 +150,6 @@ if __name__ == "__main__":
             # Gabor filter bank magnitude
             #gabor_magnitude(image, kernel_size=(16, 16))
 
+            #imshow(sliding_window(image, window=(8, 8), step=(8, 8)), time=100)
             break
 
