@@ -8,10 +8,13 @@ import itertools
 import operator
 import os
 import sys
+import time
+import warnings
 import cv2
 import cv2.cv as cv
 import numpy as np
 import scipy
+import sklearn
 import spams
 from svmutil import *
 from liblinearutil import *
@@ -37,7 +40,6 @@ def normalize_image(image, norm_size, crop=True):
         height, width, channels = image.shape
         norm_height, norm_width = norm_size
         scale = max(float(norm_height)/height, float(norm_width)/width)
-
         norm_image = cv2.resize(src=image, dsize=(0, 0), fx=scale, fy=scale)
 
         # Crop for central part image
@@ -101,21 +103,47 @@ def gabor_magnitude(image, kernel_size=(9, 9)):
     return gabor_features
 
 
-def im2col(image, window, step):
+def im2row(image, window, step=(1, 1)):
     shape = image.shape[:2]
     num_channel = 1 if len(image.shape) == 2 else image.shape[2]
 
     window, step = np.array(window), np.array(step)
-    num_block = (shape - window) // step + (1, 1)
-    if all(num_block > 0):
-        num_element = window[0] * window[1] * num_channel
-        num_window = num_block[0] * num_block[1]
+    num_window = (shape - window) // step + (1, 1)
+    if all(num_window > 0):
+        num_row = num_window[0] * num_window[1]
+        dim = window[0] * window[1] * num_channel
 
-        col = np.empty([num_window, num_element], dtype=np.uint8, order='C')
+        row = np.empty([num_row, dim], dtype=np.uint8, order='C')
         for idx, block in enumerate(sliding_window(image, window, step)):
-            col[idx] = np.reshape(block, -1, order='A')
-        return col
+            row[idx] = block.reshape(-1, order='C')
+        return row
 
+
+def row2im(row, shape, window, step):
+    num_channel = row.shape[1] // (window[0] * window[1])
+    window, step, shape = tuple(map(np.array, [window, step, shape]))
+    num_window = (shape - window) // step + (1, 1)
+
+    grids =[np.arange(num) for num in num_window]
+    image = np.empty(np.append(shape, num_channel), dtype=np.uint8, order='C')
+    for idx, grid in enumerate(itertools.product(*grids)):
+        block = [slice(a, b) for a, b in zip(grid * step, grid * step + step)]
+        image[block] = row[idx].reshape(window[0], window[1], -1)
+    return image
+
+
+class Image(object):
+    """ Store extracted features and normalized image """
+    norm_size = np.array((256, 256))
+
+    def __init__(self, path, label):
+        self.path = path
+        self.label = label
+    
+        # Normalize the image
+        raw_image = cv2.imread(path, cv2.CV_LOAD_IMAGE_COLOR)
+        self.image = normalize_image(raw_image, self.norm_size, crop=True)
+   
 
 if __name__ == "__main__":
 
@@ -126,30 +154,25 @@ if __name__ == "__main__":
 
     # Start parsing image list
     args = parser.parse_args()
+    warnings.simplefilter(action="ignore", category=FutureWarning)
     with open(args.fin, 'r') as fin:
+        dataset = []
         for line in fin:
             path, label = line.strip().split(' ')
-            raw_image = cv2.imread(path, cv2.CV_LOAD_IMAGE_COLOR)
+            data = Image(path, label)
 
-            # Normalize the image
-            norm_size = np.array((256, 256))
-            image = normalize_image(raw_image, norm_size, crop=True)
+            data.patch = im2row(data.image, window=(8, 8), step=(8, 8))
+            dataset.append(data)
 
-            
-            window = (128, 128)
-            step = (128, 128)
-            col = im2col(image, window, step)
-            for idx in range(col.shape[0]):
-                imshow(np.reshape(col.T[:, idx], window + (3,)))
+        dict_param = {'K': 100, 'lambda1': 1, 'iter': 1, 'numThreads': 4, }
+        patch = np.concatenate([data.patch for data in dataset])
+        patch_dict = spams.trainDL_Memory(patch.T/255.0, **dict_param)
 
+        lasso_param = {'lambda1': 1, 'lambda2': 0, 'numThreads': 4, }
+        alphas = [spams.lasso(data.patch.T/255.0, patch_dict, **lasso_param)
+                  for data in dataset]
 
-            # Calculate color histogram
-            #color = cv2.COLOR_BGR2LAB
-            #color_hist = color_histogram(image, color, split=True)
-
-            # Gabor filter bank magnitude
-            #gabor_magnitude(image, kernel_size=(16, 16))
-
-            #imshow(sliding_window(image, window=(8, 8), step=(8, 8)), time=100)
-            break
-
+        for idx, alpha in enumerate(alphas):
+            row = (patch_dict*alpha*255).T
+            image = row2im(row, Image.norm_size, window=(8, 8), step=(8, 8))
+            imshow(np.hstack([image, dataset[idx].image]))
