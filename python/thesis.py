@@ -49,11 +49,11 @@ def normalize_image(image, norm_size, crop=True):
 
 
 def sliding_window(image, window, step):
-    start = np.zeros(len(window), np.int8)
-    window = np.array(window)
-    stop = np.array(image.shape[0:len(window)])-window+1
-    grids = [np.array(range(a, b, c)) for a, b, c in zip(start, stop, step)]
+    start = np.zeros(len(window), np.int32)
+    stop = np.array(image.shape[:len(window)]) - window + 1
+    grids = [range(a, b, c) for a, b, c in zip(start, stop, step)]
     for offset in itertools.product(*grids):
+        offset = np.array(offset)
         block = [slice(a, b) for a, b in zip(offset, offset+window)]
         yield image[block]
 
@@ -104,14 +104,14 @@ def gabor_magnitude(image, kernel_size=(9, 9)):
 
 
 def im2row(image, window, step=(1, 1)):
-    shape = image.shape[:2]
-    num_channel = 1 if len(image.shape) == 2 else image.shape[2]
+    shape = (1, image.size) if len(image.shape) == 1 else image.shape[:2]
+    num_channel = 1 if len(image.shape) <= 2 else image.shape[2]
 
-    window, step = np.array(window), np.array(step)
+    window, step, shape = tuple(map(np.array, [window, step, shape]))
     num_window = (shape - window) // step + (1, 1)
     if all(num_window > 0):
-        num_row = num_window[0] * num_window[1]
-        dim = window[0] * window[1] * num_channel
+        num_row = np.prod(num_window)
+        dim = np.prod(window) * num_channel
 
         row = np.empty([num_row, dim], dtype=np.uint8, order='C')
         for idx, block in enumerate(sliding_window(image, window, step)):
@@ -120,6 +120,9 @@ def im2row(image, window, step=(1, 1)):
 
 
 def row2im(row, shape, window, step):
+    if len(row.shape) == 1:
+        return row.reshape(window + (-1,))
+
     num_channel = row.shape[1] // (window[0] * window[1])
     window, step, shape = tuple(map(np.array, [window, step, shape]))
     num_window = (shape - window) // step + (1, 1)
@@ -134,7 +137,7 @@ def row2im(row, shape, window, step):
 
 class Image(object):
     """ Store extracted features and normalized image """
-    norm_size = np.array((256, 256))
+    norm_size = np.array((256, 256))/4
 
     def __init__(self, path, label):
         self.path = path
@@ -146,6 +149,7 @@ class Image(object):
    
 
 if __name__ == "__main__":
+    warnings.simplefilter(action="ignore", category=FutureWarning)
 
     # Parse argument
     parser = argparse.ArgumentParser()
@@ -154,7 +158,6 @@ if __name__ == "__main__":
 
     # Start parsing image list
     args = parser.parse_args()
-    warnings.simplefilter(action="ignore", category=FutureWarning)
     with open(args.fin, 'r') as fin:
         dataset = []
         for line in fin:
@@ -172,7 +175,7 @@ if __name__ == "__main__":
         alphas = [spams.lasso(data.patch.T/255.0, patch_dict, **lasso_param)
                   for data in dataset]
 
-        for idx, alpha in enumerate(alphas):
-            row = (patch_dict*alpha*255).T
-            image = row2im(row, Image.norm_size, window=(8, 8), step=(8, 8))
-            imshow(np.hstack([image, dataset[idx].image]))
+        #for idx, alpha in enumerate(alphas):
+        #    row = (patch_dict*alpha*255).T
+        #    image = row2im(row, Image.norm_size, window=(8, 8), step=(8, 8))
+        #    imshow(np.hstack([image, dataset[idx].image]))
