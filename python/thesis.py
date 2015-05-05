@@ -5,6 +5,7 @@ import argparse
 import collections
 import inspect
 import itertools
+import math
 import operator
 import os
 import sys
@@ -113,7 +114,7 @@ def im2row(image, window, step=(1, 1)):
         num_row = np.prod(num_window)
         dim = np.prod(window) * num_channel
 
-        row = np.empty([num_row, dim], dtype=np.uint8, order='C')
+        row = np.empty([num_row, dim], order='C')
         for idx, block in enumerate(sliding_window(image, window, step)):
             row[idx] = block.reshape(-1, order='C')
         return row
@@ -121,32 +122,41 @@ def im2row(image, window, step=(1, 1)):
 
 def row2im(row, shape, window, step):
     if len(row.shape) == 1:
-        return row.reshape(window + (-1,))
+        return row.reshape(tuple(window) + (-1,))
 
     num_channel = row.shape[1] // (window[0] * window[1])
     window, step, shape = tuple(map(np.array, [window, step, shape]))
-    num_window = (shape - window) // step + (1, 1)
+    num_window = (shape - window) // step + np.array((1, 1))
 
     grids =[np.arange(num) for num in num_window]
-    image = np.empty(np.append(shape, num_channel), dtype=np.uint8, order='C')
+    image = np.zeros(np.append(shape, num_channel), order='C')
     for idx, grid in enumerate(itertools.product(*grids)):
+        if idx >= row.shape[0]: break
+
         block = [slice(a, b) for a, b in zip(grid * step, grid * step + step)]
         image[block] = row[idx].reshape(window[0], window[1], -1)
     return image
 
 
+def basis_image(basis, window):
+    basis_min = np.amin(basis, 0)
+    basis_max = np.amax(basis, 0)
+    norm_basis = (basis - basis_min)/(basis_max - basis_min + 1e-15)
+
+    width = math.ceil(math.sqrt(basis.shape[1]))
+    height = math.ceil(basis.shape[1] / width)
+    shape = np.array(window) * np.array((height, width))
+
+    return row2im(norm_basis.T, shape, window, window)
+
+
 class Image(object):
     """ Store extracted features and normalized image """
-    norm_size = np.array((256, 256))/4
 
     def __init__(self, path, label):
         self.path = path
         self.label = label
-    
-        # Normalize the image
-        raw_image = cv2.imread(path, cv2.CV_LOAD_IMAGE_COLOR)
-        self.image = normalize_image(raw_image, self.norm_size, crop=True)
-   
+  
 
 if __name__ == "__main__":
     warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -156,7 +166,7 @@ if __name__ == "__main__":
     parser.add_argument("fin", metavar="image_list", 
                         help="list with path followed by label")
 
-    # Start parsing image list
+    # Parsing image list & extract feature
     args = parser.parse_args()
     with open(args.fin, 'r') as fin:
         dataset = []
@@ -164,10 +174,18 @@ if __name__ == "__main__":
             path, label = line.strip().split(' ')
             data = Image(path, label)
 
-            data.patch = im2row(data.image, window=(8, 8), step=(8, 8))
+            # Normalize the image
+            norm_size = np.array((256, 256))
+            raw_image = cv2.imread(path, cv2.CV_LOAD_IMAGE_COLOR)
+            data.image = normalize_image(raw_image, norm_size, crop=True)
+ 
+            window = np.array((8, 8))
+            step = np.array((8, 8))
+            data.patch = im2row(data.image, window, step)
             dataset.append(data)
 
-        dict_param = {'K': 100, 'lambda1': 1, 'iter': 1, 'numThreads': 4, }
+        # Sparse coding for image patch
+        dict_param = {'K': 100, 'lambda1': 1, 'iter': 5, 'numThreads': 4, }
         patch = np.concatenate([data.patch for data in dataset])
         patch_dict = spams.trainDL_Memory(patch.T/255.0, **dict_param)
 
@@ -175,7 +193,12 @@ if __name__ == "__main__":
         alphas = [spams.lasso(data.patch.T/255.0, patch_dict, **lasso_param)
                   for data in dataset]
 
-        #for idx, alpha in enumerate(alphas):
-        #    row = (patch_dict*alpha*255).T
-        #    image = row2im(row, Image.norm_size, window=(8, 8), step=(8, 8))
-        #    imshow(np.hstack([image, dataset[idx].image]))
+        # Show patch basis normalized image
+        patch_image = basis_image(patch_dict, window)
+        imshow(patch_image)
+
+        # Show reconstruct image
+        for idx, alpha in enumerate(alphas):
+            row = (patch_dict * alpha).T
+            image = row2im(row, norm_size, window, step)
+            imshow(np.hstack([image, dataset[idx].image/255.0]))
