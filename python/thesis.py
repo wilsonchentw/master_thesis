@@ -141,7 +141,7 @@ def row2im(row, shape, window, step):
 def basis_image(basis, window):
     basis_min = np.amin(basis, 0)
     basis_max = np.amax(basis, 0)
-    norm_basis = (basis - basis_min)/(basis_max - basis_min + 1e-15)
+    norm_basis = (basis - basis_min)/(basis_max - basis_min + 1e-12)
 
     width = math.ceil(math.sqrt(basis.shape[1]))
     height = math.ceil(basis.shape[1] / width)
@@ -152,11 +152,16 @@ def basis_image(basis, window):
 
 class Image(object):
     """ Store extracted features and normalized image """
+    norm_size = np.array((256, 256))
 
     def __init__(self, path, label):
         self.path = path
         self.label = label
-  
+
+        # Normalize the image
+        raw_image = cv2.imread(path, cv2.CV_LOAD_IMAGE_COLOR)
+        self.image = normalize_image(raw_image, self.norm_size, crop=True)
+
 
 if __name__ == "__main__":
     warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -174,31 +179,26 @@ if __name__ == "__main__":
             path, label = line.strip().split(' ')
             data = Image(path, label)
 
-            # Normalize the image
-            norm_size = np.array((256, 256))
-            raw_image = cv2.imread(path, cv2.CV_LOAD_IMAGE_COLOR)
-            data.image = normalize_image(raw_image, norm_size, crop=True)
- 
-            window = np.array((8, 8))
-            step = np.array((8, 8))
-            data.patch = im2row(data.image, window, step)
-            dataset.append(data)
+            #window = np.array((8, 8))
+            #step = np.array((8, 8))
+            #data.patch = im2row(data.image, window, step)
+            #dataset.append(data)
 
-        # Sparse coding for image patch
-        dict_param = {'K': 100, 'lambda1': 1, 'iter': 5, 'numThreads': 4, }
-        patch = np.concatenate([data.patch for data in dataset])
-        patch_dict = spams.trainDL_Memory(patch.T/255.0, **dict_param)
+        ## Sparse coding for image patch
+        #dict_param = {'K': 100, 'lambda1': 1, 'iter': 5, 'numThreads': 4, }
+        #patch = np.concatenate([data.patch for data in dataset])
+        #patch_dict = spams.trainDL_Memory(patch.T/255.0, **dict_param)
 
-        lasso_param = {'lambda1': 1, 'lambda2': 0, 'numThreads': 4, }
-        alphas = [spams.lasso(data.patch.T/255.0, patch_dict, **lasso_param)
-                  for data in dataset]
+        #lasso_param = {'lambda1': 1, 'lambda2': 0, 'numThreads': 4, }
+        #alphas = [spams.lasso(data.patch.T/255.0, patch_dict, **lasso_param)
+        #          for data in dataset]
 
-        # Show patch basis normalized image
-        patch_image = basis_image(patch_dict, window)
-        imshow(patch_image)
+        ## Show patch basis normalized image
+        #patch_image = basis_image(patch_dict, window)
+        #imshow(patch_image)
 
-        # Show reconstruct image
-        for idx, alpha in enumerate(alphas):
-            row = (patch_dict * alpha).T
-            image = row2im(row, norm_size, window, step)
-            imshow(np.hstack([image, dataset[idx].image/255.0]))
+        ## Show reconstruct image
+        #for idx, alpha in enumerate(alphas):
+        #    row = (patch_dict * alpha).T
+        #    image = row2im(row, Image.norm_size, window, step)
+        #    imshow(np.hstack([image, dataset[idx].image/255.0]))
