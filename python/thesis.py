@@ -49,14 +49,14 @@ def normalize_image(image, norm_size, crop=True):
         return norm_image[y:y+norm_height, x:x+norm_width]
 
 
-def sliding_window(image, window, step):
+def sliding_window(shape, window, step):
     start = np.zeros(len(window), np.int32)
-    stop = np.array(image.shape[:len(window)]) - window + 1
+    stop = np.array(shape[:len(window)]) - window + 1
     grids = [range(a, b, c) for a, b, c in zip(start, stop, step)]
     for offset in itertools.product(*grids):
         offset = np.array(offset)
         block = [slice(a, b) for a, b in zip(offset, offset+window)]
-        yield image[block]
+        yield block
 
 
 def color_histogram(image, color=-1, split=False):
@@ -104,37 +104,29 @@ def gabor_magnitude(image, kernel_size=(9, 9)):
     return gabor_features
 
 
-def im2row(image, window, step=(1, 1)):
-    shape = (1, image.size) if len(image.shape) == 1 else image.shape[:2]
-    num_channel = 1 if len(image.shape) <= 2 else image.shape[2]
+def im2row(image, window, step):
+    (shape, window, step) = map(np.array, (image.shape[:2], window, step))
+    num_channel = 1 if len(image.shape) == 2 else image.shape[2]
 
-    window, step, shape = tuple(map(np.array, [window, step, shape]))
-    num_window = (shape - window) // step + (1, 1)
+    num_window = (shape - window) // step + np.array((1, 1))
     if all(num_window > 0):
         num_row = np.prod(num_window)
         dim = np.prod(window) * num_channel
-
-        row = np.empty([num_row, dim], order='C')
-        for idx, block in enumerate(sliding_window(image, window, step)):
-            row[idx] = block.reshape(-1, order='C')
+        row = np.empty((num_row, dim), order='C')
+        for idx, block in enumerate(sliding_window(shape, window, step)):
+            row[idx] = image[block].reshape(-1, order='C')
         return row
 
 
 def row2im(row, shape, window, step):
-    if len(row.shape) == 1:
-        return row.reshape(tuple(window) + (-1,))
+    if len(row.shape) == 1: 
+        return row.reshape(tuple(shape) + (-1,))
 
+    shape, window, step = map(np.array, (shape, window, step))
     num_channel = row.shape[1] // (window[0] * window[1])
-    window, step, shape = tuple(map(np.array, [window, step, shape]))
-    num_window = (shape - window) // step + np.array((1, 1))
-
-    grids =[np.arange(num) for num in num_window]
     image = np.zeros(np.append(shape, num_channel), order='C')
-    for idx, grid in enumerate(itertools.product(*grids)):
-        if idx >= row.shape[0]: break
-
-        block = [slice(a, b) for a, b in zip(grid * step, grid * step + step)]
-        image[block] = row[idx].reshape(window[0], window[1], -1)
+    for idx, block in enumerate(sliding_window(shape, window, step)):
+        image[block] = row[idx].reshape(np.append(window, num_channel))
     return image
 
 
@@ -148,6 +140,29 @@ def basis_image(basis, window):
     shape = np.array(window) * np.array((height, width))
 
     return row2im(norm_basis.T, shape, window, window)
+
+
+def histogram_of_gradient(image, num_bin, window, cell):
+    window, cell = np.array(window), np.array(cell)
+
+    sobel_x = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=3)
+    sobel_y = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=3)
+    magnitude, angle = cv2.cartToPolar(sobel_x, sobel_y)
+
+    # Choose largest gradient norm as magnitude
+    largest_idx = magnitude.argmax(axis=2)
+    x, y = np.indices(largest_idx.shape)
+    magnitude = magnitude[x, y, largest_idx]
+    angle = angle[x, y, largest_idx]
+    
+    image_shape = np.array(image.shape[:2])
+    num_block = (image_shape - window) // cell + np.array((1, 1))
+    hist = np.empty((np.prod(num_block), num_bin))
+    for idx, block in enumerate(sliding_window(image_shape, window, cell)):
+        mag, ang = magnitude[block].reshape(-1), angle[block].reshape(-1)
+        hist[idx], edge = np.histogram(ang, num_bin, (0, np.pi*2), weights=mag)
+        hist[idx] = hist[idx] / (np.linalg.norm(hist[idx]) + 1e-15)
+    return hist.reshape(-1)
 
 
 class Image(object):
@@ -179,26 +194,17 @@ if __name__ == "__main__":
             path, label = line.strip().split(' ')
             data = Image(path, label)
 
-            #window = np.array((8, 8))
-            #step = np.array((8, 8))
-            #data.patch = im2row(data.image, window, step)
-            #dataset.append(data)
+            image = np.copy(data.image)/255.0
+            gray_image = cv2.cvtColor(data.image, cv2.COLOR_BGR2GRAY)/255.0
 
-        ## Sparse coding for image patch
-        #dict_param = {'K': 100, 'lambda1': 1, 'iter': 5, 'numThreads': 4, }
-        #patch = np.concatenate([data.patch for data in dataset])
-        #patch_dict = spams.trainDL_Memory(patch.T/255.0, **dict_param)
-
-        #lasso_param = {'lambda1': 1, 'lambda2': 0, 'numThreads': 4, }
-        #alphas = [spams.lasso(data.patch.T/255.0, patch_dict, **lasso_param)
-        #          for data in dataset]
-
-        ## Show patch basis normalized image
-        #patch_image = basis_image(patch_dict, window)
-        #imshow(patch_image)
-
-        ## Show reconstruct image
-        #for idx, alpha in enumerate(alphas):
-        #    row = (patch_dict * alpha).T
-        #    image = row2im(row, Image.norm_size, window, step)
-        #    imshow(np.hstack([image, dataset[idx].image/255.0]))
+            num_bin = 8
+            window = (32, 32)
+            cell = (16, 16)
+            hog = histogram_of_gradient(image, num_bin, window, cell)
+ 
+            #gauss_pyramid = [image]
+            #for idx in range(5):
+            #    laplace = cv2.Laplacian(gray_image, cv2.CV_64F)
+            #    gray_image = cv2.pyrDown(gray_image)
+            #    gauss_pyramid.append(gray_image)
+            #    imshow(laplace)
