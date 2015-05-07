@@ -16,6 +16,7 @@ import cv2.cv as cv
 import numpy as np
 import scipy
 import sklearn
+from sklearn.cross_validation import StratifiedKFold
 import spams
 from svmutil import *
 from liblinearutil import *
@@ -49,9 +50,10 @@ def normalize_image(image, norm_size, crop=True):
         return norm_image[y:y+norm_height, x:x+norm_width]
 
 
-def sliding_window(shape, window, step):
-    start = np.zeros(len(window), np.int32)
-    stop = np.array(shape[:len(window)]) - window + 1
+def sliding_window(shape, window=(1, 1), step=(1, 1)):
+    num_dim = len(tuple(window))
+    start = np.zeros(num_dim, np.int32)
+    stop = np.array(shape[:num_dim]) - window + 1
     grids = [range(a, b, c) for a, b, c in zip(start, stop, step)]
     for offset in itertools.product(*grids):
         offset = np.array(offset)
@@ -122,18 +124,20 @@ def row2im(row, shape, window, step):
     if len(row.shape) == 1: 
         return row.reshape(tuple(shape) + (-1,))
 
-    shape, window, step = map(np.array, (shape, window, step))
     num_channel = row.shape[1] // (window[0] * window[1])
-    image = np.zeros(np.append(shape, num_channel), order='C')
+    shape, window, step = map(np.array, (shape, window, step))
+    window = np.append(window, num_channel)
+
+    image = np.empty(np.append(shape, num_channel), order='C')
     for idx, block in enumerate(sliding_window(shape, window, step)):
-        image[block] = row[idx].reshape(np.append(window, num_channel))
+        image[block] = row[idx].reshape(window)
     return image
 
 
 def basis_image(basis, window):
     basis_min = np.amin(basis, 0)
     basis_max = np.amax(basis, 0)
-    norm_basis = (basis - basis_min)/(basis_max - basis_min + 1e-12)
+    norm_basis = (basis - basis_min)/(basis_max - basis_min + 1e-15)
 
     width = math.ceil(math.sqrt(basis.shape[1]))
     height = math.ceil(basis.shape[1] / width)
@@ -142,27 +146,40 @@ def basis_image(basis, window):
     return row2im(norm_basis.T, shape, window, window)
 
 
-def histogram_of_gradient(image, num_bin, window, cell):
-    window, cell = np.array(window), np.array(cell)
+def histogram_of_gradient(image, bins, block, cell):
+    block_shape = np.array(block)
+    cell_shape = np.array(cell)
 
+    # Solve gradient angle & magnitude
     sobel_x = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=3)
     sobel_y = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=3)
     magnitude, angle = cv2.cartToPolar(sobel_x, sobel_y)
 
-    # Choose largest gradient norm as magnitude
+    # Truncate angle exceed 2PI and quantize into bins
+    angle[angle >= (np.pi * 2)] -= (np.pi * 2)
+    angle = (angle / (np.pi * 2) * bins).astype(int)
+    
+    # For multiple channel, choose largest gradient norm as magnitude
     largest_idx = magnitude.argmax(axis=2)
     x, y = np.indices(largest_idx.shape)
     magnitude = magnitude[x, y, largest_idx]
     angle = angle[x, y, largest_idx]
-    
+
+    # Show
+    #gray_image = np.sum(image * [[[0.114, 0.587, 0.299]]], 2)
+    #mag_norm = (magnitude-magnitude.min())/(magnitude.max()-magnitude.min()+1e-15)
+    #imshow(np.hstack((mag_norm, angle/np.pi/2, gray_image)))
+
     image_shape = np.array(image.shape[:2])
-    num_block = (image_shape - window) // cell + np.array((1, 1))
-    hist = np.empty((np.prod(num_block), num_bin))
-    for idx, block in enumerate(sliding_window(image_shape, window, cell)):
-        mag, ang = magnitude[block].reshape(-1), angle[block].reshape(-1)
-        hist[idx], edge = np.histogram(ang, num_bin, (0, np.pi*2), weights=mag)
-        hist[idx] = hist[idx] / (np.linalg.norm(hist[idx]) + 1e-15)
+    block_num = (image_shape - block_shape) // cell_shape + (1, 1)
+    hist = np.empty((np.prod(block_num), bins))
+    for idx, block in enumerate(sliding_window(image_shape, block_shape, cell_shape)):
+        mag = magnitude[block].reshape(-1)
+        ang = angle[block].reshape(-1)
+        hist[idx] = np.bincount(ang, mag, minlength=bins)
+        hist[idx] /= (np.linalg.norm(hist[idx]) + 1e-15)
     return hist.reshape(-1)
+
 
 
 class Image(object):
@@ -173,10 +190,6 @@ class Image(object):
         self.path = path
         self.label = label
 
-        # Normalize the image
-        raw_image = cv2.imread(path, cv2.CV_LOAD_IMAGE_COLOR)
-        self.image = normalize_image(raw_image, self.norm_size, crop=True)
-
 
 if __name__ == "__main__":
     warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -186,25 +199,49 @@ if __name__ == "__main__":
     parser.add_argument("fin", metavar="image_list", 
                         help="list with path followed by label")
 
-    # Parsing image list & extract feature
+    # Parsing image list
     args = parser.parse_args()
+    dataset = []
     with open(args.fin, 'r') as fin:
-        dataset = []
         for line in fin:
             path, label = line.strip().split(' ')
-            data = Image(path, label)
+            data = Image(path, int(label))
+            dataset.append(data)
 
-            image = np.copy(data.image)/255.0
-            gray_image = cv2.cvtColor(data.image, cv2.COLOR_BGR2GRAY)/255.0
+    # Extract descriptor
+    for data in dataset:
+        # Normalize the image size with cropping
+        raw_image = cv2.imread(data.path, cv2.CV_LOAD_IMAGE_COLOR)
+        image = normalize_image(raw_image, Image.norm_size, crop=True)
 
-            num_bin = 8
-            window = (32, 32)
-            cell = (16, 16)
-            hog = histogram_of_gradient(image, num_bin, window, cell)
- 
-            #gauss_pyramid = [image]
-            #for idx in range(5):
-            #    laplace = cv2.Laplacian(gray_image, cv2.CV_64F)
-            #    gray_image = cv2.pyrDown(gray_image)
-            #    gauss_pyramid.append(gray_image)
-            #    imshow(laplace)
+        # Gamma correction
+        image = np.sqrt(image/255.0)
+
+        num_bin = 8
+        window = np.array((32, 32))
+        cell = np.array((8, 8))
+        hog = histogram_of_gradient(image, num_bin, window, cell)
+
+        #gauss_pyramid = [image]
+        #for idx in range(5):
+        #    laplace = cv2.Laplacian(gray_image, cv2.CV_64F)
+        #    gray_image = cv2.pyrDown(gray_image)
+        #    gauss_pyramid.append(gray_image)
+        #    imshow(laplace)
+
+
+
+
+
+
+    # Do stratified K-fold validation
+    labels = [data.label for data in dataset]
+    folds = StratifiedKFold(labels, n_folds=5, shuffle=True)
+    for train_idx, test_idx in folds:
+        train_data = [dataset[idx] for idx in train_idx]
+        test_data = [dataset[idx] for idx in test_idx]
+
+        #label = [data.label for data in dataset]
+        #hog = [data.hog.tolist() for data in dataset]
+        #model = train(label, hog, "-q")
+        #guess, acc, val = predict(label, hog, model, "")
