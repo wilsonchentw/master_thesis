@@ -146,7 +146,7 @@ def basis_image(basis, window):
     return row2im(norm_basis.T, shape, window, window)
 
 
-def histogram_of_gradient(image, bins, block, cell):
+def get_HOG(image, bins, block, cell):
     block_shape = np.array(block)
     cell_shape = np.array(cell)
 
@@ -165,15 +165,11 @@ def histogram_of_gradient(image, bins, block, cell):
     magnitude = magnitude[x, y, largest_idx]
     angle = angle[x, y, largest_idx]
 
-    # Show
-    #gray_image = np.sum(image * [[[0.114, 0.587, 0.299]]], 2)
-    #mag_norm = (magnitude-magnitude.min())/(magnitude.max()-magnitude.min()+1e-15)
-    #imshow(np.hstack((mag_norm, angle/np.pi/2, gray_image)))
-
     image_shape = np.array(image.shape[:2])
     block_num = (image_shape - block_shape) // cell_shape + (1, 1)
     hist = np.empty((np.prod(block_num), bins))
-    for idx, block in enumerate(sliding_window(image_shape, block_shape, cell_shape)):
+    blocks = sliding_window(image_shape, block_shape, cell_shape)
+    for idx, block in enumerate(blocks):
         mag = magnitude[block].reshape(-1)
         ang = angle[block].reshape(-1)
         hist[idx] = np.bincount(ang, mag, minlength=bins)
@@ -213,14 +209,9 @@ if __name__ == "__main__":
         # Normalize the image size with cropping
         raw_image = cv2.imread(data.path, cv2.CV_LOAD_IMAGE_COLOR)
         image = normalize_image(raw_image, Image.norm_size, crop=True)
+        gamma_image = np.sqrt(image/255.0)    # Gamma correction
 
-        # Gamma correction
-        image = np.sqrt(image/255.0)
-
-        num_bin = 8
-        window = np.array((32, 32))
-        cell = np.array((8, 8))
-        hog = histogram_of_gradient(image, num_bin, window, cell)
+        data.hog = get_HOG(gamma_image, bins=8, block=(16, 16), cell=(8, 8))
 
         #gauss_pyramid = [image]
         #for idx in range(5):
@@ -231,9 +222,6 @@ if __name__ == "__main__":
 
 
 
-
-
-
     # Do stratified K-fold validation
     labels = [data.label for data in dataset]
     folds = StratifiedKFold(labels, n_folds=5, shuffle=True)
@@ -241,7 +229,6 @@ if __name__ == "__main__":
         train_data = [dataset[idx] for idx in train_idx]
         test_data = [dataset[idx] for idx in test_idx]
 
-        #label = [data.label for data in dataset]
-        #hog = [data.hog.tolist() for data in dataset]
-        #model = train(label, hog, "-q")
-        #guess, acc, val = predict(label, hog, model, "")
+
+        #model = train(train_label, train_hog, "-q")
+        #guess, acc, val = predict(test_label, test_hog, model, "")
