@@ -231,7 +231,6 @@ if __name__ == "__main__":
         #    imshow(laplace)
 
 
-    """
     # Do stratified K-fold validation
     labels = [data.label for data in dataset]
     folds = StratifiedKFold(labels, n_folds=5, shuffle=True)
@@ -246,4 +245,3 @@ if __name__ == "__main__":
 
         model = train(train_label, train_hog, "-q")
         guess, acc, val = predict(test_label, test_hog, model, "")
-    """
