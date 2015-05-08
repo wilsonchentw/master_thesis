@@ -24,7 +24,6 @@ export PYTHONPATH=$PYTHONPATH:$SPAMS_PYTHON
 
 # Parse script parameter
 if [[ $# -ne 1 ]] || [[ ! -f $1 && ! -d $1 ]]; then
-  echo "Generate image list of dataset_dir or do experement on image_list"
   echo "Usage: $0 dataset_dir"
   echo "       $0 image_list"
   exit -1
@@ -60,4 +59,4 @@ script_dir=$(cd "$(dirname "$0")" && pwd)
 #matlab -nodesktop -nosplash -singleCompThread -r "$matlab_cmd; quit"
 
 # Start my proposed method
-python thesis/thesis.py $image_list
+python thesis/run.py $image_list

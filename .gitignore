@@ -5,3 +5,6 @@ legacy
 *.mat
 *.train
 *.test
+
+# Ignore byte code compiled by Python
+*.pyc
