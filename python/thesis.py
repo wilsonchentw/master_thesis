@@ -146,24 +146,35 @@ def basis_image(basis, window):
     return row2im(norm_basis.T, shape, window, window)
 
 
-def get_HOG(image, bins, block, cell):
-    block_shape = np.array(block)
-    cell_shape = np.array(cell)
-
+def get_gradient(image):
     # Solve gradient angle & magnitude
     sobel_x = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=3)
     sobel_y = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=3)
     magnitude, angle = cv2.cartToPolar(sobel_x, sobel_y)
+    angle %= (np.pi * 2)    # Truncate angle exceed 2PI
 
-    # Truncate angle exceed 2PI and quantize into bins
-    angle[angle >= (np.pi * 2)] -= (np.pi * 2)
+    return magnitude, angle
+
+
+def get_HOG(image, bins, block, cell):
+    block_shape = np.array(block)
+    cell_shape = np.array(cell)
+
+    # Compute gradient & orientation, then quantize angle int bins
+    magnitude, angle = get_gradient(image)
     angle = (angle / (np.pi * 2) * bins).astype(int)
-    
+
     # For multiple channel, choose largest gradient norm as magnitude
     largest_idx = magnitude.argmax(axis=2)
     x, y = np.indices(largest_idx.shape)
     magnitude = magnitude[x, y, largest_idx]
     angle = angle[x, y, largest_idx]
+
+    # Show normalized magnitude, orientation, and image in a row
+    #norm_mag = cv2.normalize(magnitude, norm_type=cv2.NORM_MINMAX)
+    #norm_mag = np.repeat(np.atleast_3d(norm_mag), 3, 2)
+    #norm_ang = np.repeat(np.atleast_3d(angle.astype(float)/bins), 3, 2)
+    #imshow(np.hstack((norm_mag, norm_ang, image)))
 
     image_shape = np.array(image.shape[:2])
     block_num = (image_shape - block_shape) // cell_shape + (1, 1)
@@ -175,7 +186,6 @@ def get_HOG(image, bins, block, cell):
         hist[idx] = np.bincount(ang, mag, minlength=bins)
         hist[idx] /= (np.linalg.norm(hist[idx]) + 1e-15)
     return hist.reshape(-1)
-
 
 
 class Image(object):
@@ -221,7 +231,7 @@ if __name__ == "__main__":
         #    imshow(laplace)
 
 
-
+    """
     # Do stratified K-fold validation
     labels = [data.label for data in dataset]
     folds = StratifiedKFold(labels, n_folds=5, shuffle=True)
@@ -229,6 +239,11 @@ if __name__ == "__main__":
         train_data = [dataset[idx] for idx in train_idx]
         test_data = [dataset[idx] for idx in test_idx]
 
+        train_label = [data.label for data in train_data]
+        test_label = [data.label for data in test_data]
+        train_hog = [data.hog.tolist() for data in train_data]
+        test_hog = [data.hog.tolist() for data in test_data]
 
-        #model = train(train_label, train_hog, "-q")
-        #guess, acc, val = predict(test_label, test_hog, model, "")
+        model = train(train_label, train_hog, "-q")
+        guess, acc, val = predict(test_label, test_hog, model, "")
+    """

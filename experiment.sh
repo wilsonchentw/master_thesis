@@ -2,16 +2,25 @@
 
 LIBSVM=../libsvm
 LIBLINEAR=../liblinear
-SPAMS_PYTHON=../spams/spams-python/install/lib/python2.7/site-packages/
+SPAMS_PYTHON=../spams/spams-python/install/lib/python2.7/site-packages
+VLFEAT=../vlfeat
+
+# Change relative path into absolute path
+LIBSVM=$(realpath $LIBSVM)
+LIBLINEAR=$(realpath $LIBLINEAR)
+SPAMS_PYTHON=$(realpath $SPAMS_PYTHON)
+VLFEAT=$(realpath $VLFEAT)
 
 # Export environment variable for SPAMS, libsvm and liblinear
 export LIB_GCC=/usr/lib/gcc/x86_64-linux-gnu/4.8
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$LIB_GCC:/
+export LIB_VLFEAT=$VLFEAT/bin/glnxa64/libvl.so
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$LIB_GCC:$LIB_VLFEAT:/
 export LD_PRELOAD=$LIB_GCC/libgfortran.so:$LIB_GCC/libgcc_s.so
 export LD_PRELOAD=$LD_PRELOAD:$LIB_GCC/libstdc++.so:/$LIB_GCC/libgomp.so
-export PYTHONPATH=$PYTHONPATH:$(realpath $LIBSVM/python)
-export PYTHONPATH=$PYTHONPATH:$(realpath $LIBLINEAR/python)
-export PYTHONPATH=$PYTHONPATH:$(realpath $SPAMS_PYTHON)
+export PYTHONPATH=$PYTHONPATH:$LIBSVM/python
+export PYTHONPATH=$PYTHONPATH:$LIBLINEAR/python
+export PYTHONPATH=$PYTHONPATH:$SPAMS_PYTHON
+
 
 # Parse script parameter
 if [[ $# -ne 1 ]] || [[ ! -f $1 && ! -d $1 ]]; then
@@ -50,5 +59,5 @@ script_dir=$(cd "$(dirname "$0")" && pwd)
 #matlab_cmd=$setup_cmd"; baseline $image_list"
 #matlab -nodesktop -nosplash -singleCompThread -r "$matlab_cmd; quit"
 
-# Start my method
+# Start my proposed method
 python python/thesis.py $image_list
