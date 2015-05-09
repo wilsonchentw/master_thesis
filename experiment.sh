@@ -53,10 +53,10 @@ image_list=$1
 script_dir=$(cd "$(dirname "$0")" && pwd)
 
 # Start baseline method
-setup_cmd="addpath(fullfile('$script_dir', 'baseline'))"
-setup_cmd=$setup_cmd"; setup_3rdparty('$script_dir')"
-matlab_cmd=$setup_cmd"; baseline $image_list"
-matlab -nodesktop -nosplash -singleCompThread -r "$matlab_cmd; quit"
+#setup_cmd="addpath(fullfile('$script_dir', 'baseline'))"
+#setup_cmd=$setup_cmd"; setup_3rdparty('$script_dir')"
+#matlab_cmd=$setup_cmd"; baseline $image_list"
+#matlab -nodesktop -nosplash -singleCompThread -r "$matlab_cmd; quit"
 
 # Start my proposed method
-#python thesis/run.py $image_list
+python thesis/run.py $image_list
