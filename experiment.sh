@@ -39,9 +39,9 @@ if [[ -d $1 ]]; then
     exit -1
   else
     echo -n "Generate image list with different size ... "
-    python3 python/split_dataset.py $dataset_path\
+    python3 split_dataset.py $dataset_path\
         -f ${dataset}_full.list -v 100
-    python3 python/split_dataset.py $dataset_path\
+    python3 split_dataset.py $dataset_path\
         -f ${dataset}_small.list ${dataset}_medium.list ${dataset}_large.list\
         -v 5 20 75
     echo "done !"
@@ -53,10 +53,10 @@ image_list=$1
 script_dir=$(cd "$(dirname "$0")" && pwd)
 
 # Start baseline method
-#setup_cmd="addpath(fullfile('$script_dir', 'baseline'))"
-#setup_cmd=$setup_cmd"; setup_3rdparty('$script_dir')"
-#matlab_cmd=$setup_cmd"; baseline $image_list"
-#matlab -nodesktop -nosplash -singleCompThread -r "$matlab_cmd; quit"
+setup_cmd="addpath(fullfile('$script_dir', 'baseline'))"
+setup_cmd=$setup_cmd"; setup_3rdparty('$script_dir')"
+matlab_cmd=$setup_cmd"; baseline $image_list"
+matlab -nodesktop -nosplash -singleCompThread -r "$matlab_cmd; quit"
 
 # Start my proposed method
-python thesis/run.py $image_list
+#python thesis/run.py $image_list
