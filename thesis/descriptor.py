@@ -20,9 +20,10 @@ def get_gradient(image):
     return magnitude, angle
 
 
-def oriented_grad_hist(image, bins, cell):
+def oriented_grad_hist(image, bins, block, step=None):
     image_shape = np.array(image.shape[:2])
-    cell_shape = np.array(cell)
+    block_shape = np.array(block)
+    step = (block if step is None else step)
 
     # Compute gradient & orientation, then quantize angle int bins
     magnitude, angle = get_gradient(image)
@@ -34,14 +35,15 @@ def oriented_grad_hist(image, bins, cell):
     magnitude = magnitude[x, y, largest_idx]
     angle = angle[x, y, largest_idx]
 
-    cell_num = image_shape // cell_shape
-    hist = np.empty((np.prod(cell_num), bins))
-    cells = sliding_window(image_shape, cell_shape, cell_shape)
+    block_num = (image_shape - block_shape) // step + (1, 1)
+    hist = np.empty((np.prod(block_num), bins))
+    cells = sliding_window(image_shape, block_shape, step)
     for idx, cell in enumerate(cells):
         mag = magnitude[cell].reshape(-1)
         ang = angle[cell].reshape(-1)
         hist[idx] = np.bincount(ang, mag, minlength=bins)
-    return hist.reshape(np.append(cell_num, bins))
+
+    return hist.reshape(np.append(block_num, bins))
 
 
 def color_hist(image, color=-1, split=False):

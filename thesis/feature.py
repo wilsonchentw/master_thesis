@@ -8,6 +8,10 @@ from util import *
 __all__ = ["extract_all"]
 
 def extract_HOG(image, bins, cell, block):
+    hog = descriptor.oriented_grad_hist(image, bins, block, cell)
+    return hog.reshape(-1)
+
+    """
     image_shape = np.array(image.shape[:2])
     cell_shape = np.array(cell)
     block_shape = np.array(block)
@@ -25,8 +29,8 @@ def extract_HOG(image, bins, cell, block):
         hist[idx] = np.sum(cell_hist, axis=0)
         hist[idx] /= (np.linalg.norm(hist[idx]) + eps)
 
-    return hist.reshape(-1)
-
+    #return hist.reshape(-1)
+    """
 
 def extract_PHOG(image, bins, cell, level):
     #hog = descriptor.oriented_grad_hist(image, bins, cell)
@@ -51,4 +55,3 @@ def extract_all(dataset):
 
         extract_HOG(image, bins=8, cell=(8, 8), block=(16, 16))
         #extract_PHOG(image, bins=8, cell=(8, 8), level=3)
-        break
