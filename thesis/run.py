@@ -8,7 +8,7 @@ import cv2
 import cv2.cv as cv
 import numpy as np
 
-import descriptor
+import feature
 from util import *
 
 
@@ -36,31 +36,7 @@ if __name__ == "__main__":
             path, label = line.strip().split(' ')
             dataset.append(Image(path, int(label)))
 
-    # Extract descriptor from image
-    for data in dataset:
-        raw_image = cv2.imread(data.path, cv2.CV_LOAD_IMAGE_COLOR)
-
-        # Normalize image size, and modify value range
-        norm_size = np.array((256, 256))
-        image = normalize_image(raw_image, norm_size, crop=True) / 255.0
-        image = np.sqrt(image)   # Gamma correction
-
-        # Extract descriptor
-        for name, feature in descriptor.extract_all(image).iteritems():
-            setattr(data, name, feature)
-            print name, feature.shape
-
-        
-        #gauss_pyramid = [image]
-        #for idx in range(5):
-        #    laplace = cv2.Laplacian(gray_image, cv2.CV_64F)
-        #    gray_image = cv2.pyrDown(gray_image)
-        #    gauss_pyramid.append(gray_image)
-        #    imshow(laplace)
-
-        #svm_write_problem("filename", [0], [hog])
-        break
-
+    feature.extract_all(dataset)
 
 
     """
