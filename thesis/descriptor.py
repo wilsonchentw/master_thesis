@@ -6,7 +6,9 @@ import numpy as np
 
 from util import *
 
-__all__ = ["get_gradient", "get_HOG", "color_hist", "gabor_magnitude"]
+__all__ = [
+    "get_gradient", "get_HOG", "color_hist", "gabor_magnitude", "extract_all", 
+]
 
 def get_gradient(image):
     # Solve gradient angle & magnitude
@@ -41,7 +43,7 @@ def get_HOG(image, bins, block, cell):
         mag = magnitude[block].reshape(-1)
         ang = angle[block].reshape(-1)
         hist[idx] = np.bincount(ang, mag, minlength=bins)
-        hist[idx] /= (np.linalg.norm(hist[idx]) + epsilon)
+        hist[idx] /= (np.linalg.norm(hist[idx]) + eps)
 
     return hist.reshape(-1)
 
@@ -69,7 +71,7 @@ def color_hist(image, color=-1, split=False):
         ranges = np.array(ranges)
         hists = cv2.calcHist([image], channels, None, bins, ranges.ravel())
         hists = cv2.normalize(hists, norm_type=cv2.NORM_L1)
-    return hists
+    return np.array(hists)
 
 
 def gabor_magnitude(image, kernel_size=(11, 11)):
@@ -91,23 +93,21 @@ def gabor_magnitude(image, kernel_size=(11, 11)):
         response_imag = cv2.filter2D(gray_image, cv.CV_64F, imag)
         magnitude = np.sqrt(response_real**2+response_imag**2)
         gabor_features.extend([np.mean(magnitude), np.var(magnitude)])
-    return gabor_features
+    return np.array(gabor_features)
 
 
 def extract_all(image):
-    get_HOG(image, bins=8, block=(16, 16), cell=(8, 8))
-    color_hist(image, color=-1, split=True)
-    gabor_magnitude(image, kernel_size=(3, 3))
-    
-    #gauss_pyramid = [image]
-    #for idx in range(5):
-    #    laplace = cv2.Laplacian(gray_image, cv2.CV_64F)
-    #    gray_image = cv2.pyrDown(gray_image)
-    #    gauss_pyramid.append(gray_image)
-    #    imshow(laplace)
-    pass
-
+    descriptor_dict = {
+        'HOG': get_HOG(image, bins=8, block=(16, 16), cell=(8, 8)), 
+        'color': color_hist(image, color=-1, split=True), 
+        'gabor': gabor_magnitude(image, kernel_size=(3, 3)), 
+    }
+    return descriptor_dict
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("fin", metavar="image_list", 
+                        help="list with path followed by label")
+
     print "descriptor.py as main"

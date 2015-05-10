@@ -1,15 +1,16 @@
 import itertools
+import sys
 
 import cv2
 import cv2.cv as cv
 import numpy as np
 
 __all__ = [
-    "epsilon", "imshow", "normalize_image", "sliding_window", 
-    "im2row", "row2im", 
+    "eps", "imshow", "normalize_image", "sliding_window", 
+    "im2row", "row2im", "svm_write_problem", 
 ]
 
-epsilon = 1e-15
+eps = 1e-15
 
 def imshow(*images, **kargs):
     # Set how long image will show (in milisecond)
@@ -82,3 +83,11 @@ def row2im(row, shape, window, step):
     return image
 
 
+def svm_write_problem(filename, labels, insts):
+    with open(filename) as fout:
+        for label, inst in itertools.izip(labels, insts):
+            feature = [str(label)]
+            for dim, value in enumerate(inst):
+                if abs(value) > eps:
+                    feature.append("{0}:{1}".format(dim, value))
+            fout.write(" ".join(feature) + "\n")

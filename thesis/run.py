@@ -34,8 +34,7 @@ if __name__ == "__main__":
     with open(args.fin, 'r') as fin:
         for line in fin:
             path, label = line.strip().split(' ')
-            data = Image(path, int(label))
-            dataset.append(data)
+            dataset.append(Image(path, int(label)))
 
     # Extract descriptor from image
     for data in dataset:
@@ -43,10 +42,25 @@ if __name__ == "__main__":
 
         # Normalize image size, and modify value range
         norm_size = np.array((256, 256))
-        image = (normalize_image(raw_image, norm_size, crop=True)/255.0)
+        image = normalize_image(raw_image, norm_size, crop=True) / 255.0
         image = np.sqrt(image)   # Gamma correction
 
-        descriptor.extract_all(image)
+        # Extract descriptor
+        for name, feature in descriptor.extract_all(image).iteritems():
+            setattr(data, name, feature)
+            print name, feature.shape
+
+        
+        #gauss_pyramid = [image]
+        #for idx in range(5):
+        #    laplace = cv2.Laplacian(gray_image, cv2.CV_64F)
+        #    gray_image = cv2.pyrDown(gray_image)
+        #    gauss_pyramid.append(gray_image)
+        #    imshow(laplace)
+
+        #svm_write_problem("filename", [0], [hog])
+        break
+
 
 
     """
