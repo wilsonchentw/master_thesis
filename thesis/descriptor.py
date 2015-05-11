@@ -10,13 +10,13 @@ __all__ = [
     "get_gradient", "oriented_grad_hist", "color_hist", "gabor_magnitude", 
 ]
 
-def get_gradient(image):
-    sobel_x = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=3)
-    sobel_y = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=3)
+def get_gradient(image, sign=True):
+    sobel_x = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=1)
+    sobel_y = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=1)
     magnitude, angle = cv2.cartToPolar(sobel_x, sobel_y)
 
-    # Truncate angle exceed 2PI
-    angle %= (np.pi * 2)    
+    # Truncate angle exceed 2PI or PI (if ignore sign of orientation)
+    angle = ((angle % (np.pi * 2)) if sign else (angle % np.pi))
     return magnitude, angle
 
 
@@ -26,10 +26,11 @@ def oriented_grad_hist(image, bins, block, step=None):
     step = (block if step is None else step)
 
     # Compute gradient & orientation, then quantize angle int bins
-    magnitude, angle = get_gradient(image)
-    angle = (angle / (np.pi * 2) * bins).astype(int)
+    magnitude, angle = get_gradient(image, sign=True)
+    angle = (angle / (np.pi * 2.0) * bins).astype(int)
 
     # For multiple channel, choose largest gradient norm as magnitude
+    magnitude, angle = map(np.atleast_3d, (magnitude, angle))
     largest_idx = magnitude.argmax(axis=2)
     x, y = np.indices(largest_idx.shape)
     magnitude = magnitude[x, y, largest_idx]
@@ -37,7 +38,7 @@ def oriented_grad_hist(image, bins, block, step=None):
 
     block_num = (image_shape - block_shape) // step + (1, 1)
     hist = np.empty((np.prod(block_num), bins))
-    cells = sliding_window(image_shape, block_shape, step)
+    cells = list(sliding_window(image_shape, block_shape, step))
     for idx, cell in enumerate(cells):
         mag = magnitude[cell].reshape(-1)
         ang = angle[cell].reshape(-1)
@@ -46,11 +47,11 @@ def oriented_grad_hist(image, bins, block, step=None):
     return hist.reshape(np.append(block_num, bins))
 
 
-def color_hist(image, color=-1, split=False):
+def color_hist(image, color=-1, split=True):
     quantize_range = {
-        -1: ([2, 2, 2], [[0, 1], [0, 1], [0, 1]]), 
-        cv2.COLOR_BGR2LAB: ([2, 2, 2], [[0, 100], [-127, 127], [-127, 127]]), 
-        cv2.COLOR_BGR2HSV: ([2, 2, 2], [[0, 1], [0, 1], [0, 360]]), 
+        -1: ([8, 8, 8], [[0, 1], [0, 1], [0, 1]]), 
+        cv2.COLOR_BGR2LAB: ([8, 8, 8], [[0, 100], [-127, 127], [-127, 127]]), 
+        cv2.COLOR_BGR2HSV: ([8, 8, 8], [[0, 1], [0, 1], [0, 360]]), 
     }
 
     image = image.astype(np.float32)
@@ -58,17 +59,18 @@ def color_hist(image, color=-1, split=False):
     num_channels = (1 if len(image.shape) == 2 else image.shape[2])
     bins, ranges = quantize_range[color]
 
+    # Compensate for exclusive upper boundary
+    ranges = [[pair[0], pair[1] + eps] for pair in ranges]  
+
     hists = [];
     if split:
         for c in range(0, num_channels):
             hist = cv2.calcHist([image], [c], None, [bins[c]], ranges[c])
-            hist = cv2.normalize(hist, norm_type=cv2.NORM_L1)
             hists = np.append(hists, hist)
     else:
         channels = range(0, num_channels)
         ranges = np.array(ranges)
         hists = cv2.calcHist([image], channels, None, bins, ranges.ravel())
-        hists = cv2.normalize(hists, norm_type=cv2.NORM_L1)
     return np.array(hists)
 
 

@@ -10,7 +10,7 @@ __all__ = [
     "im2row", "row2im", "svm_write_problem", 
 ]
 
-eps = 1e-15
+eps = 1e-7
 
 def imshow(*images, **kargs):
     # Set how long image will show (in milisecond)
@@ -44,7 +44,7 @@ def normalize_image(image, norm_size, crop=True):
         return norm_image[y:y+norm_height, x:x+norm_width]
 
 
-def sliding_window(shape, window=(1, 1), step=(1, 1)):
+def sliding_window(shape, window, step):
     num_dim = len(tuple(window))
     start = np.zeros(num_dim, np.int32)
     stop = np.array(shape[:num_dim]) - window + 1
