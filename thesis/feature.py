@@ -1,3 +1,5 @@
+import itertools
+
 import cv2
 import cv2.cv as cv
 import numpy as np
@@ -5,26 +7,31 @@ import numpy as np
 import descriptor
 from util import *
 
-__all__ = [
-    "extract_all", "extract_HOG", "extract_PHOG", "extract_color", 
-    "extract_gabor", 
-]
+__all__ = ["extract_HOG", "extract_PHOG", "extract_color", "extract_gabor", ]
+
 
 def extract_HOG(image, bins, cell, block):
+    # Block overlap to achieve normalization
     hog = descriptor.oriented_grad_hist(image, bins, block, cell)
+
+    # Normalize block to unit in L2-norm
+    hog = hog.reshape(-1, bins)
+    for idx, block in enumerate(hog):
+        hog[idx] = cv2.normalize(block, norm_type=cv2.NORM_L2).reshape(-1)
     return hog.reshape(-1)
 
 
 def extract_PHOG(image, bins, level):
-    # Extract HOG of cell then combine into HOG of block
+    # Extract HOG of cell
     image_shape = np.array(image.shape[:2])
     cell_shape = image_shape // (2 ** (level - 1))
-    hog = descriptor.oriented_grad_hist(image, bins, cell_shape, cell_shape)
-    blocks = []
-    for idx in range(level):
-        block_shape = np.array((1, 1)) * (2 ** idx)
-        blocks += list(sliding_window(hog.shape, block_shape, block_shape))
+    hog = descriptor.oriented_grad_hist(image, bins, cell_shape)
 
+    # Combine cell HOG into block HOG
+    block_shape = [np.array((2 ** idx, 2 ** idx)) for idx in range(level)]
+    level_blocks = [list(sliding_window(hog.shape, block, block)) 
+                    for block in block_shape]
+    blocks = sum(level_blocks, [])
     phog = np.empty((len(blocks), bins))
     for idx, block in enumerate(blocks):
         block_hist = hog[block].reshape(-1, bins)
@@ -32,41 +39,45 @@ def extract_PHOG(image, bins, level):
     return phog.reshape(-1)
 
 
-def extract_color(image, color, split):
-    color_hist = descriptor.color_hist(image, color, split)
-    return color_hist
+def extract_color(image, num_block):
+    bins, ranges = [32, 32, 32], [[0, 1], [0, 1], [0, 1]]
+    block_shape = np.array(image.shape[:2]) // num_block
+    blocks = sliding_window(image.shape, block_shape, block_shape)
+    hists = np.empty((np.prod(num_block), np.sum(bins)))
+    for idx, block in enumerate(blocks):
+        hist = descriptor.color_hist(image, bins, ranges, split=True)
+        hists[idx] = hist.reshape(-1) / np.sum(hist)
+
+    return hists.reshape(-1)
 
 
-def extract_gabor(image, ksize):
-    gabor = descriptor.gabor_magnitude(image, ksize)
-    return gabor
+def extract_gabor(image, num_block):
+    ksize = (15, 15)
+    sigma = min(ksize) / 6.0
+    thetas = np.linspace(0, np.pi, num=6, endpoint=False)
+    lambds = min(ksize) / np.arange(3.0, 5.5, 0.5)
+    gammas = [0.5]
+
+    image_shape = image.shape[:2]
+    block_shape = np.array(image_shape) // num_block
+    gray_image = cv2.cvtColor(image.astype(np.float32), cv2.COLOR_BGR2GRAY)
+    gray_image = gray_image.astype(float)
+
+    param_bank = list(itertools.product(thetas, lambds, gammas))
+    gabor = []
+    for param_idx, param in enumerate(param_bank): 
+        theta, lambd, gamma = param
+        param = {'ksize': ksize, 'sigma': sigma, 
+                 'theta': theta, 'lambd': lambd, 'gamma': gamma}
+        real, imag = descriptor.gabor_response(gray_image, **param)
+
+        # Extract blockwise mean and variance
+        magnitude = np.sqrt((real ** 2) + (imag ** 2))
+        blocks = list(sliding_window(image_shape, block_shape, block_shape))
+        for block in blocks:
+            gabor += [np.mean(magnitude[block]), np.var(magnitude[block])]
+    return np.array(gabor)
 
 
-def extract_all(dataset):
-    for data in dataset:
-        # Normalize image size
-        norm_size = np.array((256, 256))
-        raw_image = cv2.imread(data.path, cv2.CV_LOAD_IMAGE_COLOR)
-        image = normalize_image(raw_image, norm_size, crop=True)
-
-        # Perform contrast limited adaptive histogram equalization on L-channel
-        clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(8, 8))
-        contrast_image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
-        luminance = contrast_image[:, :, 0] / 255.0
-        luminance = cv2.normalize(luminance, norm_type=cv2.NORM_MINMAX) * 255.0
-        contrast_image[:, :, 0] = clahe.apply(luminance.astype(np.uint8))
-        contrast_image = cv2.cvtColor(contrast_image, cv2.COLOR_LAB2BGR)
-        image = contrast_image / 255.0
-
-        extract_HOG(image, bins=8, cell=(8, 8), block=(16, 16))
-        extract_PHOG(image, bins=8, level=3)
-        extract_color(image, color=-1, split=True)
-        extract_gabor(image, ksize=(11, 11))
-
-        #gauss_pyramid = [image]
-        #for idx in range(5):
-        #    laplace = cv2.Laplacian(gray_image, cv2.CV_64F)
-        #    gray_image = cv2.pyrDown(gray_image)
-        #    gauss_pyramid.append(gray_image)
-        #    imshow(laplace)
-
+if __name__ == "__main__":
+    print "feature.py as main"

@@ -1,5 +1,3 @@
-import itertools
-
 import cv2
 import cv2.cv as cv
 import numpy as np
@@ -7,16 +5,17 @@ import numpy as np
 from util import *
 
 __all__ = [
-    "get_gradient", "oriented_grad_hist", "color_hist", "gabor_magnitude", 
+    "get_gradient", "oriented_grad_hist", "color_hist", "gabor_response", 
+    "detect_corner", 
 ]
 
-def get_gradient(image, sign=True):
+def get_gradient(image):
     sobel_x = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=1)
     sobel_y = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=1)
     magnitude, angle = cv2.cartToPolar(sobel_x, sobel_y)
 
     # Truncate angle exceed 2PI or PI (if ignore sign of orientation)
-    angle = ((angle % (np.pi * 2)) if sign else (angle % np.pi))
+    angle %= (np.pi * 2)
     return magnitude, angle
 
 
@@ -26,7 +25,7 @@ def oriented_grad_hist(image, bins, block, step=None):
     step = (block if step is None else step)
 
     # Compute gradient & orientation, then quantize angle int bins
-    magnitude, angle = get_gradient(image, sign=True)
+    magnitude, angle = get_gradient(image)
     angle = (angle / (np.pi * 2.0) * bins).astype(int)
 
     # For multiple channel, choose largest gradient norm as magnitude
@@ -47,58 +46,36 @@ def oriented_grad_hist(image, bins, block, step=None):
     return hist.reshape(np.append(block_num, bins))
 
 
-def color_hist(image, color=-1, split=True):
-    quantize_range = {
-        -1: ([8, 8, 8], [[0, 1], [0, 1], [0, 1]]), 
-        cv2.COLOR_BGR2LAB: ([8, 8, 8], [[0, 100], [-127, 127], [-127, 127]]), 
-        cv2.COLOR_BGR2HSV: ([8, 8, 8], [[0, 1], [0, 1], [0, 360]]), 
-    }
+def color_hist(image, bins, ranges, split=True):
+    # Compensate for exclusive upper boundary
+    ranges = [[pair[0], pair[1] + eps] for pair in ranges]
 
     image = image.astype(np.float32)
-    image = (image if color == -1 else cv2.cv2Color(image, color))
-    num_channels = (1 if len(image.shape) == 2 else image.shape[2])
-    bins, ranges = quantize_range[color]
-
-    # Compensate for exclusive upper boundary
-    ranges = [[pair[0], pair[1] + eps] for pair in ranges]  
-
-    hists = [];
+    num_channel = (1 if len(image.shape) == 2 else image.shape[2])
     if split:
-        for c in range(0, num_channels):
+        hists = []
+        for c in range(num_channel):
             hist = cv2.calcHist([image], [c], None, [bins[c]], ranges[c])
-            hists = np.append(hists, hist)
+            hists.append(hist.reshape(-1))
     else:
-        channels = range(0, num_channels)
-        ranges = np.array(ranges)
-        hists = cv2.calcHist([image], channels, None, bins, ranges.ravel())
+        channels = range(num_channel)
+        ranges = np.array(ranges).ravel()
+        hists = cv2.calcHist([image], channels, None, bins, ranges)
+
     return np.array(hists)
 
 
-def gabor_magnitude(image, kernel_size=(11, 11)):
-    ksize = tuple(np.array(kernel_size))
-    sigma = [min(ksize)/6.0]
-    theta = np.linspace(0, np.pi, num=6, endpoint=False)
-    lambd = min(ksize)/np.arange(5.0, 0.0, -1)
-    gamma = [1.0]
+def gabor_response(image, ksize, sigma, theta, lambd, gamma):
+    real = cv2.getGaborKernel(ksize, sigma, theta, lambd, gamma, 0)
+    imag = cv2.getGaborKernel(ksize, sigma, theta, lambd, gamma, cv.CV_PI/2.0)
 
-    image = image.astype(np.float32)
-    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY).astype(float)
-    gabor_features = []
-    for param in itertools.product([ksize], sigma, theta, lambd, gamma):
-        ksize, sigma, theta, lambd, gamma = param
-        real = cv2.getGaborKernel(ksize, sigma, theta, lambd, gamma, 0)
-        imag = cv2.getGaborKernel(ksize, sigma, theta, lambd, gamma, np.pi/2)
+    response_real = cv2.filter2D(image, cv.CV_64F, real)
+    response_imag = cv2.filter2D(image, cv.CV_64F, imag)
 
-        response_real = cv2.filter2D(gray_image, cv.CV_64F, real)
-        response_imag = cv2.filter2D(gray_image, cv.CV_64F, imag)
-        magnitude = np.sqrt(response_real**2+response_imag**2)
-        gabor_features.extend([np.mean(magnitude), np.var(magnitude)])
-    return np.array(gabor_features)
+    #imshow(cv2.normalize(response_real, norm_type=cv2.NORM_MINMAX))
+
+    return response_real, response_imag
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("fin", metavar="image_list", 
-                        help="list with path followed by label")
-
     print "descriptor.py as main"

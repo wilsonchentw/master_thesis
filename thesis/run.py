@@ -14,10 +14,25 @@ from util import *
 
 class Image(object):
     """ Store path, label, and extracted descriptors """
-
     def __init__(self, path, label):
         self.path = path
         self.label = label
+
+
+def get_CLAHE(image):
+    # Global enhance luminance
+    enhance_image = cv2.cvtColor(image.astype(np.float32), cv2.COLOR_BGR2LAB)
+    luminance = enhance_image[:, :, 0] / 100.0
+    luminance = cv2.normalize(luminance, norm_type=cv2.NORM_MINMAX)
+    luminance = (luminance * 255).astype(np.uint8)
+
+    # Perform CLAHE on L-channel
+    clahe = cv2.createCLAHE(clipLimit=4, tileGridSize=(8, 8))
+    enhance_image[:, :, 0] = clahe.apply(luminance) / 255.0 * 100.0
+    enhance_image = cv2.cvtColor(enhance_image, cv2.COLOR_LAB2BGR)
+
+    # Convert type to float
+    return enhance_image.astype(float)
 
 
 if __name__ == "__main__":
@@ -32,11 +47,27 @@ if __name__ == "__main__":
     args = parser.parse_args()
     dataset = []
     with open(args.fin, 'r') as fin:
-        for line in fin:
+        for line_idx, line in enumerate(fin):
             path, label = line.strip().split(' ')
-            dataset.append(Image(path, int(label)))
 
-    feature.extract_all(dataset)
+            # Normalize image size
+            norm_size = np.array((256, 256))
+            raw_image = cv2.imread(path, cv2.CV_LOAD_IMAGE_COLOR)
+            image = normalize_image(raw_image, norm_size, crop=True) / 255.0
+            enhance_image = get_CLAHE(image)
+
+            # Extract feature
+            cell, block = (16, 16), (32, 32)
+            data = Image(path, label)
+            data.hog = feature.extract_HOG(image, 12, cell, block)
+            data.phog = feature.extract_PHOG(image, bins=12, level=4)
+            data.color = feature.extract_color(image, num_block=(4, 4))
+            data.gabor = feature.extract_gabor(image, num_block=(4, 4))
+            dataset.append(data)
+
+            # Progress report
+            if line_idx % 10 == 0: 
+                print "line{0} is done".format(line_idx)
 
 
     """

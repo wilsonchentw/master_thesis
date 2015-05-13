@@ -1,4 +1,5 @@
 import itertools
+import math
 import sys
 
 import cv2
@@ -15,8 +16,8 @@ eps = 1e-7
 def imshow(*images, **kargs):
     # Set how long image will show (in milisecond)
     time = 0 if 'time' not in kargs else kargs['time']
-
-    # Horizontally concatenate images
+    
+    # Add single channel image to three channel by directly tile
     images = [np.atleast_3d(image) for image in images]
     images = [np.tile(image, (1, 1, 3 // image.shape[2])) for image in images]
     concat_image = np.hstack(tuple(images))
@@ -69,17 +70,15 @@ def im2row(image, window, step):
         return row
 
 
-def row2im(row, shape, window, step):
+def row2im(row, shape, window, step=None):
     if len(row.shape) == 1: 
         return row.reshape(tuple(shape) + (-1,))
 
+    step = window if step is None else step
     num_channel = row.shape[1] // (window[0] * window[1])
-    shape, window, step = map(np.array, (shape, window, step))
-    window = np.append(window, num_channel)
-
     image = np.empty(np.append(shape, num_channel), order='C')
     for idx, block in enumerate(sliding_window(shape, window, step)):
-        image[block] = row[idx].reshape(window)
+        image[block] = row[idx].reshape(tuple(window) + (num_channel,))
     return image
 
 
