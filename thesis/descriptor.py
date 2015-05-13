@@ -71,9 +71,6 @@ def gabor_response(image, ksize, sigma, theta, lambd, gamma):
 
     response_real = cv2.filter2D(image, cv.CV_64F, real)
     response_imag = cv2.filter2D(image, cv.CV_64F, imag)
-
-    #imshow(cv2.normalize(response_real, norm_type=cv2.NORM_MINMAX))
-
     return response_real, response_imag
 
 
