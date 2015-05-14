@@ -6,23 +6,14 @@ from util import *
 
 __all__ = [
     "get_gradient", "oriented_grad_hist", "color_hist", "gabor_response", 
-    "detect_corner", 
 ]
 
-def get_gradient(image):
-    sobel_x = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=1)
-    sobel_y = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=1)
-    magnitude, angle = cv2.cartToPolar(sobel_x, sobel_y)
-
-    # Truncate angle exceed 2PI or PI (if ignore sign of orientation)
-    angle %= (np.pi * 2)
-    return magnitude, angle
 
 
-def oriented_grad_hist(image, bins, block, step=None):
+def hog(image, bins, block, step=None):
     image_shape = np.array(image.shape[:2])
     block_shape = np.array(block)
-    step = (block if step is None else step)
+    step = (block_shape if step is None else np.array(step))
 
     # Compute gradient & orientation, then quantize angle int bins
     magnitude, angle = get_gradient(image)
@@ -35,12 +26,13 @@ def oriented_grad_hist(image, bins, block, step=None):
     magnitude = magnitude[x, y, largest_idx]
     angle = angle[x, y, largest_idx]
 
-    block_num = (image_shape - block_shape) // step + (1, 1)
+    # Calculate histogram of each block
     hist = np.empty((np.prod(block_num), bins))
-    cells = list(sliding_window(image_shape, block_shape, step))
-    for idx, cell in enumerate(cells):
-        mag = magnitude[cell].reshape(-1)
-        ang = angle[cell].reshape(-1)
+    block_num = (image_shape - block_shape) // step + (1, 1)
+    blocks = list(sliding_window(image_shape, block_shape, step))
+    for idx, block in enumerate(blocks):
+        mag = magnitude[block].reshape(-1)
+        ang = angle[block].reshape(-1)
         hist[idx] = np.bincount(ang, mag, minlength=bins)
 
     return hist.reshape(np.append(block_num, bins))

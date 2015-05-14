@@ -1,11 +1,8 @@
 import itertools
-import math
-import sys
 
 import cv2
 import cv2.cv as cv
 import numpy as np
-
 
 eps = 1e-7
 
@@ -53,4 +50,27 @@ def sliding_window(shape, window, step):
         block = [slice(a, b) for a, b in zip(offset, offset+window)]
         yield block
 
+
+def get_gradient(image):
+    sobel_x = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=1)
+    sobel_y = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=1)
+    magnitude, angle = cv2.cartToPolar(sobel_x, sobel_y)
+
+    # Truncate angle exceed 2PI
+    return magnitude, angle % (np.pi * 2)
+
+
+def get_clahe(image):
+    # Global enhance luminance
+    image = image.astype(np.float32)
+    enhance_img = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+    luminance = cv2.normalize(enhance_img[:, :, 0], norm_type=cv2.NORM_MINMAX)
+
+    # Perform CLAHE on L-channel
+    clahe = cv2.createCLAHE(clipLimit=3.5, tileGridSize=(8, 8))
+    luminance = (luminance * 255).astype(np.uint8)
+    enhance_img[:, :, 0] = clahe.apply(luminance) / 255.0 * 100.0
+    enhance_img = cv2.cvtColor(enhance_img, cv2.COLOR_LAB2BGR)
+
+    return enhance_img.astype(float)
 

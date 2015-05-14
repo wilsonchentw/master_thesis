@@ -1,81 +1,45 @@
-import itertools
-
 import cv2
 import cv2.cv as cv
 import numpy as np
 
-import descriptor
+from hog_helper import extract_hog
+from phog_helper import extract_phog
+from color_helper import extract_color
+from gabor_helper import extract_gabor
 from util import *
 
 
-#def extract_HOG(image, bins, cell, block):
-#    # Block overlap to achieve normalization
-#    hog = descriptor.oriented_grad_hist(image, bins, block, cell)
-#
-#    # Normalize block to unit in L2-norm
-#    hog = hog.reshape(-1, bins)
-#    for idx, block in enumerate(hog):
-#        hog[idx] = cv2.normalize(block, norm_type=cv2.NORM_L2).reshape(-1)
-#    return hog.reshape(-1)
-#
-#
-#def extract_PHOG(image, bins, level):
-#    # Extract HOG of cell
-#    image_shape = np.array(image.shape[:2])
-#    cell_shape = image_shape // (2 ** (level - 1))
-#    hog = descriptor.oriented_grad_hist(image, bins, cell_shape)
-#
-#    # Combine cell HOG into block HOG
-#    block_shape = [np.array((2 ** idx, 2 ** idx)) for idx in range(level)]
-#    level_blocks = [list(sliding_window(hog.shape, block, block)) 
-#                    for block in block_shape]
-#    blocks = sum(level_blocks, [])
-#
-#    phog = np.empty((len(blocks), bins))
-#    for idx, block in enumerate(blocks):
-#        block_hist = hog[block].reshape(-1, bins)
-#        phog[idx] = np.sum(block_hist, axis=0)
-#    return phog.reshape(-1)
-#
-#
-#def extract_color(image, num_block):
-#    bins, ranges = [32, 32, 32], [[0, 1], [0, 1], [0, 1]]
-#    block_shape = np.array(image.shape[:2]) // num_block
-#    blocks = sliding_window(image.shape, block_shape, block_shape)
-#    hists = np.empty((np.prod(num_block), np.sum(bins)))
-#    for idx, block in enumerate(blocks):
-#        hist = descriptor.color_hist(image, bins, ranges, split=True)
-#        hists[idx] = hist.reshape(-1) / np.sum(hist)
-#
-#    return hists.reshape(-1)
-#
-#
-#def extract_gabor(image, num_block):
-#    ksize = (15, 15)
-#    sigma = min(ksize) / 6.0
-#    thetas = np.linspace(0, np.pi, num=6, endpoint=False)
-#    lambds = min(ksize) / np.arange(3.0, 3.5, 0.5)
-#    gammas = [0.5]
-#
-#    image_shape = image.shape[:2]
-#    block_shape = np.array(image_shape) // num_block
-#    gray_image = cv2.cvtColor(image.astype(np.float32), cv2.COLOR_BGR2GRAY)
-#    gray_image = gray_image.astype(float)
-#
-#    param_bank = list(itertools.product(thetas, lambds, gammas))
-#    gabor = []
-#    for param_idx, param in enumerate(param_bank): 
-#        theta, lambd, gamma = param
-#        param = {'ksize': ksize, 'sigma': sigma, 
-#                 'theta': theta, 'lambd': lambd, 'gamma': gamma}
-#        real, imag = descriptor.gabor_response(gray_image, **param)
-#
-#        # Extract blockwise mean and variance
-#        magnitude = np.sqrt((real ** 2) + (imag ** 2))
-#        blocks = list(sliding_window(image_shape, block_shape, block_shape))
-#        for block in blocks:
-#            gabor += [np.mean(magnitude[block]), np.var(magnitude[block])]
-#    return np.array(gabor)
+def extract_all(data):
+    # Setup parameter for descriptor
+    hog_param = {'bins': 12, 'block': (16, 16), 'step': (8, 8), }
+    phog_param = {'bins': 12, 'level': 3, }
+    color_param = {
+        'num_block': (4, 4), 
+        'bins': (32, 32, 32), 
+        'ranges': [[0, 1], [0, 1], [0, 1]], 
+        'split': True, 
+    }
+    ksize = range(7, 39, 4)
+    gabor_param = {
+        'num_block': (4, 4), 
+        'param_bank': {
+            'ksize': [(ks, ks) for ks in ksize], 
+            'sigma': [0.0036 * ks * ks + 0.35 * ks + 0.18 for ks in ksize], 
+            'theta': np.linspace(0, np.pi, num=4, endpoint=False), 
+            'lambd': [0.0045 * ks * ks + 0.4375 * ks + 0.225 for ks in ksize], 
+            'gamma': [0.3], 
+        }
+    }
+
+    # Preprocessing input image
+    raw_image = cv2.imread(data.path, cv2.CV_LOAD_IMAGE_COLOR)
+    image = normalize_image(raw_image, (256, 256), crop=True) / 255.0
+    enhance_image = get_clahe(image)
+
+    data.hog = extract_hog(image, **hog_param).reshape(-1)
+    data.phog = extract_phog(image, **phog_param).reshape(-1)
+    data.color = extract_color(image, **color_param).reshape(-1)
+    data.gabor = extract_gabor(image, **gabor_param).reshape(-1)
 
 
 if __name__ == "__main__":
