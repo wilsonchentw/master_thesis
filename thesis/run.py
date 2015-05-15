@@ -31,15 +31,8 @@ if __name__ == "__main__":
     with open(args.fin, 'r') as fin:
         for line_idx, line in enumerate(fin, 1):
             path, label = line.strip().split(' ')
-
-            # Extract features
             data = Image(path, label)
-            feature.extract_all(data)
             dataset.append(data)
 
-            if (line_idx % 1) == 0:
-                print "line {0} done".format(line_idx)
-                break
-
-    for 
-    
+    for data_idx, data in enumerate(dataset, 1):
+        feature.extract_all(data)

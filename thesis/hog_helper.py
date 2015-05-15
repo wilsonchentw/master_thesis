@@ -5,11 +5,6 @@ import numpy as np
 from util import *
 
 def extract_hog(image, bins, block, step=None):
-    image_shape = np.array(image.shape[:2])
-    block_shape = np.array(block)
-    block_num = (image_shape - block_shape) // step + (1, 1)
-    step = (block_shape if step is None else np.array(step))
-
     # Compute gradient & orientation, then quantize angle int bins
     magnitude, angle = get_gradient(image)
     angle = (angle / (np.pi * 2.0) * bins).astype(int)
@@ -21,17 +16,17 @@ def extract_hog(image, bins, block, step=None):
     magnitude = magnitude[x, y, largest_idx]
     angle = angle[x, y, largest_idx]
 
-    # Calculate histogram of each block
-    hist = np.empty((np.prod(block_num), bins))
-    blocks = list(sliding_window(image_shape, block_shape, step))
-    for idx, block in enumerate(blocks):
+    # Calculate weighted histogram with L2-normalization
+    blocks = SlidingWindow(image.shape, block, step)
+    hist_shape = np.append(blocks.dst_shape, bins)
+    hist = np.empty(hist_shape)
+    for block in blocks:
         mag = magnitude[block].reshape(-1)
         ang = angle[block].reshape(-1)
-        hist[idx] = np.bincount(ang, mag, minlength=bins)
-        hist[idx] /= (np.linalg.norm(hist[idx]) + eps)
+        hist[block.dst] = np.bincount(ang, mag, minlength=bins)
+        hist[block.dst] /= (np.linalg.norm(hist[block.dst]) + eps)
 
-    return hist.reshape(np.append(block_num, bins))
-
+    return hist
 
 if __name__ == "__main__":
     print "hog_helper.py as main"

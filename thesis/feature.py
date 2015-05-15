@@ -15,7 +15,7 @@ def extract_all(data):
     phog_param = {'bins': 12, 'level': 3, }
     color_param = {
         'num_block': (4, 4), 
-        'bins': (32, 32, 32), 
+        'bins': (32, 32, 16), 
         'ranges': [[0, 1], [0, 1], [0, 1]], 
         'split': True, 
     }
@@ -33,13 +33,14 @@ def extract_all(data):
 
     # Preprocessing input image
     raw_image = cv2.imread(data.path, cv2.CV_LOAD_IMAGE_COLOR)
-    image = normalize_image(raw_image, (256, 256), crop=True) / 255.0
+    image = normalize_image(raw_image, (256, 256), crop=True)
+    image = image.astype(np.float32) / 255.0
     enhance_image = get_clahe(image)
 
-    data.hog = extract_hog(image, **hog_param).reshape(-1)
-    data.phog = extract_phog(image, **phog_param).reshape(-1)
-    data.color = extract_color(image, **color_param).reshape(-1)
-    data.gabor = extract_gabor(image, **gabor_param).reshape(-1)
+    data.hog = extract_hog(image, **hog_param)
+    data.phog = extract_phog(image, **phog_param)
+    data.color = extract_color(image, **color_param)
+    data.gabor = extract_gabor(enhance_image, **gabor_param)
 
 
 if __name__ == "__main__":

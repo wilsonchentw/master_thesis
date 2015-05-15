@@ -11,8 +11,9 @@ def gabor_response(image, ksize, sigma, theta, lambd, gamma):
     real = cv2.getGaborKernel(ksize, sigma, theta, lambd, gamma, 0)
     imag = cv2.getGaborKernel(ksize, sigma, theta, lambd, gamma, cv.CV_PI/2.0)
 
-    response_real = cv2.filter2D(image, cv.CV_64F, real)
-    response_imag = cv2.filter2D(image, cv.CV_64F, imag)
+    response_real = cv2.filter2D(image, cv.CV_32F, real)
+    response_imag = cv2.filter2D(image, cv.CV_32F, imag)
+
     return response_real, response_imag
 
 
@@ -30,7 +31,7 @@ def set_parameter(param_bank):
         lambds = param_bank['lambd']
         gammas = param_bank['gamma']
 
-    # Iterate all parameter according to Serre
+    # Iterate all parameter according to Serre [PAMI 06]
     param_bank = []
     for theta, gamma in itertools.product(thetas, gammas):
         for idx, ksize in enumerate(ksizes):
@@ -40,23 +41,23 @@ def set_parameter(param_bank):
 
 
 def extract_gabor(image, num_block, param_bank):
-    gray = cv2.cvtColor(image.astype(np.float32), cv2.COLOR_BGR2GRAY)
-    gray = gray.astype(float)
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     image_shape = image.shape[:2]
     block_shape = np.array(image_shape) // num_block
-    blocks = list(sliding_window(image_shape, block_shape, block_shape))
+    blocks = SlidingWindow(image_shape, block_shape, block_shape)
+    block_num = np.prod(blocks.dst_shape)
 
     # For each parameter, convolve gabor filter using given parameter
     param_bank = set_parameter(param_bank)
-    gabor = np.empty((len(param_bank), len(blocks), 2))
+    gabor = np.empty((len(param_bank), block_num, 2))
     for param_idx, param in enumerate(param_bank):
         ksize, sigma, theta, lambd, gamma = param
         real, imag = gabor_response(gray, ksize, sigma, theta, lambd, gamma)
 
         # Extract gabor magnitude of mean and variance for each patch
         magnitude = np.sqrt((real ** 2) + (imag ** 2))
-        magnitude = cv2.normalize(magnitude, norm_type=cv2.NORM_MINMAX)
+        #imshow(cv2.normalize(magnitude, norm_type=cv2.NORM_MINMAX), time=1)
 
         for block_idx, block in enumerate(blocks):
             patch = magnitude[block]

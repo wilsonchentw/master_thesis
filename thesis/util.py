@@ -40,20 +40,10 @@ def normalize_image(image, norm_size, crop=True):
         return norm_image[y:y+norm_height, x:x+norm_width]
 
 
-def sliding_window(shape, window, step):
-    num_dim = len(tuple(window))
-    start = np.zeros(num_dim, np.int32)
-    stop = np.array(shape[:num_dim]) - window + 1
-    grids = [range(a, b, c) for a, b, c in zip(start, stop, step)]
-    for offset in itertools.product(*grids):
-        offset = np.array(offset)
-        block = [slice(a, b) for a, b in zip(offset, offset+window)]
-        yield block
-
-
 def get_gradient(image):
-    sobel_x = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=1)
-    sobel_y = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=1)
+    image = image.astype(np.float32)
+    sobel_x = cv2.Sobel(image, cv2.CV_32F, 1, 0, ksize=1)
+    sobel_y = cv2.Sobel(image, cv2.CV_32F, 0, 1, ksize=1)
     magnitude, angle = cv2.cartToPolar(sobel_x, sobel_y)
 
     # Truncate angle exceed 2PI
@@ -62,7 +52,6 @@ def get_gradient(image):
 
 def get_clahe(image):
     # Global enhance luminance
-    image = image.astype(np.float32)
     enhance_img = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
     luminance = cv2.normalize(enhance_img[:, :, 0], norm_type=cv2.NORM_MINMAX)
 
@@ -70,7 +59,33 @@ def get_clahe(image):
     clahe = cv2.createCLAHE(clipLimit=3.5, tileGridSize=(8, 8))
     luminance = (luminance * 255).astype(np.uint8)
     enhance_img[:, :, 0] = clahe.apply(luminance) / 255.0 * 100.0
-    enhance_img = cv2.cvtColor(enhance_img, cv2.COLOR_LAB2BGR)
+    return cv2.cvtColor(enhance_img, cv2.COLOR_LAB2BGR)
 
-    return enhance_img.astype(float)
+
+class SlidingWindow(object):
+
+    class Block(tuple):
+        def __new__(cls, indexes, src, dst):
+            self = tuple.__new__(cls, indexes)
+            self.src = tuple(src)
+            self.dst = tuple(dst)
+            return self
+
+    def __init__(self, shape, window, step):
+        # Generate grids reference point
+        grid = [range(0, e - w + 1, s) for e, w, s in zip(shape, window, step)]
+        num_dim = len(grid)
+
+        # Only store effective shape, window, and step
+        self.src_shape = tuple(shape[:num_dim])
+        self.dst_shape = tuple(len(side) for side in grid)
+        self.window = np.array(window[:num_dim])
+        self.step = np.array(step[:num_dim])
+        self.grid = grid
+
+    def __iter__(self):
+        for point in itertools.product(*self.grid):
+            indexes = [slice(p, p + w) for p, w in zip(point, self.window)]
+            dst_point = np.array(point) // self.step
+            yield self.Block(indexes, point, dst_point)
 
