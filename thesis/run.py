@@ -29,7 +29,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     dataset = []
     with open(args.fin, 'r') as fin:
-        for line_idx, line in enumerate(fin, 1):
+        for line_idx, line in enumerate(fin):
             path, label = line.strip().split(' ')
             data = Image(path, label)
 
@@ -38,11 +38,18 @@ if __name__ == "__main__":
             dataset.append(data)
 
             # Progress report
-            if line_idx % 10 == 0: 
+            batch_size = 1
+            if (line_idx + 1) % batch_size == 0: 
                 print "line {0} is done".format(line_idx)
                 break
 
+    # Save for libsvm format
+    title = args.fin.partition('.')[0]
+    descriptor = {
+        'hog': (data.hog for data in dataset), 
+        'phog': (data.phog for data in dataset), 
+        'color': (data.color for data in dataset), 
+        'gabor': (data.gabor for data in dataset), 
+    }
 
-    #inst = [data.phog for data in dataset]
-    #label = [data.label for data in dataset]
-    #svm_write_problem("filename", label, inst)
+    #svm_write_problem("filename", label, color)

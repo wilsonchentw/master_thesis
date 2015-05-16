@@ -38,6 +38,7 @@ def extract_feature(data):
     gabor = extract_gabor(image, num_block=(4, 4), param_bank=None)
     data.gabor = gabor.reshape(-1)
 
+    print data.hog.shape, data.phog.shape, data.color.shape, data.gabor.shape
     return data
 
 

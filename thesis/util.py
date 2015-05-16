@@ -76,7 +76,7 @@ def normalize_image(image, norm_size, crop=True):
 
 def get_gradient(image):
     image = image.astype(np.float32)
-    sobel_x = cv2.Sobel(image, cv2.CV_32F, 1, 0, ksize=1)
+    sobel_x = cv2.Sobel(image, cv2.CV_32F, 1, 0, ksize=1) 
     sobel_y = cv2.Sobel(image, cv2.CV_32F, 0, 1, ksize=1)
     magnitude, angle = cv2.cartToPolar(sobel_x, sobel_y)
 
@@ -107,13 +107,12 @@ def canny_edge(image):
     return contour.astype(np.float32) / 255.0
 
 
-"""
 def svm_write_problem(filename, label, inst):
     #with open(filename) as fout:
     with sys.stdout as fout:
         for y, x in itertools.izip(label, inst):
             output = [str(y)]
             for idx, xi in enumerate(x):
-                if abs(xi) < eps:
+                if abs(xi) > eps:
                     output.append("{0}:{1}".format(idx, xi))
-"""         
+        fout.write(" ".join(output) + "\n")
