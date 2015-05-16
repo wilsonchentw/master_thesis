@@ -3,21 +3,14 @@ import cv2.cv as cv
 import numpy as np
 
 from util import *
-from hog_helper import extract_hog
+from hog import extract_hog
 
 
 def extract_phog(image, bins, level):
-    # Perform Canny edge detection for shape
-    gray_image = (image * 255.0).astype(np.uint8)
-    gray_image = cv2.cvtColor(gray_image, cv2.COLOR_BGR2GRAY)
-    mid, std = np.median(gray_image), np.std(gray_image)
-    t_lo, t_hi = (mid + std * 1.0), (mid + std * 1.5)
-    contour = cv2.Canny(gray_image, t_lo, t_hi, L2gradient=True) / 255.0
-
     # Calculate HOG of smallest cells
     image_shape = np.array(image.shape[:2])
     cell_shape = image_shape // (2 ** (level - 1))
-    hog = extract_hog(contour, bins, cell_shape, cell_shape)
+    hog = extract_hog(image, bins, cell_shape, cell_shape)
 
     # Summarize HOG of blocks
     block_shape = [(2 ** (level - 1 - lv),) * 2 for lv in range(level)]

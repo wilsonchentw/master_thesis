@@ -17,54 +17,49 @@ def gabor_response(image, ksize, sigma, theta, lambd, gamma):
     return response_real, response_imag
 
 
-def set_parameter(param_bank):
-    if param_bank is None:
-        ksizes = [(15, 15)]
-        sigmas = [min(ks) / 6.0 for ks in ksize]
-        thetas = np.linspace(0, np.pi, num=6, endpoint=False)
-        lambds = [sigma / 0.8 for sigma in sigmas]
-        gammas = [0.3]
-    else:
-        ksizes = param_bank['ksize']
-        sigmas = param_bank['sigma']
-        thetas = param_bank['theta']
-        lambds = param_bank['lambd']
-        gammas = param_bank['gamma']
+def gabor_param():
+    # Default parameter is according to Serre [PAMI'06] except ksize
+    ksizes = range(7, 39, 4)
+    sigmas = []
+    thetas = np.linspace(0, np.pi, num=4, endpoint=False)
+    lambds = []
+    gammas = []
 
-    # Iterate all parameter according to Serre [PAMI 06]
     param_bank = []
-    for theta, gamma in itertools.product(thetas, gammas):
-        for idx, ksize in enumerate(ksizes):
-            param = (ksize, sigmas[idx], theta, lambds[idx], gamma)
-            param_bank.append(param)
+    for theta, ksize in itertools.product(thetas, ksizes):
+        sigma = 0.0036 * (ksize ** 2) + 0.35 * ksize + 0.18
+        param = {
+            'ksize': (ksize, ksize), 
+            'sigma': sigma, 
+            'theta': theta, 
+            'lambd': sigma / 0.8, 
+            'gamma': 0.3, 
+        }
+        param_bank.append(param)
     return param_bank
 
 
-def extract_gabor(image, num_block, param_bank):
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+def extract_gabor(image, num_block, param_bank=None):
+    # Setup Gabor filter bank parameter
+    param_bank = gabor_param() if param_bank is None else param_bank
+    num_param = len(param_bank)
 
     image_shape = image.shape[:2]
     block_shape = np.array(image_shape) // num_block
     blocks = SlidingWindow(image_shape, block_shape, block_shape)
-    block_num = np.prod(blocks.dst_shape)
+    num_block = np.prod(blocks.dst_shape)
 
-    # For each parameter, convolve gabor filter using given parameter
-    param_bank = set_parameter(param_bank)
-    gabor = np.empty((len(param_bank), block_num, 2))
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    gabor = np.empty((num_param, num_block, 2))
     for param_idx, param in enumerate(param_bank):
-        ksize, sigma, theta, lambd, gamma = param
-        real, imag = gabor_response(gray, ksize, sigma, theta, lambd, gamma)
-
-        # Extract gabor magnitude of mean and variance for each patch
+        real, imag = gabor_response(gray_image, **param)
         magnitude = np.sqrt((real ** 2) + (imag ** 2))
-        #imshow(cv2.normalize(magnitude, norm_type=cv2.NORM_MINMAX), time=1)
 
         for block_idx, block in enumerate(blocks):
             patch = magnitude[block]
             gabor[param_idx, block_idx] = [np.mean(patch), np.var(patch)]
-            
     return gabor
-
+ 
 
 if __name__ == "__main__":
     print "gabor_helper.py as main"

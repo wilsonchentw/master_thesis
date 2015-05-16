@@ -32,7 +32,17 @@ if __name__ == "__main__":
         for line_idx, line in enumerate(fin, 1):
             path, label = line.strip().split(' ')
             data = Image(path, label)
+
+            # Extract feature
+            data = feature.extract_feature(data)
             dataset.append(data)
 
-    for data_idx, data in enumerate(dataset, 1):
-        feature.extract_all(data)
+            # Progress report
+            if line_idx % 10 == 0: 
+                print "line {0} is done".format(line_idx)
+                break
+
+
+    #inst = [data.phog for data in dataset]
+    #label = [data.label for data in dataset]
+    #svm_write_problem("filename", label, inst)

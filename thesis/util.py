@@ -1,4 +1,5 @@
 import itertools
+import sys
 
 import cv2
 import cv2.cv as cv
@@ -6,10 +7,43 @@ import numpy as np
 
 eps = 1e-7
 
+class SlidingWindow(object):
+
+    class Block(tuple):
+        def __new__(cls, indexes, src, dst):
+            self = tuple.__new__(cls, indexes)
+            self.src = tuple(src)
+            self.dst = tuple(dst)
+            return self
+
+    def __init__(self, shape, window, step):
+        # Generate grids reference point
+        grid = [range(0, e - w + 1, s) for e, w, s in zip(shape, window, step)]
+        num_dim = len(grid)
+
+        # Only store effective shape, window, and step
+        self.src_shape = tuple(shape[:num_dim])
+        self.dst_shape = tuple(len(side) for side in grid)
+        self.window = np.array(window[:num_dim])
+        self.step = np.array(step[:num_dim])
+        self.grid = grid
+
+    def __iter__(self):
+        for point in itertools.product(*self.grid):
+            indexes = [slice(p, p + w) for p, w in zip(point, self.window)]
+            dst_point = np.array(point) // self.step
+            yield self.Block(indexes, point, dst_point)
+
+
 def imshow(*images, **kargs):
     # Set how long image will show (in milisecond)
     time = 0 if 'time' not in kargs else kargs['time']
     
+    # Normalize value range if norm flag is set
+    if ('norm' in kargs) and kargs['norm']:
+        images = [cv2.normalize(image, norm_type=cv2.NORM_MINMAX) 
+                  for image in images]
+
     # Modify single channel image to 3-channel by directly tile
     images = [np.atleast_3d(image) for image in images]
     images = [np.tile(image, (1, 1, 3 // image.shape[2])) for image in images]
@@ -62,30 +96,24 @@ def get_clahe(image):
     return cv2.cvtColor(enhance_img, cv2.COLOR_LAB2BGR)
 
 
-class SlidingWindow(object):
+def canny_edge(image):
+    # Perform Canny edge detection for shape
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    gray_image = (gray_image * 255).astype(np.uint8)
+    
+    mid, std = np.median(gray_image), np.std(gray_image)
+    t_lo, t_hi = (mid + std * 0.5), (mid + std * 1.5)
+    contour = cv2.Canny(gray_image, t_lo, t_hi, L2gradient=True)
+    return contour.astype(np.float32) / 255.0
 
-    class Block(tuple):
-        def __new__(cls, indexes, src, dst):
-            self = tuple.__new__(cls, indexes)
-            self.src = tuple(src)
-            self.dst = tuple(dst)
-            return self
 
-    def __init__(self, shape, window, step):
-        # Generate grids reference point
-        grid = [range(0, e - w + 1, s) for e, w, s in zip(shape, window, step)]
-        num_dim = len(grid)
-
-        # Only store effective shape, window, and step
-        self.src_shape = tuple(shape[:num_dim])
-        self.dst_shape = tuple(len(side) for side in grid)
-        self.window = np.array(window[:num_dim])
-        self.step = np.array(step[:num_dim])
-        self.grid = grid
-
-    def __iter__(self):
-        for point in itertools.product(*self.grid):
-            indexes = [slice(p, p + w) for p, w in zip(point, self.window)]
-            dst_point = np.array(point) // self.step
-            yield self.Block(indexes, point, dst_point)
-
+"""
+def svm_write_problem(filename, label, inst):
+    #with open(filename) as fout:
+    with sys.stdout as fout:
+        for y, x in itertools.izip(label, inst):
+            output = [str(y)]
+            for idx, xi in enumerate(x):
+                if abs(xi) < eps:
+                    output.append("{0}:{1}".format(idx, xi))
+"""         

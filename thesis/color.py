@@ -9,10 +9,11 @@ def extract_color(image, num_block, bins, ranges, split):
     ranges = np.array([[pair[0], pair[1] + eps] for pair in ranges])
 
     block_shape = np.array(image.shape[:2]) // num_block
-    if split:
-        hist = channel_hist(image, bins, ranges, block_shape, block_shape)
-    else:
-        hist = color_cube(image, bins, ranges, block_shape, block_shape)
+    hist = (
+        channel_hist(image, bins, ranges, block_shape, block_shape)
+        if split
+        else color_cube(image, bins, ranges, block_shape, block_shape)
+    )
 
     return hist
 
@@ -42,7 +43,7 @@ def color_cube(image, bins, ranges, block, step):
     for block in blocks:
         patch = image[block]
         block_hist = cv2.calcHist([patch], channels, None, bins, ranges)
-        hist[block.dst] = block_hist# / np.sum(block_hist)
+        hist[block.dst] = block_hist / np.sum(block_hist)
     return hist
 
 

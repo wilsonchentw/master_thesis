@@ -4,7 +4,7 @@ import numpy as np
 
 from util import *
 
-def extract_hog(image, bins, block, step=None):
+def extract_hog(image, bins, block, step):
     # Compute gradient & orientation, then quantize angle int bins
     magnitude, angle = get_gradient(image)
     angle = (angle / (np.pi * 2.0) * bins).astype(int)
@@ -16,17 +16,24 @@ def extract_hog(image, bins, block, step=None):
     magnitude = magnitude[x, y, largest_idx]
     angle = angle[x, y, largest_idx]
 
+    # Gaussian window, downweight pixel near edge
+    ksize = tuple((x + 1 if x % 2 == 0 else x) for x in block)
+    sigmaX, sigmaY = block[1] * 0.5, block[0] * 0.5
+    gauss_param = {'ksize': ksize, 'sigmaX': sigmaX, 'sigmaY': sigmaY}
+
     # Calculate weighted histogram with L2-normalization
     blocks = SlidingWindow(image.shape, block, step)
     hist_shape = np.append(blocks.dst_shape, bins)
     hist = np.empty(hist_shape)
     for block in blocks:
-        mag = magnitude[block].reshape(-1)
+        mag = cv2.GaussianBlur(magnitude[block], **gauss_param).reshape(-1)
+        #mag = magnitude[block].reshape(-1)
         ang = angle[block].reshape(-1)
         hist[block.dst] = np.bincount(ang, mag, minlength=bins)
         hist[block.dst] /= (np.linalg.norm(hist[block.dst]) + eps)
 
     return hist
+
 
 if __name__ == "__main__":
     print "hog_helper.py as main"
