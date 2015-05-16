@@ -20,20 +20,25 @@ def extract_feature(data):
     contour = canny_edge(image)
 
     # Histogram of Oriented Gradient
-    hog = extract_hog(image, bins=12, block=(16, 16), step=(8, 8))
+    hog = extract_hog(image, bins=12, block=(32, 32), step=(16, 16))
     data.hog = hog.reshape(-1)
 
     # Pyramid of Histogram of Oriented Gradient
-    #phog = extract_phog(contour, bins=12, level=3)
+    phog = extract_phog(contour, bins=12, level=4)
+    data.phog = np.concatenate([hog.reshape(-1) for hog in phog])
 
-    #color_param = {
-    #    'num_block': (4, 4),  
-    #    'bins': (32, 32, 32), 
-    #    'ranges': [[0, 1], [0, 1], [0, 1]], 
-    #    'split': True
-    #}
-    #data.color = extract_color(image, **color_param)
-    #data.gabor = extract_gabor(image, num_block=(4, 4), param_bank=None)
+    # Blockwise color histogram
+    bins = (32, 32, 32)
+    ranges = [[0, 1], [0, 1], [0, 1]]
+    param = {'num_block': (4, 4),  'bins': bins, 'ranges': ranges, }
+    color = extract_color(image, **param)
+    data.color = np.concatenate([c.reshape(-1) for c in color])
+
+    # Gabor filter bank response
+    gabor = extract_gabor(image, num_block=(4, 4), param_bank=None)
+    data.gabor = gabor.reshape(-1)
+
+    return data
 
 
 if __name__ == "__main__":

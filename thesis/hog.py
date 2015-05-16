@@ -27,7 +27,6 @@ def extract_hog(image, bins, block, step):
     hist = np.empty(hist_shape)
     for block in blocks:
         mag = cv2.GaussianBlur(magnitude[block], **gauss_param).reshape(-1)
-        #mag = magnitude[block].reshape(-1)
         ang = angle[block].reshape(-1)
         hist[block.dst] = np.bincount(ang, mag, minlength=bins)
         hist[block.dst] /= (np.linalg.norm(hist[block.dst]) + eps)
