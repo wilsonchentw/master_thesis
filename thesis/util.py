@@ -108,8 +108,7 @@ def canny_edge(image):
 
 
 def svm_write_problem(filename, label, inst):
-    #with open(filename) as fout:
-    with sys.stdout as fout:
+    with open(filename, 'w') as fout:
         for y, x in itertools.izip(label, inst):
             output = [str(y)]
             for idx, xi in enumerate(x):

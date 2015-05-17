@@ -2,54 +2,57 @@
 # -*- coding: utf-8 -*-
 
 import argparse
+import os
 import warnings
 
 import numpy as np
 
-import feature
+import descriptor
 from util import *
 
+def extract_from_scratch(filename, batchsize):
+    dataset = {}
+    with open(args.fin, 'r') as fin:
+        for line_idx, line in enumerate(fin, 1):
+            # Extract raw descriptor
+            path, label = line.strip().split(' ')
+            data = descriptor.extract_descriptor(label, path)
 
-class Image(object):
-    """ Store path, label, and extracted descriptors """
-    def __init__(self, path, label):
-        self.path = path
-        self.label = label
+            # Update dataset
+            for name, value in data.items():
+                dataset.setdefault(name, []).append(value)
+
+            # With each batch, print progress report
+            if line_idx % batchsize == 0: 
+                print "line {0} is done".format(line_idx)
+
+    # Convert to numpy array for furthur usage
+    for name in dataset:
+        dataset[name] = np.array(dataset[name])
+
+    return dataset
 
 
 if __name__ == "__main__":
-    warnings.simplefilter(action="ignore", category=FutureWarning)
 
     # Parse argument
+    warnings.simplefilter(action="ignore", category=FutureWarning)
     parser = argparse.ArgumentParser()
     parser.add_argument("fin", metavar="image_list", 
                         help="list with path followed by label")
 
-    # Parsing image list
     args = parser.parse_args()
-    dataset = []
-    with open(args.fin, 'r') as fin:
-        for line_idx, line in enumerate(fin):
-            path, label = line.strip().split(' ')
-            data = Image(path, label)
-
-            # Extract feature
-            data = feature.extract_feature(data)
-            dataset.append(data)
-
-            # Progress report
-            batch_size = 1
-            if (line_idx + 1) % batch_size == 0: 
-                print "line {0} is done".format(line_idx)
-                break
-
-    # Save for libsvm format
     title = args.fin.partition('.')[0]
-    descriptor = {
-        'hog': (data.hog for data in dataset), 
-        'phog': (data.phog for data in dataset), 
-        'color': (data.color for data in dataset), 
-        'gabor': (data.gabor for data in dataset), 
-    }
 
-    #svm_write_problem("filename", label, color)
+    try:
+        dataset = {}
+        with np.load(title + ".npz", 'r') as fin:
+            for name in fin.files:
+                dataset[name] = fin[name]
+    except IOError:
+        dataset = extract_from_scratch(args.fin, 100)
+        np.savez_compressed(title)
+        for name in dataset:
+            filename = "{0}_{1}.dat".format(title, name)
+            svm_write_problem(filename, dataset['label'], dataset[name])
+
