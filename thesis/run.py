@@ -12,7 +12,7 @@ from util import *
 
 def extract_from_scratch(filename, batchsize):
     dataset = {}
-    with open(args.fin, 'r') as fin:
+    with open(filename, 'r') as fin:
         for line_idx, line in enumerate(fin, 1):
             # Extract raw descriptor
             path, label = line.strip().split(' ')
@@ -44,15 +44,18 @@ if __name__ == "__main__":
     args = parser.parse_args()
     title = args.fin.partition('.')[0]
 
+    # Read dataset
     try:
         dataset = {}
         with np.load(title + ".npz", 'r') as fin:
+            print "Load {0} from disk ... ".format(title + ".npz")
             for name in fin.files:
                 dataset[name] = fin[name]
     except IOError:
+        print "Extract descriptor from image"
         dataset = extract_from_scratch(args.fin, 100)
         np.savez_compressed(title)
         for name in dataset:
-            filename = "{0}_{1}.dat".format(title, name)
-            svm_write_problem(filename, dataset['label'], dataset[name])
-
+            if name != 'label':
+                filename = "{0}_{1}.dat".format(title, name)
+                svm_write_problem(filename, dataset['label'], dataset[name])
