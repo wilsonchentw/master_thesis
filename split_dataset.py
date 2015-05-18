@@ -31,8 +31,11 @@ if __name__ == "__main__":
     rootpath, fout, fold = check_option(args)
     cwdlist = [os.path.join(rootpath, d) for d in listdir(rootpath)]
     for label, dirpath in enumerate(filter(isdir, cwdlist)):
+        # Filter out weird type of file
         image_list = [os.path.join(dirpath, f) for f in listdir(dirpath)]
         image_list = filter(isfile, image_list)
+        image_list = filter(lambda f: not f.endswith(".txt"), image_list)
+
         random.shuffle(image_list)
 
         # Partition images list in directory
