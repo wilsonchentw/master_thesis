@@ -64,7 +64,26 @@ def setup_environment(lib):
     )
 
 
+def is_valid_dir(din):  
+    cwd = getcwd()
+    din = realpath(normpath(din))
+    prefix = basename(din)
+
+    if not isdir(din):
+        print "Input is not directory"
+        return False
+    elif any(isfile(f) and f.startswith(prefix) for f in listdir(cwd)):
+        print "Found possible duplicate file: "
+        for f in listdir(cwd):
+            if isfile(f) and f.startswith(prefix):
+                print "{0}".format(f)
+        return False
+    else:
+        return True
+
+
 def generate_list(path, listname, percent):
+    prefix = basename(realpath(normpath(path)))
     listname = ["{0}_{1}.list".format(prefix, name) for name in listname]
     if sum(percent) < 100:
         listname.append(os.devnull)
@@ -82,41 +101,33 @@ if __name__ == "__main__":
     dataset.add_argument('-f', metavar="image_list", dest="fin")
     dataset.add_argument('-d', metavar="images_dir", dest="din")
 
+    # Parse argument
     args = parser.parse_args()
-    if args.din is not None:
-        cwd = getcwd()
-        din = normpath(args.din)
-        prefix = basename(din)
+    if (args.din is not None) and is_valid_dir(args.din):
+        print "Generate image list ... "
+        args.din = realpath(normpath(args.din))
+        generate_list(args.din, ["small", "medium", "large"], [5, 20, 50])
+        generate_list(args.din, ["full"], [100])
+        exit(0)
+    elif (args.fin is not None) and isfile(args.fin):
+        root = dirname(realpath(sys.argv[0]))
+        setup_environment(lib)
+    else:
+        print "... Fail on running script"
+        exit(-1)
 
-        if not isdir(args.din):
-            print "Input is not directory"
-            exit(-1)
-        elif any([isfile(f) and f.startswith(prefix) for f in listdir(cwd)]):
-            print "Found possible duplicate file in `{0}`:".format(cwd)
-            for f in listdir(cwd):
-                if isfile(f) and f.startswith(prefix):
-                    print os.path.join(cwd, f)
-            exit(-1)
-        else:
-            print "Generate image list ... "
-            generate_list(din, ["small", "medium", "large"], [5, 20, 50])
-            generate_list(din, ["full"], [100])
-            exit(0)
-    elif args.fin is not None:
-        if not isfile(args.fin):
-            print "Input is not file"
-            exit(-1)
-        else:
-            # If input is image list, setup environment variable
-            root = dirname(realpath(sys.argv[0]))
-            fin = realpath(args.fin)
-            setup_environment(lib)
 
-            vl_setup = os.path.join(lib['vlfeat'], "toolbox", "vl_setup.m")
-            baseline = os.path.join(root, 'baseline')
+    # Setup command to feed MATLAB
+    fin = realpath(normpath(args.fin))
+    vl_setup = os.path.join(lib['vlfeat'], "toolbox", "vl_setup.m")
+    baseline = os.path.join(root, 'baseline')
 
-            #run(fullfile(root_dir, '../vlfeat/toolbox/vl_setup'));
-            cmd = "addpath('{0}'); baseline {1}; quit".format(baseline, fin)
-            start_args = ["-nodesktop -nosplash -singleCompThread -r"]
-            #subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
+    setup_vl = "run('{0}')".format(vl_setup)
+    setup_baseline = "addpath('{0}')".format(baseline)
+    run_baseline = "baseline_new '{0}'".format(fin)
+
+    start_args = "-nodesktop -nosplash -singleCompThread -r"
+    matlab_cmd = "\n;".join([setup_vl, setup_baseline, run_baseline])
+    cmd = ["matlab", start_args, "\"{0}\"".format(matlab_cmd), ]
+    subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
 
