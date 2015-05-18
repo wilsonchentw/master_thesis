@@ -8,7 +8,12 @@ function dataset = extract_descriptors(dataset, norm_size)
         % Read and preprocessing image
         image = imread(dataset(idx).path);
         norm_image = normalize_image(image, norm_size, true);
-        gray_image = rgb2gray(norm_image);
+        if size(norm_image, 3) == 3
+            gray_image = rgb2gray(norm_image);
+        else
+            fprintf(1, '%s is not 3-channel image.\n', dataset(idx).path)
+            gray_image = norm_image;
+        end
 
         % Extract SIFT features
         dataset(idx).sift = extract_sift(gray_image);

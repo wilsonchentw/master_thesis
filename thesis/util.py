@@ -114,4 +114,4 @@ def svm_write_problem(filename, label, inst):
             for idx, xi in enumerate(x):
                 if abs(xi) > eps:
                     output.append("{0}:{1}".format(idx, xi))
-        fout.write(" ".join(output) + "\n")
+            fout.write(" ".join(output) + "\n")

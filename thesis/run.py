@@ -52,9 +52,8 @@ if __name__ == "__main__":
             for name in fin.files:
                 dataset[name] = fin[name]
     except IOError:
-        print "Extract descriptor from image"
         dataset = extract_from_scratch(args.fin, 100)
-        np.savez_compressed(title)
+        np.savez_compressed(title, **dataset)
         for name in dataset:
             if name != 'label':
                 filename = "{0}_{1}.dat".format(title, name)
