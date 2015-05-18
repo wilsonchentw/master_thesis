@@ -120,11 +120,11 @@ if __name__ == "__main__":
     # Setup command to feed MATLAB
     fin = realpath(normpath(args.fin))
     vl_setup = os.path.join(lib['vlfeat'], "toolbox", "vl_setup.m")
-    baseline = os.path.join(root, 'baseline')
+    baseline_path = os.path.join(root, 'baseline')
 
     setup_vl = "run('{0}')".format(vl_setup)
-    setup_baseline = "addpath('{0}')".format(baseline)
-    run_baseline = "baseline_new '{0}'".format(fin)
+    setup_baseline = "addpath('{0}')".format(baseline_path)
+    run_baseline = "baseline '{0}'".format(fin)
 
     start_args = "-nodesktop -nosplash -singleCompThread -r"
     matlab_cmd = "\n;".join([setup_vl, setup_baseline, run_baseline])
