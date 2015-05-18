@@ -3,10 +3,9 @@
 
 import argparse
 import os
-from os import environ as env
-from os import pathsep as sep
+from os import environ, pathsep
 from os import getenv, listdir, getcwd
-from os.path import abspath, isfile
+from os.path import realpath, isfile, dirname
 import subprocess
 import sys
 
@@ -22,25 +21,34 @@ lib = {
 
 
 def setup_environment(lib):
+    for name, path in lib.items():
+        lib[name] = realpath(path)
+
     # Setup environment variable
-    env['LD_LIBRARY_PATH'] = sep.join([
-        getenv('LD_LIBRARY_PATH', ""), 
-        lib['gcc'], 
-        lib['vlfeat'] + "/bin/glnxa64/libvl.so", 
-    ])
-    env['LD_PRELOAD'] = sep.join([
-        getenv('LD_PRELOAD', ""), 
-        lib['gcc'] + "/libgfortran.so", 
-        lib['gcc'] + "/libgcc_s.so", 
-        lib['gcc'] + "/libstdc++.so", 
-        lib['gcc'] + "/libgomp.so", 
-    ])
-    env['PYTHONPATH'] = sep.join([
-        getenv('PYTHONPATH', ""), 
-        lib['libsvm'] + "/python", 
-        lib['liblinear'] + "/python", 
-        lib['spams_py'], 
-    ])
+    environ['LD_LIBRARY'] = pathsep.join(
+        filter(None, [
+            getenv('LD_LIBRARY'), 
+            lib['gcc'], 
+            os.path.join(lib['vlfeat'], "bin", "glnxa64", "libvl.so"),
+        ])
+    )
+    environ['LD_PRELOAD'] = pathsep.join(
+        filter(None, [
+            getenv('LD_PRELOAD'), 
+            os.path.join(lib['gcc'], "libgfortran.so"), 
+            os.path.join(lib['gcc'], "libgcc_s.so"), 
+            os.path.join(lib['gcc'], 'libstdc++.so'), 
+            os.path.join(lib['gcc'], 'libgomp.so'), 
+        ])
+    )
+    environ['PYTHONPATH'] = pathsep.join(
+        filter(None, [
+            getenv('PYTHON'), 
+            os.path.join(lib['libsvm'], "python"), 
+            os.path.join(lib['liblinear'], "python"), 
+            os.path.join(lib['spams_py']), 
+        ])
+    )
 
 
 def generate_list(path, listname, percent):
@@ -71,13 +79,12 @@ if __name__ == "__main__":
             print "Find possible duplicate file, check your working directory"
             exit(-1)
         else:
+            print "Generate image list ..."
             generate_list(args.din, ["small", "medium", "large"], [5, 20, 50])
             generate_list(args.din, ["full"], [100])
-    else:
-        print "input is file"
-        
+            exit(0)
 
-    # Convert to absolute path, then setup environment variable
-    for name, path in lib.items():
-        lib[name] = abspath(path)
+
+    # If input is image list, setup environment variable
     setup_environment(lib)
+    root = dirname(realpath(sys.argv[0]))
