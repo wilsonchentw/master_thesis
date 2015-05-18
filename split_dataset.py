@@ -1,47 +1,50 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import argparse
+import os
+from os import getcwd, listdir
+from os.path import isfile, isdir, abspath
 import sys
 import random
-import argparse
-from itertools import accumulate
-from os import getcwd, listdir
-from os.path import isfile, join, abspath
+
 
 def check_option(args):
-    if not args.f and not args.v:
-        args.f = [sys.stdout]
-        args.v = [1]
-    elif len(args.f) != len(args.v):
-        print("mismatch number of arguments")
-        exit(1)
-    elif len([e for e in args.v if e < 0]) > 0:
-        print("number of fold must be non-negative")
-        exit(1)
+    if len(args.f) != len(args.v):
+        print "Mismatch number of arguments"
+        exit(-2)
+    elif len(filter(lambda x: x <= 0, args.v)) > 0:
+        print("number of fold must be positive")
+        exit(-3)
     else:
-        args.f = [open(f, mode="w") for f in args.f]
-    return abspath(args.dataset), args.f, args.v 
+        fout = [open(f, mode="w") for f in args.f]
+        return abspath(args.dataset), fout, args.v 
 
-def usage_msg():
-    return ("split_dataset.py dataset_folder [-f list ...] [-v portion ...]\n"
-            "If no -f & -v, print all files in dataset_folder on screen\n "
-           )
 
-parser = argparse.ArgumentParser(usage=usage_msg())
-parser.add_argument("dataset", help="path to dataset directory")
-parser.add_argument("-f", nargs="*", type=str, metavar="list_name")
-parser.add_argument("-v", nargs="*", type=int, metavar="fold")
-args = parser.parse_args()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("dataset", help="path to dataset directory")
+    parser.add_argument("-f", nargs="+", type=str, metavar="list_name")
+    parser.add_argument("-v", nargs="+", type=int, metavar="fold")
+    args = parser.parse_args()
 
-rootpath, filelist, fold = check_option(args)
-for idx, label in enumerate(listdir(rootpath)):
-    dirpath = join(rootpath, label)
-    pathlist = [p for p in listdir(dirpath) if isfile(join(dirpath, p))]
-    random.shuffle(pathlist)
+    rootpath, fout, fold = check_option(args)
+    cwdlist = [os.path.join(rootpath, d) for d in listdir(rootpath)]
+    for label, dirpath in enumerate(filter(isdir, cwdlist)):
+        image_list = [os.path.join(dirpath, f) for f in listdir(dirpath)]
+        image_list = filter(isfile, image_list)
+        random.shuffle(image_list)
 
-    num = [v*len(pathlist)//sum(fold) for v in fold]
-    num = [n+1 if i < len(pathlist)-sum(num) else n for i, n in enumerate(num)]
-    acc = list(accumulate(num))
-    for i, f in enumerate(filelist):
-        for image in pathlist[acc[i]-num[i]:acc[i]]:
-            print(join(dirpath, image) + " " + str(idx+1), file=f)
+        # Partition images list in directory
+        total = len(image_list)
+        if total < sum(fold):
+            print "Warning: {0} only has {1} images".format(dirpath, total)
+            continue
+        else:
+            num_image = [v * total // sum(fold) for v in fold]
+            sample = random.sample(range(len(fold)), total - sum(num_image))
+            for idx, f in enumerate(fout):
+                num = num_image[idx] + (1 if idx not in sample else 0)
+                sublist, image_list = image_list[:num], image_list[num:]
+                for image in sublist:
+                    f.write("{0} {1}\n".format(image, label))
