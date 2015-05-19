@@ -27,7 +27,7 @@ function baseline(image_list)
         sift.p = struct('K', sift.dim, 'lambda', 0.25, 'lambda2', 0, ...
                         'iter', 1000, 'mode', 2, 'modeD', 0, ...
                         'modeParam', 0, 'clean', true, 'numThreads', 4);
-        sift.dict = mexTrainDL_Memory([dataset(f.train).sift], sift.p);
+        sift.dict = mexTrainDL([dataset(f.train).sift], sift.p);
         sift.alpha = mexLasso([dataset.sift], sift.dict, sift.p); 
         sift.n = [dataset.sift_num];
         encode.sift = sparse(pooling(sift.alpha, sift.n)');
@@ -37,7 +37,7 @@ function baseline(image_list)
         lbp.p = struct('K', lbp.dim, 'lambda', 0.25, 'lambda2', 0, ...
                        'iter', 1000, 'mode', 2, 'modeD', 0, ...
                        'modeParam', 0, 'clean', true, 'numThreads', 4);
-        lbp.dict = mexTrainDL_Memory([dataset(f.train).lbp], lbp.p);
+        lbp.dict = mexTrainDL([dataset(f.train).lbp], lbp.p);
         lbp.alpha = mexLasso([dataset.lbp], lbp.dict, lbp.p);
         lbp.n = [dataset.lbp_num];
         encode.lbp = sparse(pooling(lbp.alpha, lbp.n)');
