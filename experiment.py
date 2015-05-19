@@ -83,7 +83,9 @@ def is_valid_dir(din):
 
 
 def generate_list(path, listname, percent):
-    prefix = basename(realpath(normpath(path)))
+    path = realpath(normpath(path))
+
+    prefix = basename(path)
     listname = ["{0}_{1}.list".format(prefix, name) for name in listname]
     if sum(percent) < 100:
         listname.append(os.devnull)
@@ -105,29 +107,30 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if (args.din is not None) and is_valid_dir(args.din):
         print "Generate image list ... "
-        args.din = realpath(normpath(args.din))
         generate_list(args.din, ["small", "medium"], [5, 20])
         generate_list(args.din, ["full"], [100])
         exit(0)
     elif (args.fin is not None) and isfile(args.fin):
         root = dirname(realpath(sys.argv[0]))
+        fin = realpath(normpath(args.fin))
         setup_environment(lib)
     else:
         print "... Fail on running script"
         exit(-1)
 
+    ## Setup command to feed MATLAB
+    #vl_setup = os.path.join(lib['vlfeat'], "toolbox", "vl_setup")
+    #baseline_path = os.path.join(root, 'baseline')
 
-    # Setup command to feed MATLAB
-    fin = realpath(normpath(args.fin))
-    vl_setup = os.path.join(lib['vlfeat'], "toolbox", "vl_setup")
-    baseline_path = os.path.join(root, 'baseline')
+    #setup_vl = "run('{0}')".format(vl_setup)
+    #setup_baseline = "addpath('{0}')".format(baseline_path)
+    #run_baseline = "baseline '{0}'".format(fin)
 
-    setup_vl = "run('{0}')".format(vl_setup)
-    setup_baseline = "addpath('{0}')".format(baseline_path)
-    run_baseline = "baseline '{0}'".format(fin)
+    #start_args = "-nodesktop -nosplash -singleCompThread -r"
+    #matlab_cmd = "\n;".join([setup_vl, setup_baseline, run_baseline])
+    #cmd = ["matlab", start_args, "\"{0}\"".format(matlab_cmd), ]
+    #subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
 
-    start_args = "-nodesktop -nosplash -singleCompThread -r"
-    matlab_cmd = "\n;".join([setup_vl, setup_baseline, run_baseline])
-    cmd = ["matlab", start_args, "\"{0}\"".format(matlab_cmd), ]
+
+    cmd = ["python", os.path.join(root, "thesis", "run.py"), fin]
     subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
-

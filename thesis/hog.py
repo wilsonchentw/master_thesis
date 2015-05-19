@@ -4,7 +4,7 @@ import numpy as np
 
 from util import *
 
-def extract_hog(image, bins, block, step):
+def raw_hog(image, bins, block, step):
     # Compute gradient & orientation, then quantize angle int bins
     magnitude, angle = get_gradient(image)
     angle = (angle / (np.pi * 2.0) * bins).astype(int)
@@ -32,6 +32,11 @@ def extract_hog(image, bins, block, step):
         hist[block.dst] /= (np.linalg.norm(hist[block.dst]) + eps)
 
     return hist
+
+
+def extract_hog(image):
+    hog = raw_hog(image, bins=12, block=(32, 32), step=(16, 16))
+    return hog.reshape(-1)
 
 
 if __name__ == "__main__":

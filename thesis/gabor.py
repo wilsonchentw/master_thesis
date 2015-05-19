@@ -39,27 +39,27 @@ def gabor_param():
     return param_bank
 
 
-def extract_gabor(image, num_block, param_bank=None):
-    # Setup Gabor filter bank parameter
-    param_bank = gabor_param() if param_bank is None else param_bank
-    num_param = len(param_bank)
+def extract_gabor(image):
+    param_bank = gabor_param()
 
-    image_shape = image.shape[:2]
-    block_shape = np.array(image_shape) // num_block
+    # Aggregate blockwise result
+    num_block = (4, 4)
+    image_shape = np.array(image.shape[:2])
+    block_shape = image_shape // num_block
     blocks = SlidingWindow(image_shape, block_shape, block_shape)
-    num_block = np.prod(blocks.dst_shape)
 
-    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    gabor = np.empty((num_param, num_block, 2))
+    gabor = np.empty((len(param_bank), np.prod(num_block), 2))
     for param_idx, param in enumerate(param_bank):
-        real, imag = gabor_response(gray_image, **param)
+        real, imag = gabor_response(image, **param)
         magnitude = np.sqrt((real ** 2) + (imag ** 2))
 
         for block_idx, block in enumerate(blocks):
             patch = magnitude[block]
-            gabor[param_idx, block_idx] = [np.mean(patch), np.var(patch)]
-    return gabor
- 
+            gabor[param_idx, block_idx, 0] = np.mean(patch)
+            gabor[param_idx, block_idx, 1] = np.var(patch)
+
+    return gabor.reshape(-1)
+
 
 if __name__ == "__main__":
     print "gabor_helper.py as main"

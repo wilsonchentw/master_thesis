@@ -4,13 +4,18 @@ import numpy as np
 
 from util import *
 
-def extract_color(image, num_block, bins, ranges):
+def extract_color(image):
+    bins = (32, 32, 32)
+    ranges = [[0, 1], [0, 1], [0, 1]]
+    num_block = (4, 4)
+
     # Compensate for exclusive upper boundary
     ranges = np.array([[pair[0], pair[1] + eps] for pair in ranges])
-    block_shape = np.array(image.shape[:2]) // num_block
 
+    block_shape = np.array(image.shape[:2]) // num_block
     hist = channel_hist(image, bins, ranges, block_shape, block_shape)
-    return hist
+
+    return np.concatenate([h.reshape(-1) for h in hist])
 
 
 def channel_hist(image, bins, ranges, block, step):

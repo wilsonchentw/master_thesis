@@ -10,28 +10,29 @@ import numpy as np
 import descriptor
 from util import *
 
-def extract_from_scratch(filename, batchsize):
+
+def extract_instance_wise(filename, batchsize):
     dataset = {}
     with open(filename, 'r') as fin:
         for line_idx, line in enumerate(fin, 1):
-            # Extract raw descriptor
             path, label = line.strip().split(' ')
-            data = descriptor.extract_descriptor(label, path)
+            data = descriptor.instance_descriptor(label, path)
 
-            # Update dataset
+            # Add image descriptor to update dataset 
             for name, value in data.items():
                 dataset.setdefault(name, []).append(value)
 
             # With each batch, print progress report
             if line_idx % batchsize == 0: 
                 print "line {0} is done".format(line_idx)
+                break
 
     # Convert to numpy array for furthur usage
     for name in dataset:
         dataset[name] = np.array(dataset[name])
 
     return dataset
-
+          
 
 if __name__ == "__main__":
 
@@ -42,8 +43,11 @@ if __name__ == "__main__":
                         help="list with path followed by label")
 
     args = parser.parse_args()
-    title = args.fin.partition('.')[0]
+    prefix = os.path.basename(args.fin).partition('.')[0]
+    dataset = extract_instance_wise(args.fin, batchsize=5)
 
+
+    """
     # Read dataset
     try:
         dataset = {}
@@ -58,3 +62,4 @@ if __name__ == "__main__":
             if name != 'label':
                 filename = "{0}_{1}.dat".format(title, name)
                 svm_write_problem(filename, dataset['label'], dataset[name])
+    """
