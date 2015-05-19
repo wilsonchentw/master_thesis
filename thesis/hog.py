@@ -2,7 +2,9 @@ import cv2
 import cv2.cv as cv
 import numpy as np
 
-from util import *
+from dip import *
+from utility import *
+from descriptor import *
 
 def raw_hog(image, bins, block, step):
     # Compute gradient & orientation, then quantize angle int bins
@@ -34,10 +36,10 @@ def raw_hog(image, bins, block, step):
     return hist
 
 
-def extract_hog(image):
+def get_hog(image):
     hog = raw_hog(image, bins=12, block=(32, 32), step=(16, 16))
     return hog.reshape(-1)
 
 
 if __name__ == "__main__":
-    print "hog_helper.py as main"
+    print "hog.py as main function"

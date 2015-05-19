@@ -39,7 +39,7 @@ def gabor_param():
     return param_bank
 
 
-def extract_gabor(image):
+def get_gabor(image):
     param_bank = gabor_param()
 
     # Aggregate blockwise result

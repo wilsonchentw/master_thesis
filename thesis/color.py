@@ -4,7 +4,7 @@ import numpy as np
 
 from util import *
 
-def extract_color(image):
+def get_color(image):
     bins = (32, 32, 32)
     ranges = [[0, 1], [0, 1], [0, 1]]
     num_block = (4, 4)

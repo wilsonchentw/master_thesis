@@ -6,6 +6,7 @@ dataset
 *.mat
 *.train
 *.test
+*.npz
 
 # Ignore byte code compiled by Python
 *.pyc

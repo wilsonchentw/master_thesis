@@ -6,6 +6,7 @@ from util import *
 from hog import raw_hog
 
 def raw_phog(image, bins, level):
+
     # Extract HOG of smallest cells
     image_shape = np.array(image.shape[:2])
     cell_shape = image_shape // (2 ** (level - 1))
@@ -20,11 +21,12 @@ def raw_phog(image, bins, level):
         for block in blocks[lv]:
             block_hist = hog[block].reshape(-1, bins)
             phog[lv][block.dst] = np.sum(block_hist, axis=0)
+            phog[lv][block.dst] /= np.sum(phog[lv][block.dst])
 
     return phog
 
 
-def extract_phog(image):
+def get_phog(image):
     phog = raw_phog(image, bins=12, level=4)
     return np.concatenate([hog.reshape(-1) for hog in phog])
 
