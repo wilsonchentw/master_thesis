@@ -57,9 +57,9 @@ def setup_environment(lib):
             getenv('MATLABPATH'), 
             os.path.join(lib['liblinear'], "matlab"), 
             os.path.join(lib['libsvm'], "matlab"), 
+            os.path.join(lib['spams-matlab'], "build"), 
             os.path.join(lib['spams-matlab'], "test_release"), 
             os.path.join(lib['spams-matlab'], "src_release"), 
-            os.path.join(lib['spams-matlab'], "build"), 
         ])
     )
 
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     if (args.din is not None) and is_valid_dir(args.din):
         print "Generate image list ... "
         args.din = realpath(normpath(args.din))
-        generate_list(args.din, ["small", "medium", "large"], [5, 20, 50])
+        generate_list(args.din, ["small", "medium"], [5, 20])
         generate_list(args.din, ["full"], [100])
         exit(0)
     elif (args.fin is not None) and isfile(args.fin):
@@ -119,7 +119,7 @@ if __name__ == "__main__":
 
     # Setup command to feed MATLAB
     fin = realpath(normpath(args.fin))
-    vl_setup = os.path.join(lib['vlfeat'], "toolbox", "vl_setup.m")
+    vl_setup = os.path.join(lib['vlfeat'], "toolbox", "vl_setup")
     baseline_path = os.path.join(root, 'baseline')
 
     setup_vl = "run('{0}')".format(vl_setup)
