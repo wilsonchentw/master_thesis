@@ -9,7 +9,7 @@ from hog import get_hog
 from phog import get_phog
 from color import get_color
 from gabor import get_gabor
-from utility import *
+from util import *
 
 def extract_descriptor(filename, preprocess, extract, batchsize=None):
     preprocess = (lambda x: x) if preprocess is None else preprocess

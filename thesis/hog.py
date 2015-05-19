@@ -3,8 +3,8 @@ import cv2.cv as cv
 import numpy as np
 
 from dip import *
-from utility import *
-from descriptor import *
+from util import *
+
 
 def raw_hog(image, bins, block, step):
     # Compute gradient & orientation, then quantize angle int bins
