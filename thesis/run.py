@@ -15,7 +15,7 @@ def load_dataset(filename):
         with np.load(prefix + ".npz") as fin:
             dataset = {name: fin[name] for name in fin}
     except IOError:
-        dataset = descriptor.extract_all(args.fin, batchsize=5)
+        dataset = descriptor.extract_all(args.fin, batchsize=100)
         np.savez_compressed(prefix, **dataset)
 
     return dataset
