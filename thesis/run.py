@@ -25,14 +25,33 @@ def extract_instance_wise(filename, batchsize):
             # With each batch, print progress report
             if line_idx % batchsize == 0: 
                 print "line {0} is done".format(line_idx)
-                break
 
     # Convert to numpy array for furthur usage
     for name in dataset:
         dataset[name] = np.array(dataset[name])
 
     return dataset
-          
+ 
+
+def load_dataset(fin):
+    prefix = os.path.basename(fin).partition('.')[0]
+
+    try: 
+        # Warm start at pre-extract dataset
+        dataset = {}
+        with np.load(prefix + ".npz") as fin:
+            for name in fin.files:
+                dataset[name] = fin[name]
+    except IOError:
+        # Cold start
+        dataset = extract_instance_wise(fin, batchsize=5)
+        np.savez_compressed(prefix, **dataset)
+        for name in dataset:
+            if name != 'label':
+                filename = "{0}_{1}.dat".format(prefix, name)
+                svm_write_problem(filename, dataset['label'], dataset[name])
+    return dataset
+
 
 if __name__ == "__main__":
 
@@ -43,23 +62,4 @@ if __name__ == "__main__":
                         help="list with path followed by label")
 
     args = parser.parse_args()
-    prefix = os.path.basename(args.fin).partition('.')[0]
-    dataset = extract_instance_wise(args.fin, batchsize=5)
-
-
-    """
-    # Read dataset
-    try:
-        dataset = {}
-        with np.load(title + ".npz", 'r') as fin:
-            print "Load {0} from disk ... ".format(title + ".npz")
-            for name in fin.files:
-                dataset[name] = fin[name]
-    except IOError:
-        dataset = extract_from_scratch(args.fin, 100)
-        np.savez_compressed(title, **dataset)
-        for name in dataset:
-            if name != 'label':
-                filename = "{0}_{1}.dat".format(title, name)
-                svm_write_problem(filename, dataset['label'], dataset[name])
-    """
+    dataset = load_dataset(args.fin)

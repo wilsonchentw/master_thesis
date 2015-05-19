@@ -107,7 +107,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if (args.din is not None) and is_valid_dir(args.din):
         print "Generate image list ... "
-        generate_list(args.din, ["small", "medium"], [5, 20])
+        generate_list(args.din, ["tiny", "small", "medium"], [5, 10, 20])
         generate_list(args.din, ["full"], [100])
         exit(0)
     elif (args.fin is not None) and isfile(args.fin):
