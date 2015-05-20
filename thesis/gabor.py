@@ -3,7 +3,11 @@ import itertools
 import cv2
 import cv2.cv as cv
 import numpy as np
+import sklearn
+from svmutil import *
+from liblinearutil import *
 
+from dip import *
 from util import *
 
 
@@ -40,6 +44,7 @@ def gabor_param():
 
 
 def get_gabor(image):
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     param_bank = gabor_param()
 
     # Aggregate blockwise result
@@ -59,6 +64,11 @@ def get_gabor(image):
             gabor[param_idx, block_idx, 1] = np.var(patch)
 
     return gabor.reshape(-1)
+
+
+def extract_gabor(pathlist, batchsize):
+    gabor = extract_descriptor(pathlist, get_gabor, batchsize)
+    return color
 
 
 if __name__ == "__main__":

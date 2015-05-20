@@ -1,21 +1,12 @@
 import cv2
 import cv2.cv as cv
 import numpy as np
+import sklearn
+from svmutil import *
+from liblinearutil import *
 
+from dip import *
 from util import *
-
-def get_color(image):
-    bins = (32, 32, 32)
-    ranges = [[0, 1], [0, 1], [0, 1]]
-    num_block = (16, 16)
-
-    # Compensate for exclusive upper boundary
-    ranges = np.array([[pair[0], pair[1] + eps] for pair in ranges])
-
-    block_shape = np.array(image.shape[:2]) // num_block
-    hist = channel_hist(image, bins, ranges, block_shape, block_shape)
-
-    return np.concatenate([h.reshape(-1) for h in hist])
 
 
 def channel_hist(image, bins, ranges, block, step):
@@ -45,6 +36,25 @@ def color_cube(image, bins, ranges, block, step):
         block_hist = cv2.calcHist([patch], channels, None, bins, ranges)
         hist[block.dst] = block_hist / np.sum(block_hist)
     return hist
+
+
+def get_color(image):
+    bins = (32, 32, 32)
+    ranges = [[0, 1], [0, 1], [0, 1]]
+    num_block = (16, 16)
+
+    # Compensate for exclusive upper boundary
+    ranges = np.array([[pair[0], pair[1] + eps] for pair in ranges])
+
+    block_shape = np.array(image.shape[:2]) // num_block
+    hist = channel_hist(image, bins, ranges, block_shape, block_shape)
+
+    return np.concatenate([h.reshape(-1) for h in hist])
+
+
+def extract_color(pathlist, batchsize):
+    color = extract_descriptor(pathlist, get_color, batchsize)
+    return color
 
 
 if __name__ == "__main__":

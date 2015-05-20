@@ -51,3 +51,17 @@ def canny_edge(image):
     t_lo, t_hi = (mid + std * 0.5), (mid + std * 1.5)
     contour = cv2.Canny(gray_image, t_lo, t_hi, L2gradient=True)
     return contour.astype(np.float32) / 255.0
+
+
+def extract_descriptor(pathlist, extract, batchsize=None):
+    descriptor = []
+    for idx, path in enumerate(pathlist, 1):
+        raw_image = cv2.imread(path, cv2.CV_LOAD_IMAGE_COLOR)
+        norm_image = normalize_image(raw_image, (256, 256), crop=True)
+        image = norm_image.astype(np.float32) / 255.0
+        descriptor.append(extract(image))
+
+        if (batchsize is not None) and (idx % batchsize) == 0:
+            print "line {0} is done".format(idx)
+
+    return np.array(descriptor)
