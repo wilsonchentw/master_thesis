@@ -77,4 +77,3 @@ def preload_list(filename):
             dataset['label'].append(label)
 
         return dataset
-

@@ -3,9 +3,6 @@ import itertools
 import cv2
 import cv2.cv as cv
 import numpy as np
-import sklearn
-from svmutil import *
-from liblinearutil import *
 
 from dip import *
 from util import *
@@ -65,11 +62,3 @@ def get_gabor(image):
 
     return gabor.reshape(-1)
 
-
-def extract_gabor(pathlist, batchsize):
-    gabor = extract_descriptor(pathlist, get_gabor, batchsize)
-    return color
-
-
-if __name__ == "__main__":
-    print "gabor_helper.py as main"

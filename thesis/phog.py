@@ -1,9 +1,6 @@
 import cv2
 import cv2.cv as cv
 import numpy as np
-import sklearn
-from svmutil import *
-from liblinearutil import *
 
 from dip import *
 from util import *
@@ -37,10 +34,3 @@ def get_phog(image):
     return phog / np.sum(phog)
 
 
-def extract_phog(pathlist, batchsize=None):
-    phog = extract_descriptor(pathlist, get_phog, batchsize)
-    return phog
-
-
-if __name__ == "__main__":
-    print "phog_helper.py as main"

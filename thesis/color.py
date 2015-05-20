@@ -1,9 +1,6 @@
 import cv2
 import cv2.cv as cv
 import numpy as np
-import sklearn
-from svmutil import *
-from liblinearutil import *
 
 from dip import *
 from util import *
@@ -51,11 +48,3 @@ def get_color(image):
 
     return np.concatenate([h.reshape(-1) for h in hist])
 
-
-def extract_color(pathlist, batchsize):
-    color = extract_descriptor(pathlist, get_color, batchsize)
-    return color
-
-
-if __name__ == "__main__":
-    print "color_helper.py as main"

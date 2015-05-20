@@ -1,9 +1,6 @@
 import cv2
 import cv2.cv as cv
 import numpy as np
-import sklearn
-from svmutil import *
-from liblinearutil import *
 
 from dip import *
 from util import *
@@ -44,10 +41,3 @@ def get_hog(image):
     return hog.reshape(-1)
 
 
-def extract_hog(pathlist, batchsize=None):
-    hog = extract_descriptor(pathlist, get_hog, batchsize)
-    return hog
-
-
-if __name__ == "__main__":
-    print "hog.py as main function"

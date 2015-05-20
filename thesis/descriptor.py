@@ -3,55 +3,39 @@ import os
 import cv2
 import cv2.cv as cv
 import numpy as np
+import sklearn
+from svmutil import *
+from liblinearutil import *
 
-import dip
+from dip import *
+from util import *
 from hog import get_hog
 from phog import get_phog
 from color import get_color
 from gabor import get_gabor
-from util import *
 
-def extract_descriptor(filename, preprocess, extract, batchsize=None):
-    preprocess = (lambda x: x) if preprocess is None else preprocess
-    normalize_image = dip.normalize_image
-
+def extract_descriptor(pathlist, extract, batchsize=None):
     descriptor = []
-    with open(filename, 'r') as fin:
-        for idx, line in enumerate(fin, 1):
-            path, label = line.strip().split(" ")
+    for idx, path in enumerate(pathlist, 1):
+        raw_image = cv2.imread(path, cv2.CV_LOAD_IMAGE_COLOR)
+        norm_image = normalize_image(raw_image, (256, 256), crop=True)
+        image = norm_image.astype(np.float32) / 255.0
+        descriptor.append(extract(image))
 
-            raw_image = cv2.imread(path, cv2.CV_LOAD_IMAGE_COLOR)
-            norm_image = normalize_image(raw_image, (256, 256), crop=True)
-            image = preprocess(norm_image.astype(np.float32) / 255.0)
-            descriptor.append(extract(image))
+        if (batchsize is not None) and (idx % batchsize) == 0:
+            print "line {0} is done".format(idx)
 
-            if (batchsize is not None) and (idx % batchsize) == 0:
-                print "line {0} is done".format(idx)
+    return np.array(descriptor)
 
-        return np.array(descriptor)
-
-
-def extract_all(filename, batchsize=None):
-    param = {
-        'hog': (None, get_hog), 
-        'phog': (None, get_phog), 
-        'color': (None, get_color), 
-        'gabor': (lambda x: cv2.cvtColor(x, cv2.COLOR_BGR2GRAY), get_gabor), 
-    }
+def extract_all(filename, batchsize=100):
+    extract_list = ['hog', 'phog', 'color', 'gabor']
 
     prefix = os.path.basename(filename).partition('.')[0]
-    with open(filename, 'r') as fin:
-        label = [line.strip().split(" ")[1] for line in fin]
+    dataset = preload_list(filename)
+    for name in extract_list:
+        extract = globals()["get_" + name]
+        dataset[name] = extract_descriptor(dataset['path'], extract, 100)
+        outfile = "{0}_{1}.dat".format(prefix, name)
+        svm_write_problem(outfile, dataset['label'], dataset[name])
 
-    data = {}
-    for name, (preproc, extract) in param.items():
-        data[name] = extract_descriptor(filename, preproc, extract, batchsize)
-        data_name = "{0}_{1}.dat".format(prefix, name)
-        svm_write_problem(data_name, label, data[name])
-        print "{0} with shape {1}".format(name, data[name].shape)
-        
-    return data
-
-
-if __name__ == "__main__":
-    print "descriptor.py as main"
+    return dataset
