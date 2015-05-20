@@ -43,7 +43,7 @@ def get_gabor(image):
     param_bank = gabor_param()
 
     # Aggregate blockwise result
-    num_block = (4, 4)
+    num_block = (8, 8)
     image_shape = np.array(image.shape[:2])
     block_shape = image_shape // num_block
     blocks = SlidingWindow(image_shape, block_shape, block_shape)

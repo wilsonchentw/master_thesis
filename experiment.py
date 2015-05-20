@@ -115,6 +115,7 @@ if __name__ == "__main__":
         fin = realpath(normpath(args.fin))
         setup_environment(lib)
     else:
+        print "not a valid directory or file"
         print "... Fail on running script"
         exit(-1)
 

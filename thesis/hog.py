@@ -37,7 +37,7 @@ def raw_hog(image, bins, block, step):
 
 
 def get_hog(image):
-    hog = raw_hog(image, bins=12, block=(32, 32), step=(16, 16))
+    hog = raw_hog(image, bins=12, block=(16, 16), step=(8, 8))
     return hog.reshape(-1)
 
 
