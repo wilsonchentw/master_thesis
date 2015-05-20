@@ -5,7 +5,10 @@ import argparse
 import os
 import warnings
 
+from svmutil import *
+from liblinearutil import *
 import numpy as np
+import sklearn
 
 import descriptor
 

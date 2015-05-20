@@ -47,7 +47,7 @@ def extract_all(filename, batchsize=None):
     for name, (preproc, extract) in param.items():
         data[name] = extract_descriptor(filename, preproc, extract, batchsize)
         data_name = "{0}_{1}.dat".format(prefix, name)
-        #svm_write_problem(data_name, label, data[name])
+        svm_write_problem(data_name, label, data[name])
         print "{0} with shape {1}".format(name, data[name].shape)
         
     return data

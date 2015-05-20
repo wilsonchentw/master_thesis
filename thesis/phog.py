@@ -26,7 +26,7 @@ def raw_phog(image, bins, level):
 
 
 def get_phog(image):
-    phog = raw_phog(image, bins=12, level=5)
+    phog = raw_phog(image, bins=12, level=6)
     phog = np.concatenate([hog.reshape(-1) for hog in phog])
     return phog / np.sum(phog)
 

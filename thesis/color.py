@@ -7,7 +7,7 @@ from util import *
 def get_color(image):
     bins = (32, 32, 32)
     ranges = [[0, 1], [0, 1], [0, 1]]
-    num_block = (8, 8)
+    num_block = (16, 16)
 
     # Compensate for exclusive upper boundary
     ranges = np.array([[pair[0], pair[1] + eps] for pair in ranges])
