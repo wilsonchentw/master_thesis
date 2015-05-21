@@ -66,15 +66,3 @@ def svm_write_problem(filename, label, inst):
                 if abs(xi) > eps:
                     output.append("{0}:{1}".format(idx, xi))
             fout.write(" ".join(output) + "\n")
-
-
-def preload_list(filename):
-    with open(filename, 'r') as fin:
-        dataset = collections.defaultdict(list)
-        for line in fin:
-            path, label = line.strip().split(" ")
-            dataset['path'].append(path)
-            dataset['label'].append(int(label))
-
-        dataset['label'] = np.array(dataset['label'])
-        return dataset

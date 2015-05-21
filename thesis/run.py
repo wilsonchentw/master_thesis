@@ -3,7 +3,6 @@
 
 import argparse
 import collections
-import itertools
 import os
 import warnings
 
@@ -15,22 +14,24 @@ import sklearn
 
 import descriptor
 
-def load_dataset(filename):
-    try:
-        with np.load(prefix + ".npz") as fin:
-            dataset = {name: fin[name] for name in fin}
-    except IOError:
-        dataset = descriptor.extract_all(filename)
-        np.savez_compressed(prefix, **dataset)
 
-    return dataset
+def preload_list(filename):
+    with open(filename, 'r') as fin:
+        dataset = collections.defaultdict(list)
+        for line in fin:
+            path, label = line.strip().split(" ")
+            dataset['path'].append(path)
+            dataset['label'].append(int(label))
+
+        dataset['label'] = np.array(dataset['label'])
+        return dataset
 
 
 def grid_parameter(label, inst):
-    inst = inst.tolist()
-    s_grid = [0, 1, 3]
-    c_grid = [100, 10, 1, 0.1, 0.01, 0.001, 1e-4]
+    s_grid = [1, 3]
+    c_grid = [100, 10, 1, 0.1, 0.01, 0.001, 0.0001]
 
+    inst = inst.tolist()
     acc = np.zeros((len(s_grid), len(c_grid)))
     for s_idx, s in enumerate(s_grid):
         for c_idx, c in enumerate(c_grid):
@@ -49,10 +50,16 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     prefix = os.path.basename(args.fin).partition('.')[0]
-    dataset = load_dataset(args.fin)
-    label = dataset.pop('label', np.array([])).tolist()
 
-    for name in dataset:
-        acc = grid_parameter(label, dataset[name])
-        print "{0}: ".format(name)
-        print acc
+    # Extract descriptor
+    filename = prefix + ".npz"
+    try:
+        with np.load(filename) as fin:
+            dataset = {name: fin[name] for name in fin}
+    except IOError:
+        dataset = preload_list(args.fin)
+        dataset['hog'] = descriptor.extract_hog(dataset['path'])
+        np.savez_compressed(filename, **dataset)
+
+    label = dataset.pop('label', np.array([])).tolist()
+    print grid_parameter(label, dataset['hog'])

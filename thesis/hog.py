@@ -2,6 +2,7 @@ import cv2
 import cv2.cv as cv
 import numpy as np
 
+
 from dip import *
 from util import *
 
@@ -39,5 +40,3 @@ def raw_hog(image, bins, block, step):
 def get_hog(image):
     hog = raw_hog(image, bins=12, block=(16, 16), step=(8, 8))
     return hog.reshape(-1)
-
-
