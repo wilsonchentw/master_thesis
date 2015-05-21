@@ -20,7 +20,7 @@ def load_dataset(filename):
         with np.load(prefix + ".npz") as fin:
             dataset = {name: fin[name] for name in fin}
     except IOError:
-        dataset = descriptor.extract_all(filename, 100, True)
+        dataset = descriptor.extract_all(filename)
         np.savez_compressed(prefix, **dataset)
 
     return dataset
@@ -52,7 +52,4 @@ if __name__ == "__main__":
     dataset = load_dataset(args.fin)
     label = dataset.pop('label', np.array([])).tolist()
 
-    for name in dataset:
-        acc = grid_parameter(label, dataset[name])
-        print "{0}: ".format(name)
-        print acc
+    

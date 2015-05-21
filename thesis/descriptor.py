@@ -12,7 +12,7 @@ from phog import get_phog
 from color import get_color
 from gabor import get_gabor
 
-def extract_descriptor(pathlist, extract, batchsize=None):
+def extract_descriptor(pathlist, extract, batchsize=100):
     descriptor = []
     for idx, path in enumerate(pathlist, 1):
         raw_image = cv2.imread(path, cv2.CV_LOAD_IMAGE_COLOR)
@@ -26,7 +26,7 @@ def extract_descriptor(pathlist, extract, batchsize=None):
     return np.array(descriptor)
 
 
-def extract_all(filename, batchsize=None, write_out=False):
+def extract_all(filename):
     extract_list = ['hog', 'phog', 'color', 'gabor']
 
     prefix = os.path.basename(filename).partition('.')[0]
@@ -35,10 +35,10 @@ def extract_all(filename, batchsize=None, write_out=False):
         print "Extract {0}... ".format(name)
 
         extract = globals()["get_" + name]
-        dataset[name] = extract_descriptor(dataset['path'], extract, batchsize)
-        if write_out:
-            outfile = "{0}_{1}.dat".format(prefix, name)
-            svm_write_problem(outfile, dataset['label'], dataset[name])
+        dataset[name] = extract_descriptor(dataset['path'], extract)
+
+        outfile = "{0}_{1}.dat".format(prefix, name)
+        svm_write_problem(outfile, dataset['label'], dataset[name])
 
     dataset.pop('path', None)
     return dataset
