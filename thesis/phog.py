@@ -31,6 +31,4 @@ def get_phog(image):
     image = canny_edge(image)
     phog = raw_phog(image, bins=12, level=6)
     phog = np.concatenate([hog.reshape(-1) for hog in phog])
-    return phog / np.sum(phog)
-
-
+    return phog / (np.linalg.norm(phog) + eps)

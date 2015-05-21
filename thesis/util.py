@@ -74,6 +74,7 @@ def preload_list(filename):
         for line in fin:
             path, label = line.strip().split(" ")
             dataset['path'].append(path)
-            dataset['label'].append(label)
+            dataset['label'].append(int(label))
 
+        dataset['label'] = np.array(dataset['label'])
         return dataset

@@ -1,11 +1,9 @@
 import os
+import sys
 
 import cv2
 import cv2.cv as cv
 import numpy as np
-import sklearn
-from svmutil import *
-from liblinearutil import *
 
 from dip import *
 from util import *
@@ -33,9 +31,12 @@ def extract_all(filename, batchsize=100):
     prefix = os.path.basename(filename).partition('.')[0]
     dataset = preload_list(filename)
     for name in extract_list:
+        print "Extract {0} ... ".format(name)
+
         extract = globals()["get_" + name]
         dataset[name] = extract_descriptor(dataset['path'], extract, 100)
         outfile = "{0}_{1}.dat".format(prefix, name)
         svm_write_problem(outfile, dataset['label'], dataset[name])
 
+    dataset.pop('path', None)
     return dataset

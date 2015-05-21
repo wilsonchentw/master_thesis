@@ -2,12 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import argparse
+import itertools
 import os
 import warnings
 
 from svmutil import *
 from liblinearutil import *
 import numpy as np
+import scipy
 import sklearn
 
 import descriptor
@@ -34,4 +36,14 @@ if __name__ == "__main__":
     prefix = os.path.basename(args.fin).partition('.')[0]
     dataset = load_dataset(args.fin)
 
+    label = dataset.pop('label', None).tolist()
+    for name in dataset:
+        print "{0}: ".format(name)
+        inst = dataset[name].tolist()
 
+        c = [10, 1, 0.1, 0.01, 0.001]
+        s = [1, 3, 4, 5, 6, 7]
+        for s, c in itertools.product(s, c):
+            option = "-s {0} -c {1} -v 5 -q".format(s, c)
+            print option
+            model = train(label, inst, option)
