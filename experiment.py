@@ -107,7 +107,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if (args.din is not None) and is_valid_dir(args.din):
         print "Generate image list ... "
-        generate_list(args.din, ["tiny", "small", "medium"], [5, 10, 20])
+        #generate_list(args.din, ["medium", "small"], [20, 10])
+        generate_list(args.din, ["train", "val", "test"], [64, 16, 20])
         generate_list(args.din, ["full"], [100])
         exit(0)
     elif (args.fin is not None) and isfile(args.fin):
@@ -118,6 +119,7 @@ if __name__ == "__main__":
         print "not a valid directory or file"
         print "... Fail on running script"
         exit(-1)
+
 
     ## Setup command to feed MATLAB
     #vl_setup = os.path.join(lib['vlfeat'], "toolbox", "vl_setup")

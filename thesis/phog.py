@@ -23,6 +23,7 @@ def raw_phog(image, bins, level):
         for block in blocks[lv]:
             block_hist = hog[block].reshape(-1, bins)
             phog[lv][block.dst] = np.sum(block_hist, axis=0)
+            phog[lv][block.dst] /= (np.sum(phog[lv][block.dst]) + eps)
 
     return phog
 

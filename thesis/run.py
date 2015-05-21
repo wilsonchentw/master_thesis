@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import argparse
+import collections
 import itertools
 import os
 import warnings
@@ -19,10 +20,24 @@ def load_dataset(filename):
         with np.load(prefix + ".npz") as fin:
             dataset = {name: fin[name] for name in fin}
     except IOError:
-        dataset = descriptor.extract_all(args.fin, batchsize=5)
+        dataset = descriptor.extract_all(filename, 100, True)
         np.savez_compressed(prefix, **dataset)
 
     return dataset
+
+
+def grid_parameter(label, inst):
+    inst = inst.tolist()
+    s_grid = [0, 1, 3]
+    c_grid = [100, 10, 1, 0.1, 0.01, 0.001, 1e-4]
+
+    acc = np.zeros((len(s_grid), len(c_grid)))
+    for s_idx, s in enumerate(s_grid):
+        for c_idx, c in enumerate(c_grid):
+            option = "-s {0} -c {1} -v 5 -q".format(s, c)
+            acc[s_idx, c_idx] = train(label, inst, option)
+    return acc
+
 
 if __name__ == "__main__":
 
@@ -35,15 +50,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     prefix = os.path.basename(args.fin).partition('.')[0]
     dataset = load_dataset(args.fin)
+    label = dataset.pop('label', np.array([])).tolist()
 
-    label = dataset.pop('label', None).tolist()
     for name in dataset:
+        acc = grid_parameter(label, dataset[name])
         print "{0}: ".format(name)
-        inst = dataset[name].tolist()
-
-        c = [10, 1, 0.1, 0.01, 0.001]
-        s = [1, 3, 4, 5, 6, 7]
-        for s, c in itertools.product(s, c):
-            option = "-s {0} -c {1} -v 5 -q".format(s, c)
-            print option
-            model = train(label, inst, option)
+        print acc

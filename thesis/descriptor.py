@@ -25,18 +25,20 @@ def extract_descriptor(pathlist, extract, batchsize=None):
 
     return np.array(descriptor)
 
-def extract_all(filename, batchsize=100):
+
+def extract_all(filename, batchsize=None, write_out=False):
     extract_list = ['hog', 'phog', 'color', 'gabor']
 
     prefix = os.path.basename(filename).partition('.')[0]
     dataset = preload_list(filename)
     for name in extract_list:
-        print "Extract {0} ... ".format(name)
+        print "Extract {0}... ".format(name)
 
         extract = globals()["get_" + name]
-        dataset[name] = extract_descriptor(dataset['path'], extract, 100)
-        outfile = "{0}_{1}.dat".format(prefix, name)
-        svm_write_problem(outfile, dataset['label'], dataset[name])
+        dataset[name] = extract_descriptor(dataset['path'], extract, batchsize)
+        if write_out:
+            outfile = "{0}_{1}.dat".format(prefix, name)
+            svm_write_problem(outfile, dataset['label'], dataset[name])
 
     dataset.pop('path', None)
     return dataset
