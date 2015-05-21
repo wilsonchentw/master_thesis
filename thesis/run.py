@@ -52,4 +52,7 @@ if __name__ == "__main__":
     dataset = load_dataset(args.fin)
     label = dataset.pop('label', np.array([])).tolist()
 
-    
+    for name in dataset:
+        acc = grid_parameter(label, dataset[name])
+        print "{0}: ".format(name)
+        print acc
