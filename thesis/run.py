@@ -59,7 +59,9 @@ if __name__ == "__main__":
     except IOError:
         dataset = preload_list(args.fin)
         dataset['hog'] = descriptor.extract_hog(dataset['path'])
-        np.savez_compressed(filename, **dataset)
+        #np.savez_compressed(filename, **dataset)
 
     label = dataset.pop('label', np.array([])).tolist()
     print grid_parameter(label, dataset['hog'])
+
+    #train(label, dataset['hog'].tolist(), '-v 5 -q')
