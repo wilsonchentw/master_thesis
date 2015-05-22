@@ -28,8 +28,8 @@ def preload_list(filename):
 
 
 def grid_parameter(label, inst):
-    s_grid = [1, 3]
-    c_grid = [100, 10, 1, 0.1, 0.01, 0.001, 0.0001]
+    s_grid = [0, 1, 3]
+    c_grid = [100, 10, 1, 0.1, 0.01, 0.001, 1e-4, 1e-5]
 
     inst = inst.tolist()
     acc = np.zeros((len(s_grid), len(c_grid)))
