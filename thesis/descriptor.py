@@ -25,4 +25,4 @@ def extract_descriptor(pathlist, extract, batchsize=100):
 
 
 def extract_hog(pathlist):
-    return extract_descriptor(pathlist, get_hog, batchsize=5)
+    return extract_descriptor(pathlist, get_hog)
