@@ -36,7 +36,7 @@ def get_clahe(image):
     luminance = cv2.normalize(enhance_img[:, :, 0], norm_type=cv2.NORM_MINMAX)
 
     # Perform CLAHE on L-channel
-    clahe = cv2.createCLAHE(clipLimit=3.5, tileGridSize=(8, 8))
+    clahe = cv2.createCLAHE(clipLimit=4, tileGridSize=(32, 32))
     luminance = (luminance * 255).astype(np.uint8)
     enhance_img[:, :, 0] = clahe.apply(luminance) / 255.0 * 100.0
     return cv2.cvtColor(enhance_img, cv2.COLOR_LAB2BGR)

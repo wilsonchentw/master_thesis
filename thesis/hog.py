@@ -32,11 +32,13 @@ def raw_hog(image, bins, block, step):
         mag = cv2.GaussianBlur(magnitude[block], **gauss_param).reshape(-1)
         ang = angle[block].reshape(-1)
         hist[block.dst] = np.bincount(ang, mag, minlength=bins)
+        hist[block.dst] /= (np.linalg.norm(hist[block.dst]) + eps)
 
     return hist
 
 
 def get_hog(image):
-    hog = raw_hog(image, bins=8, block=(16, 16), step=(8, 8))
-    hog = np.sqrt(hog / np.sum(hog))    # RootHOG
+    #image = get_clahe(image)
+    hog = raw_hog(image, bins=72, block=(128, 128), step=(128, 128))
+    #hog = np.sqrt(hog / np.sum(hog))    # RootHOG
     return hog.reshape(-1)
