@@ -84,9 +84,9 @@ if __name__ == "__main__":
     bin_grid = [8, 16, 32, 64, 128]
     block_grid = [(8, 8), (16, 16), (32, 32), (64, 64), (128, 128), (256, 256)]
     step_grid = [(2, 2), (4, 4), (8, 8), (16, 16), (32, 32), (64, 64), (128, 128)]
-    pool = multiprocessing.Pool()
+    pool = multiprocessing.Pool(10)
     for bins, block, step in itertools.product(bin_grid, block_grid, step_grid):
-        if min(block) >= min(step) and min(step) * 2 >= max(block):
+        if min(block) >= min(step) and min(step) * 4 >= max(block):
             pool.apply_async(special_hog, [bins, block, step])
 
     pool.close()
