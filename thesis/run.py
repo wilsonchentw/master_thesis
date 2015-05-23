@@ -78,7 +78,7 @@ if __name__ == "__main__":
     block_grid = [(8, 8), (16, 16), (32, 32), (64, 64), (128, 128), (256, 256)]
     step_grid = [(2, 2), (4, 4), (8, 8), (16, 16), (32, 32), (64, 64), (128, 128)]
     for bins, block, step in itertools.product(bin_grid, block_grid, step_grid):
-        if min(block) >= min(step):
+        if min(block) >= min(step) and min(step) * 2 >= max(block):
             get_hog = lambda x: raw_hog(x, bins, block, step).reshape(-1)
             hog = descriptor.extract_descriptor(dataset['path'], get_hog, None)
             print "bin={0}, block={1}, step={2}".format(bins, block, step)
