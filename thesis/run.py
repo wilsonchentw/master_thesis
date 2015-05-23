@@ -52,6 +52,7 @@ if __name__ == "__main__":
     prefix = os.path.basename(args.fin).partition('.')[0]
 
     # Extract descriptor
+    """
     filename = prefix + ".npz"
     try:
         with np.load(filename) as fin:
@@ -65,20 +66,20 @@ if __name__ == "__main__":
     #print grid_parameter(label, dataset['hog'])
 
     train(label, dataset['hog'].tolist(), '-v 5 -q')
-
     """
+
     from hog import raw_hog
     import itertools
 
     dataset = preload_list(args.fin)
+    label = dataset.pop('label', np.array([])).tolist()
  
     bin_grid = [8, 16, 32, 64, 128]
     block_grid = [(8, 8), (16, 16), (32, 32), (64, 64), (128, 128), (256, 256)]
-    #step_grid = [(2, 2), (4, 4), (8, 8), (16, 16), (32, 32), (64, 64), (128, 128)]
-    step_grid = [(16, 16), (32, 32), (64, 64), (128, 128)]
+    step_grid = [(2, 2), (4, 4), (8, 8), (16, 16), (32, 32), (64, 64), (128, 128)]
     for bins, block, step in itertools.product(bin_grid, block_grid, step_grid):
         if min(block) >= min(step):
             get_hog = lambda x: raw_hog(x, bins, block, step).reshape(-1)
-            hog = descriptor.extract_descriptor(dataset['path'], get_hog)
-            print hog.shape
-    """
+            hog = descriptor.extract_descriptor(dataset['path'], get_hog, None)
+            print "bin={0}, block={1}, step={2}".format(bins, block, step)
+            train(label, hog.tolist(), '-v 5 -q')
