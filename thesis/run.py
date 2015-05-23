@@ -83,7 +83,7 @@ if __name__ == "__main__":
         acc = train(label, hog.tolist(), '-v 5 -q')
         print (acc, bins, block, step)
 
-    bin_grid = [8, 16, 32, 64, 128]
+    bin_grid = [8, 16, 32]
     block_grid = [(8, 8), (16, 16), (32, 32), (64, 64), (128, 128), (256, 256)]
     step_grid = [(4, 4), (8, 8), (16, 16), (32, 32), (64, 64), (128, 128)]
     pool = multiprocessing.Pool(10)
