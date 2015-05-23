@@ -3,8 +3,10 @@
 
 import argparse
 import collections
+import itertools
 import multiprocessing
 import os
+import sys
 import warnings
 
 from svmutil import *
@@ -52,8 +54,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     prefix = os.path.basename(args.fin).partition('.')[0]
 
-    # Extract descriptor
     """
+    # Extract descriptor
     filename = prefix + ".npz"
     try:
         with np.load(filename) as fin:
@@ -65,9 +67,9 @@ if __name__ == "__main__":
 
     label = dataset.pop('label', np.array([])).tolist()
     #print grid_parameter(label, dataset['hog'])
-
     train(label, dataset['hog'].tolist(), '-v 5 -q')
     """
+
 
     from hog import raw_hog
     import itertools
@@ -83,7 +85,7 @@ if __name__ == "__main__":
 
     bin_grid = [8, 16, 32, 64, 128]
     block_grid = [(8, 8), (16, 16), (32, 32), (64, 64), (128, 128), (256, 256)]
-    step_grid = [(2, 2), (4, 4), (8, 8), (16, 16), (32, 32), (64, 64), (128, 128)]
+    step_grid = [(4, 4), (8, 8), (16, 16), (32, 32), (64, 64), (128, 128)]
     pool = multiprocessing.Pool(10)
     for bins, block, step in itertools.product(bin_grid, block_grid, step_grid):
         if min(block) >= min(step) and min(step) * 4 >= max(block):
