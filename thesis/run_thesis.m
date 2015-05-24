@@ -5,7 +5,7 @@ function run_thesis(image_list)
     %sift = extract_sift(path);
     %lbp = extract_pyramid_lbp(path);
     %color = extract_color(path);
-    gabor = extract_gabor(path);
+    %gabor = extract_gabor(path);
 end
 
 function setup_3rdparty(root_dir)
@@ -79,7 +79,7 @@ function lbp = extract_pyramid_lbp(path)
         lbp{1, idx} = get_lbp(single(gray_image));
         for lv = 2:level
             gray_image = imfilter(gray_image, blur_kernel, 'symmetric');
-            gray_image = imresize(gray_image, scale);a
+            gray_image = imresize(gray_image, scale);
 
             lbp{lv, idx} = get_lbp(single(gray_image));
         end
@@ -126,13 +126,12 @@ function color = get_color(image)
 end
 
 function gabor = extract_gabor(path)
-    color = cell(1, length(path));
+    % TODO: NOT IMPLEMENT YET!
+    gabor = cell(1, length(path));
     for idx = 1:length(path)
         image = read_image(path{idx});
         gray_image = rgb2gray(image);
 
-        gabor{idx} = get_gabor(image);
     end
 end
-
 
