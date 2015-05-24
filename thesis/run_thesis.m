@@ -4,8 +4,8 @@ function run_thesis(image_list)
 
     %sift = extract_sift(path);
     %lbp = extract_pyramid_lbp(path);
-    color = extract_color(path);
-
+    %color = extract_color(path);
+    gabor = extract_gabor(path);
 end
 
 function setup_3rdparty(root_dir)
@@ -79,7 +79,8 @@ function lbp = extract_pyramid_lbp(path)
         lbp{1, idx} = get_lbp(single(gray_image));
         for lv = 2:level
             gray_image = imfilter(gray_image, blur_kernel, 'symmetric');
-            gray_image = imresize(gray_image, scale);
+            gray_image = imresize(gray_image, scale);a
+
             lbp{lv, idx} = get_lbp(single(gray_image));
         end
     end
@@ -97,15 +98,41 @@ end
 
 function color = extract_color(path)
     color = cell(1, length(path));
-    %{
+    for idx = 1:length(path)
+        image = read_image(path{idx});
+        color{idx} = get_color(image);
+    end
+end
+
+function color = get_color(image)
+    num_bin = 32;
+    num_block = [4, 4];
+
+    image_size = size(image);
+    block_size = image_size(1:2) ./ num_block;
+    edges = linspace(0, 256, num_bin+1);
+
+    color = [];
+    for channel = 1:image_size(3)
+        patch = im2col(image(:, :, channel), block_size, 'distinct');
+
+        block_hist = zeros(num_bin, size(patch, 2));
+        for idx = 1:size(patch, 2)
+            block_hist(:, idx) = histcounts(patch(:, idx), edges)';
+        end
+        color(:, :, channel) = block_hist;
+    end
+    color = reshape(color, [], 1);
+end
+
+function gabor = extract_gabor(path)
+    color = cell(1, length(path));
     for idx = 1:length(path)
         image = read_image(path{idx});
         gray_image = rgb2gray(image);
 
-        % Extract SIFT descriptors
-        [frames, descriptors] = vl_sift(single(gray_image));
-        descriptors = double(descriptors) / 255.0;
-        sift{idx} = descriptors;
+        gabor{idx} = get_gabor(image);
     end
-    %}
 end
+
+
