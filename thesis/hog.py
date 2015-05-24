@@ -2,7 +2,6 @@ import cv2
 import cv2.cv as cv
 import numpy as np
 
-
 from dip import *
 from util import *
 
@@ -33,12 +32,12 @@ def raw_hog(image, bins, block, step):
         ang = angle[block].reshape(-1)
         hist[block.dst] = np.bincount(ang, mag, minlength=bins)
         hist[block.dst] /= (np.linalg.norm(hist[block.dst]) + eps)
+        #hist[block.dst] /= (np.sum(hist[block.dst]) + eps)
 
     return hist
 
 
 def get_hog(image):
-    image = get_clahe(image)
-    hog = raw_hog(image, bins=8, block=(32, 32), step=(16, 16))
-    #hog = np.sqrt(hog / np.sum(hog))    # RootHOG
+    hog = raw_hog(image, bins=128, block=(64, 64), step=(32, 32))
+    hog = np.sqrt(hog / np.sum(hog))    # RootHOG
     return hog.reshape(-1)

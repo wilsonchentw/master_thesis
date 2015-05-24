@@ -23,13 +23,14 @@ def raw_phog(image, bins, level):
         for block in blocks[lv]:
             block_hist = hog[block].reshape(-1, bins)
             phog[lv][block.dst] = np.sum(block_hist, axis=0)
-            phog[lv][block.dst] /= (np.sum(phog[lv][block.dst]) + eps)
+            #phog[lv][block.dst] /= (np.sum(phog[lv][block.dst]) + eps)
+            phog[lv][block.dst] /= (np.linalg.norm(phog[lv][block.dst]) + eps)
 
     return phog
 
 
 def get_phog(image):
-    image = canny_edge(image)
-    phog = raw_phog(image, bins=12, level=6)
+    #image = canny_edge(image)
+    phog = raw_phog(image, bins=128, level=3)
     phog = np.concatenate([hog.reshape(-1) for hog in phog])
     return phog / (np.linalg.norm(phog) + eps)

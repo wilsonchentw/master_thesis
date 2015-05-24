@@ -48,7 +48,7 @@ def canny_edge(image):
     gray_image = (gray_image * 255).astype(np.uint8)
     
     mid, std = np.median(gray_image), np.std(gray_image)
-    t_lo, t_hi = (mid + std * 0.5), (mid + std * 1.5)
+    t_lo, t_hi = (mid - std * 1.5), (mid + std * 1.5)
     contour = cv2.Canny(gray_image, t_lo, t_hi, L2gradient=True)
     return contour.astype(np.float32) / 255.0
 

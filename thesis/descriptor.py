@@ -26,6 +26,10 @@ def extract_descriptor(pathlist, extract, batchsize=200):
     return np.array(descriptor)
 
 
-def extract_hog(pathlist):
-    hog = extract_descriptor(pathlist, get_hog)
-    return hog
+#def extract_hog(pathlist):
+#    hog = extract_descriptor(pathlist, get_hog)
+#    return hog.reshape(hog.shape[0], -1)
+#
+#def extract_phog(pathlist):
+#    phog = extract_descriptor(pathlist, get_phog)
+#    return phog.reshape(phog.shape[0], -1)

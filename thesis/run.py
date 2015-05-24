@@ -54,7 +54,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
     prefix = os.path.basename(args.fin).partition('.')[0]
 
-    """
     # Extract descriptor
     filename = prefix + ".npz"
     try:
@@ -62,34 +61,11 @@ if __name__ == "__main__":
             dataset = {name: fin[name] for name in fin}
     except IOError:
         dataset = preload_list(args.fin)
-        dataset['hog'] = descriptor.extract_hog(dataset['path'])
+        dataset['phog'] = descriptor.extract_phog(dataset['path'])
+        dataset['hog'] = descriptor.extract_phog(dataset['path'])
         #np.savez_compressed(filename, **dataset)
 
     label = dataset.pop('label', np.array([])).tolist()
     #print grid_parameter(label, dataset['hog'])
     train(label, dataset['hog'].tolist(), '-v 5 -q')
-    """
-
-
-    from hog import raw_hog
-    import itertools
-
-    dataset = preload_list(args.fin)
-    label = dataset.pop('label', np.array([])).tolist()
- 
-    def special_hog(bins, block, step):
-        get_hog = lambda x: raw_hog(x, bins, block, step).reshape(-1)
-        hog = descriptor.extract_descriptor(dataset['path'], get_hog, None)
-        acc = train(label, hog.tolist(), '-v 5 -q')
-        print (acc, bins, block, step)
-
-    bin_grid = [8, 16, 32]
-    block_grid = [(8, 8), (16, 16), (32, 32), (64, 64), (128, 128), (256, 256)]
-    step_grid = [(4, 4), (8, 8), (16, 16), (32, 32), (64, 64), (128, 128)]
-    pool = multiprocessing.Pool(10)
-    for bins, block, step in itertools.product(bin_grid, block_grid, step_grid):
-        if min(block) >= min(step) and min(step) * 4 >= max(block):
-            pool.apply_async(special_hog, [bins, block, step])
-
-    pool.close()
-    pool.join()
+    train(label, dataset['phog'].tolist(), '-v 5 -q')
