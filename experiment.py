@@ -135,5 +135,5 @@ if __name__ == "__main__":
     #subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
 
 
-    cmd = ["python", os.path.join(root, "thesis", "run.py"), fin]
+    cmd = ["python", os.path.join(root, "thesis", "run_thesis.py"), fin]
     subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
