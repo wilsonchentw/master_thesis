@@ -61,8 +61,8 @@ if __name__ == "__main__":
             dataset = {name: fin[name] for name in fin}
     except IOError:
         dataset = preload_list(args.fin)
+        dataset['hog'] = descriptor.extract_hog(dataset['path'])
         dataset['phog'] = descriptor.extract_phog(dataset['path'])
-        dataset['hog'] = descriptor.extract_phog(dataset['path'])
         #np.savez_compressed(filename, **dataset)
 
     label = dataset.pop('label', np.array([])).tolist()
