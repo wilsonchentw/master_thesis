@@ -16,6 +16,7 @@ def raw_phog(image, bins, level):
 
     # Summarize HOG of blocks
     block_shape = [(2 ** lv, 2 ** lv) for lv in reversed(range(1, level + 1))]
+    block_shape = [np.array(block) for block in block_shape]
     blocks = [SlidingWindow(hog.shape, blk, blk) for blk in block_shape]
     phog_shape = [np.append(blks.dst_shape, bins) for blks in blocks]
     phog = [np.empty(ps) for ps in phog_shape]
@@ -31,6 +32,6 @@ def raw_phog(image, bins, level):
 
 def get_phog(image):
     #image = canny_edge(image)
-    phog = raw_phog(image, bins=128, level=3)
+    phog = raw_phog(image, bins=256, level=3)
     phog = np.concatenate([hog.reshape(-1) for hog in phog])
-    return phog / (np.linalg.norm(phog) + eps)
+    return phog

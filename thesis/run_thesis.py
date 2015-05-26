@@ -54,18 +54,18 @@ if __name__ == "__main__":
     args = parser.parse_args()
     prefix = os.path.basename(args.fin).partition('.')[0]
 
-    # Extract descriptor
-    filename = prefix + ".npz"
-    try:
-        with np.load(filename) as fin:
-            dataset = {name: fin[name] for name in fin}
-    except IOError:
-        dataset = preload_list(args.fin)
-        dataset['hog'] = descriptor.extract_hog(dataset['path'])
-        dataset['phog'] = descriptor.extract_phog(dataset['path'])
-        #np.savez_compressed(filename, **dataset)
+    ## Extract descriptor
+    #filename = prefix + ".npz"
+    #try:
+    #    with np.load(filename) as fin:
+    #        dataset = {name: fin[name] for name in fin}
+    #except IOError:
+    #    dataset = preload_list(args.fin)
+    #    #np.savez_compressed(filename, **dataset)
 
+
+    dataset = preload_list(args.fin)
     label = dataset.pop('label', np.array([])).tolist()
-    #print grid_parameter(label, dataset['hog'])
-    train(label, dataset['hog'].tolist(), '-v 5 -q')
+    dataset['phog'] = descriptor.extract_phog(dataset['path'])
     train(label, dataset['phog'].tolist(), '-v 5 -q')
+    #print grid_parameter(label, dataset['phog'])
