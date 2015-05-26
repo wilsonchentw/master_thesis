@@ -43,7 +43,7 @@ def grid_parameter(label, inst):
     return acc
 
 
-def load_dataset():
+def load_dataset(prefix):
     filename = prefix + ".npz"
     try:
         with np.load(filename) as fin:
