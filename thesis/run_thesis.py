@@ -64,8 +64,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     prefix = os.path.basename(args.fin).partition('.')[0]
-
     dataset = preload_list(args.fin)
-    dataset['phog'] = descriptor.extract_phog(dataset['path'])
-    train(label, dataset['phog'].tolist(), '-v 5 -q')
+    label = dataset.pop('label', np.array([])).tolist()
+
+    dataset['hog'] = descriptor.extract_phog(dataset['path'])
+    train(label, dataset['hog'].tolist(), '-v 5 -q')
     #print grid_parameter(label, dataset['phog'])
