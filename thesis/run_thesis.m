@@ -3,9 +3,12 @@ function run_thesis(image_list)
     [prefix, label, path] = parse_list(image_list);
 
     %sift = extract_sift(path);
-    %lbp = extract_pyramid_lbp(path);
+    lbp = extract_pyramid_lbp(path);
     %color = extract_color(path);
     %gabor = extract_gabor(path);
+
+    lbp_feature = reshape(cell2mat(reshape(lbp, 1, [])), [], size(lbp, 2));
+    train(double(label), sparse(double(lbp_feature)), '-v 5 -q', 'col')
 end
 
 function setup_3rdparty(root_dir)
