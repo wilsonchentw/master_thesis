@@ -5,10 +5,13 @@ function run_thesis(image_list)
     %sift = extract_sift(path);
     lbp = extract_pyramid_lbp(path);
     %color = extract_color(path);
-    %gabor = extract_gabor(path);
+    %hog = extract_hog(path);
 
     lbp_feature = reshape(cell2mat(reshape(lbp, 1, [])), [], size(lbp, 2));
-    train(double(label), sparse(double(lbp_feature)), '-v 5 -q', 'col')
+    train(double(label), sparse(double(lbp_feature)), '-v 5 -q', 'col');
+
+    %hog_feature = reshape(cell2mat(hog), [], size(hog, 2));
+    %train(double(label), sparse(double(hog_feature)), '-v 5 -q', 'col');
 end
 
 function setup_3rdparty(root_dir)
@@ -128,13 +131,15 @@ function color = get_color(image)
     color = reshape(color, [], 1);
 end
 
-function gabor = extract_gabor(path)
-    % TODO: NOT IMPLEMENT YET!
-    gabor = cell(1, length(path));
+function hog = extract_hog(path)
+    cell_size = 32;
+
+    hog = cell(1, length(path));
     for idx = 1:length(path)
         image = read_image(path{idx});
-        gray_image = rgb2gray(image);
-
+        hog{idx} = vl_hog(single(image), cell_size, ...
+                          'NumOrientations', 128, 'Variant', 'DalalTriggs');
+        hog{idx} = reshape(hog{idx}, [], 1);
     end
 end
 
