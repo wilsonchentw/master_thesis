@@ -68,7 +68,10 @@ if __name__ == "__main__":
     label = dataset.pop('label', np.array([])).tolist()
 
     #dataset['hog'] = descriptor.extract_hog(dataset['path'])
-    dataset['phog'] = descriptor.extract_phog(dataset['path'])
     #train(label, dataset['hog'].tolist(), '-v 5 -q')
-    train(label, dataset['phog'].tolist(), '-v 5 -q')
+    #dataset['phog'] = descriptor.extract_phog(dataset['path'])
+    #train(label, dataset['phog'].tolist(), '-v 5 -q')
+    dataset['lbp'] = descriptor.extract_lbp(dataset['path'])
+    train(label, dataset['lbp'].tolist(), '-v 5 -q')
+
     #print grid_parameter(label, dataset['phog'])

@@ -9,7 +9,6 @@ function run_thesis(image_list)
 
     lbp_feature = reshape(cell2mat(reshape(lbp, 1, [])), [], size(lbp, 2));
     train(double(label), sparse(double(lbp_feature)), '-v 5 -q', 'col');
-
     %hog_feature = reshape(cell2mat(hog), [], size(hog, 2));
     %train(double(label), sparse(double(hog_feature)), '-v 5 -q', 'col');
 end
@@ -132,13 +131,13 @@ function color = get_color(image)
 end
 
 function hog = extract_hog(path)
-    cell_size = 32;
+    cell_size = 16;
 
     hog = cell(1, length(path));
     for idx = 1:length(path)
         image = read_image(path{idx});
         hog{idx} = vl_hog(single(image), cell_size, ...
-                          'NumOrientations', 128, 'Variant', 'DalalTriggs');
+                          'NumOrientations', 16, 'Variant', 'DalalTriggs');
         hog{idx} = reshape(hog{idx}, [], 1);
     end
 end

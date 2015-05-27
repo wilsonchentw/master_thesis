@@ -18,7 +18,7 @@ def raw_hog(image, bins, block, step, soft=False):
     # TODO: BILINEAR INTERPOLATION WITH SPATIAL & ORIENTATION
     # Soft assignment with linear distributed
     unit_angle = (np.pi * 2) / bins
-    angle = (angle / (np.pi * 2.0) * bins).astype(int)
+    angle = (angle / unit_angle).astype(int)
     weight = (
         1.0 - (np.fmod(angle, unit_angle) / unit_angle) 
         if soft 
