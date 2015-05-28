@@ -71,7 +71,7 @@ if __name__ == "__main__":
     #train(label, dataset['hog'].tolist(), '-v 5 -q')
     #dataset['phog'] = descriptor.extract_phog(dataset['path'])
     #train(label, dataset['phog'].tolist(), '-v 5 -q')
-    dataset['lbp'] = descriptor.extract_lbp(dataset['path'])
-    train(label, dataset['lbp'].tolist(), '-v 5 -q')
 
+    #dataset['color'] = descriptor.extract_color(dataset['path'])
+    #train(label, dataset['color'].tolist(), '-v 5 -q')
     #print grid_parameter(label, dataset['phog'])

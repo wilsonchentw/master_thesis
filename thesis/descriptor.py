@@ -3,7 +3,6 @@ import cv2.cv as cv
 import numpy as np
 import scipy
 import spams
-from skimage.feature import local_binary_pattern
 
 from dip import *
 from util import *
@@ -13,7 +12,7 @@ from color import get_color
 from gabor import get_gabor
 
 
-def extract_descriptor(pathlist, extract, batchsize=200):
+def extract_descriptor(pathlist, extract, batchsize=500):
     descriptor = []
     for idx, path in enumerate(pathlist, 1):
         raw_image = cv2.imread(path, cv2.CV_LOAD_IMAGE_COLOR)
@@ -40,3 +39,4 @@ def extract_phog(pathlist):
 def extract_color(pathlist):
     color = extract_descriptor(pathlist, get_color)
     return color.reshape(color.shape[0], -1)
+
