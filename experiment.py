@@ -9,41 +9,23 @@ from os.path import normpath, realpath, basename, dirname, isfile, isdir
 import subprocess
 import sys
 
-
-# Setup variable
 lib = {
-    'gcc': "/usr/lib/gcc/x86_64-linux-gnu/4.8", 
-    'vlfeat': "../vlfeat", 
-    'libsvm': "../libsvm", 
-    'liblinear': "../liblinear", 
+    'vlfeat': "/home/zxm20243/Software/vlfeat", 
+    'spams-matlab': "/home/zxm20243/Software/spams-matlab", 
     'spams-python': (
-        "../spams/spams-python/install/lib/python2.7/site-packages"
+        "/home/zxm20243/Software/spams-python/"
+        "install/lib/python2.7/site-packages"
     ), 
-    'spams-matlab': "../spams/spams-matlab"
+    'liblinear': "/home/zxm20243/Software/liblinear", 
+    'libsvm': "/home/zxm20243/Software/libsvm", 
 }
 
 
-def setup_environment(lib):
-    for name, path in lib.items():
-        lib[name] = realpath(path)
+def setup_3rdparty(lib):
+    # Normalize library path
+    lib = {name: realpath(normpath(path)) for name, path in lib.items()}
 
     # Setup environment variable
-    environ['LD_LIBRARY'] = pathsep.join(
-        filter(None, [
-            getenv('LD_LIBRARY'), 
-            lib['gcc'], 
-            os.path.join(lib['vlfeat'], "bin", "glnxa64", "libvl.so"),
-        ])
-    )
-    environ['LD_PRELOAD'] = pathsep.join(
-        filter(None, [
-            getenv('LD_PRELOAD'), 
-            os.path.join(lib['gcc'], "libgfortran.so"), 
-            os.path.join(lib['gcc'], "libgcc_s.so"), 
-            os.path.join(lib['gcc'], "libstdc++.so"), 
-            os.path.join(lib['gcc'], "libgomp.so"), 
-        ])
-    )
     environ['PYTHONPATH'] = pathsep.join(
         filter(None, [
             getenv('PYTHON'), 
@@ -58,41 +40,24 @@ def setup_environment(lib):
             os.path.join(lib['liblinear'], "matlab"), 
             os.path.join(lib['libsvm'], "matlab"), 
             os.path.join(lib['spams-matlab'], "build"), 
-            os.path.join(lib['spams-matlab'], "test_release"), 
             os.path.join(lib['spams-matlab'], "src_release"), 
+            os.path.join(lib['spams-matlab'], "test_release"), 
         ])
     )
 
-
-def is_valid_dir(din):  
-    cwd = getcwd()
-    din = realpath(normpath(din))
-    prefix = basename(din)
-
-    if not isdir(din):
-        print "Input is not directory"
-        return False
-    elif any(isfile(f) and f.startswith(prefix) for f in listdir(cwd)):
-        print "Found possible duplicate file: "
-        for f in listdir(cwd):
-            if isfile(f) and f.startswith(prefix):
-                print "{0}".format(f)
-        return False
-    else:
-        return True
+    return lib
 
 
-def generate_list(path, listname, percent):
-    path = realpath(normpath(path))
+def run_baseline(fin):
+    # Run baseline
+    vl_script = os.path.join(lib['vlfeat'], "toolbox", "vl_setup")
+    setup_vl = "run('{0}')".format(vl_script)
+    setup_baseline = "addpath('{0}')".format(os.path.join(root, 'baseline'))
+    run_baseline = "baseline '{0}'".format(fin)
 
-    prefix = basename(path)
-    listname = ["{0}_{1}.list".format(prefix, name) for name in listname]
-    if sum(percent) < 100:
-        listname.append(os.devnull)
-        percent.append(100 - sum(percent))
- 
-    split_dataset = os.path.join(os.getcwd(), "split_dataset.py")
-    cmd = [split_dataset, path, "-f"] + listname + ["-v"] + map(str, percent)
+    start_args = "-nodesktop -nosplash -singleCompThread -r"
+    matlab_cmd = "; ".join([setup_vl, setup_baseline, run_baseline, 'quit'])
+    cmd = ["matlab", start_args, '"{0}"'.format(matlab_cmd)]
     subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
 
 
@@ -103,37 +68,17 @@ if __name__ == "__main__":
     dataset.add_argument('-f', metavar="image_list", dest="fin")
     dataset.add_argument('-d', metavar="images_dir", dest="din")
 
+
     # Parse argument
     args = parser.parse_args()
-    if (args.din is not None) and is_valid_dir(args.din):
-        print "Generate image list ... "
-        #generate_list(args.din, ["medium", "small"], [20, 10])
-        generate_list(args.din, ["train", "val", "test"], [64, 16, 20])
-        generate_list(args.din, ["full"], [100])
-        exit(0)
-    elif (args.fin is not None) and isfile(args.fin):
-        root = dirname(realpath(sys.argv[0]))
-        fin = realpath(normpath(args.fin))
-        setup_environment(lib)
-    else:
-        print "not a valid directory or file"
-        print "... Fail on running script"
-        exit(-1)
+    fin = realpath(normpath(args.fin))
 
+    # Setup root & third-party library
+    root = dirname(realpath(normpath(sys.argv[0])))
+    lib = setup_3rdparty(lib)
 
-    ## Setup command to feed MATLAB
-    #vl_setup = os.path.join(lib['vlfeat'], "toolbox", "vl_setup")
-    #baseline_path = os.path.join(root, 'baseline')
-
-    #setup_vl = "run('{0}')".format(vl_setup)
-    #setup_baseline = "addpath('{0}')".format(baseline_path)
-    #run_baseline = "baseline '{0}'".format(fin)
-
-    #start_args = "-nodesktop -nosplash -singleCompThread -r"
-    #matlab_cmd = "\n;".join([setup_vl, setup_baseline, run_baseline])
-    #cmd = ["matlab", start_args, "\"{0}\"".format(matlab_cmd), ]
-    #subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
-
+    # Run baseline method
+    #run_baseline(fin)
 
     cmd = ["python", os.path.join(root, "thesis", "run_thesis.py"), fin]
     subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
