@@ -10,6 +10,7 @@ import subprocess
 import sys
 
 lib = {
+    'gcc': "/usr/lib/gcc/x86_64-linux-gnu/4.9", 
     'vlfeat': "~/Software/vlfeat", 
     'spams-matlab': "~/Software/spams-matlab", 
     'spams-python': (
@@ -24,10 +25,14 @@ def setup_3rdparty(lib):
     # Normalize library path
     for name, path in lib.items():
         lib[name] = realpath(normpath(os.path.expanduser(path)))
-        print lib[name]
-
 
     # Setup environment variable
+    environ['LD_LIBRARY_PATH'] = pathsep.join(
+        filter(None, [
+            getenv('LD_LIBRARY_PATH'), 
+            lib['gcc'], 
+        ])
+    )
     environ['PYTHONPATH'] = pathsep.join(
         filter(None, [
             getenv('PYTHON'), 
