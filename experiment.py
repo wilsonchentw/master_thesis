@@ -10,7 +10,7 @@ import subprocess
 import sys
 
 lib = {
-    'gcc': "/usr/lib/gcc/x86_64-linux-gnu/4.9", 
+    'gcc': "/usr/lib/gcc/x86_64-linux-gnu/4.8", 
     'vlfeat': "~/Software/vlfeat", 
     'spams-matlab': "~/Software/spams-matlab", 
     'spams-python': (
@@ -27,12 +27,6 @@ def setup_3rdparty(lib):
         lib[name] = realpath(normpath(os.path.expanduser(path)))
 
     # Setup environment variable
-    #environ['LD_LIBRARY_PATH'] = pathsep.join(
-    #    filter(None, [
-    #        getenv('LD_LIBRARY_PATH'), 
-    #        lib['gcc'], 
-    #    ])
-    #)
     environ['LD_PRELOAD'] = pathsep.join(
         filter(None, [
             getenv('LD_PRELOAD'), 
@@ -77,6 +71,20 @@ def run_baseline(fin):
     subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
 
 
+def generate_list(path, listname, percent):
+    path = realpath(normpath(path))
+
+    prefix = basename(path)
+    listname = ["{0}_{1}.list".format(prefix, name) for name in listname]
+    if sum(percent) < 100:
+        listname.append(os.devnull)
+        percent.append(100 - sum(percent))
+ 
+    split_dataset = os.path.join(os.getcwd(), "split_dataset.py")
+    cmd = [split_dataset, path, "-f"] + listname + ["-v"] + map(str, percent)
+    subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
+
+
 if __name__ == "__main__":
     # Setup argument parser
     parser = argparse.ArgumentParser()
@@ -87,14 +95,19 @@ if __name__ == "__main__":
 
     # Parse argument
     args = parser.parse_args()
-    fin = realpath(normpath(args.fin))
+    if args.din is not None:
+        generate_list(args.din, ["train", "val", "test"], [64, 16, 20])
+        generate_list(args.din, ["full"], [100])
+        exit(0)
+    else:
+        # Setup root & third-party library
+        lib = setup_3rdparty(lib)
+        root = dirname(realpath(normpath(sys.argv[0])))
+        fin = realpath(normpath(args.fin))
 
-    # Setup root & third-party library
-    lib = setup_3rdparty(lib)
-    root = dirname(realpath(normpath(sys.argv[0])))
+        # Run baseline method
+        #run_baseline(fin)
 
-    # Run baseline method
-    run_baseline(fin)
-
-    cmd = ["python", os.path.join(root, "thesis", "run_thesis.py"), fin]
-    subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
+        # Run thesis
+        #cmd = ["python", os.path.join(root, "thesis", "run_thesis.py"), fin]
+        #subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
