@@ -27,10 +27,19 @@ def setup_3rdparty(lib):
         lib[name] = realpath(normpath(os.path.expanduser(path)))
 
     # Setup environment variable
-    environ['LD_LIBRARY_PATH'] = pathsep.join(
+    #environ['LD_LIBRARY_PATH'] = pathsep.join(
+    #    filter(None, [
+    #        getenv('LD_LIBRARY_PATH'), 
+    #        lib['gcc'], 
+    #    ])
+    #)
+    environ['LD_PRELOAD'] = pathsep.join(
         filter(None, [
-            getenv('LD_LIBRARY_PATH'), 
-            lib['gcc'], 
+            getenv('LD_PRELOAD'), 
+            os.path.join(lib['gcc'], "libgfortran.so"), 
+            os.path.join(lib['gcc'], "libgcc_s.so"), 
+            os.path.join(lib['gcc'], "libstdc++.so"), 
+            os.path.join(lib['gcc'], "libgomp.so"), 
         ])
     )
     environ['PYTHONPATH'] = pathsep.join(
