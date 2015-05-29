@@ -10,20 +10,22 @@ import subprocess
 import sys
 
 lib = {
-    'vlfeat': "/home/zxm20243/Software/vlfeat", 
-    'spams-matlab': "/home/zxm20243/Software/spams-matlab", 
+    'vlfeat': "~/Software/vlfeat", 
+    'spams-matlab': "~/Software/spams-matlab", 
     'spams-python': (
-        "/home/zxm20243/Software/spams-python/"
-        "install/lib/python2.7/site-packages"
+        "~/Software/spams-python/install/lib/python2.7/site-packages"
     ), 
-    'liblinear': "/home/zxm20243/Software/liblinear", 
-    'libsvm': "/home/zxm20243/Software/libsvm", 
+    'liblinear': "~/Software/liblinear", 
+    'libsvm': "~/Software/libsvm", 
 }
 
 
 def setup_3rdparty(lib):
     # Normalize library path
-    lib = {name: realpath(normpath(path)) for name, path in lib.items()}
+    for name, path in lib.items():
+        lib[name] = realpath(normpath(os.path.expanduser(path)))
+        print lib[name]
+
 
     # Setup environment variable
     environ['PYTHONPATH'] = pathsep.join(
@@ -74,11 +76,11 @@ if __name__ == "__main__":
     fin = realpath(normpath(args.fin))
 
     # Setup root & third-party library
-    root = dirname(realpath(normpath(sys.argv[0])))
     lib = setup_3rdparty(lib)
+    root = dirname(realpath(normpath(sys.argv[0])))
 
     # Run baseline method
-    #run_baseline(fin)
+    run_baseline(fin)
 
     cmd = ["python", os.path.join(root, "thesis", "run_thesis.py"), fin]
     subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
