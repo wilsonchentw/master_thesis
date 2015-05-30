@@ -28,7 +28,7 @@ def extract_descriptor(pathlist, extract, batchsize=None):
 
 def get_hog(image):
     hog = raw_hog(image, bins=128, block=(64, 64), step=(32, 32))
-    hog /= np.linalg.norm(hog.reshape(-1))
+    #hog /= np.linalg.norm(hog.reshape(-1))
     return hog
 
 
@@ -66,4 +66,3 @@ def extract_phog(pathlist):
 def extract_color(pathlist):
     color = extract_descriptor(pathlist, get_color)
     return color.reshape(color.shape[0], -1)
-

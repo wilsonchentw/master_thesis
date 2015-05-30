@@ -60,7 +60,7 @@ def kmeans_bag_of_word(feature, dict_size):
     num_word = feature.shape[1]
 
     feature = feature.reshape(num_image * num_word, -1)
-    codebook = KMeans(n_clusters=dict_size, copy_x=False, n_jobs=-1)
+    codebook = KMeans(n_clusters=dict_size, copy_x=False, n_jobs=4)
     hard_code = codebook.fit_predict(feature).reshape(num_image, num_word)
     hard_code = hard_code.reshape(num_image, num_word)
     
@@ -84,18 +84,14 @@ if __name__ == "__main__":
     dataset = preload_list(args.fin)
     label = dataset.pop('label', np.array([])).tolist()
 
-    #dataset['hog'] = descriptor.extract_hog(dataset['path'])
-    #train(label, dataset['hog'].tolist(), '-v 5 -q')
-    #dataset['phog'] = descriptor.extract_phog(dataset['path'])
-    #train(label, dataset['phog'].tolist(), '-v 5 -q')
-    #print grid_parameter(label, dataset['phog'])
-
-
     # K-Means clustering
     hog = descriptor.extract_hog(dataset['path'])
-    for dict_size in 2 ** np.arange(2).astype(int):
+    for dict_size in 2 ** np.arange(4, 11):
         print "dict_size = {0}".format(dict_size)
+
         num_image, dims = hog.shape[0], hog.shape[-1]
         hog = hog.reshape(num_image, -1, dims)
-        hog_bow = kmeans_bag_of_word(hog, dict_size=64)
+        hog_bow = kmeans_bag_of_word(hog, dict_size)
+
+        hog_bow /= np.atleast_2d(np.linalg.norm(hog_bow, axis=1)).T
         train(label, hog_bow.tolist(), '-v 5 -q')
