@@ -21,19 +21,11 @@ def vgg_phog(image, level, bins):
     return phog
 
 
-def dpm_hog(image, level, bins, block, cell):
+def dpm_phog(image, level, bins, block, cell):
     phog = [raw_hog(image, bins, block, cell)]
     for lv in range(1, level):
         image = cv2.pyrDown(image)
         hog = raw_hog(image, bins, block, cell)
         phog.append(hog / np.linalg.norm(hog.reshape(-1)))
 
-    return phog
-
-
-def get_phog(image):
-    #phog = vgg_phog(image, level=3, bins=32)
-    phog = dpm_hog(image, level=3, bins=32, block=(64, 64), cell=(32, 32))
-    #phog = dpm_hog(image, level=3, bins=128, block=(64, 64), cell=(32, 32))
-    phog = np.concatenate([hog.reshape(-1) for hog in phog])
     return phog

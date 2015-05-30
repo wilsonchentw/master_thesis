@@ -58,19 +58,6 @@ def setup_3rdparty(lib):
     return lib
 
 
-def run_baseline(fin):
-    # Run baseline
-    vl_script = os.path.join(lib['vlfeat'], "toolbox", "vl_setup")
-    setup_vl = "run('{0}')".format(vl_script)
-    setup_baseline = "addpath('{0}')".format(os.path.join(root, 'baseline'))
-    run_baseline = "baseline '{0}'".format(fin)
-
-    start_args = "-nodesktop -nosplash -singleCompThread -r"
-    matlab_cmd = "; ".join([setup_vl, setup_baseline, run_baseline, 'quit'])
-    cmd = ["matlab", start_args, '"{0}"'.format(matlab_cmd)]
-    subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
-
-
 def generate_list(path, listname, percent):
     path = realpath(normpath(path))
 
@@ -85,29 +72,42 @@ def generate_list(path, listname, percent):
     subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
 
 
+def run_baseline(fin):
+    # Run baseline
+    vl_script = os.path.join(lib['vlfeat'], "toolbox", "vl_setup")
+    setup_vl = "run('{0}')".format(vl_script)
+    setup_baseline = "addpath('{0}')".format(os.path.join(root, 'baseline'))
+    run_baseline = "run_baseline '{0}'".format(fin)
+
+    start_args = "-nodesktop -nosplash -singleCompThread -r"
+    matlab_cmd = "; ".join([setup_vl, setup_baseline, run_baseline, 'quit'])
+    cmd = ["matlab", start_args, '"{0}"'.format(matlab_cmd)]
+    subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
+
+
 if __name__ == "__main__":
     # Setup argument parser
     parser = argparse.ArgumentParser()
     dataset = parser.add_mutually_exclusive_group(required=True)
     dataset.add_argument('-f', metavar="image_list", dest="fin")
     dataset.add_argument('-d', metavar="images_dir", dest="din")
-
-
-    # Parse argument
     args = parser.parse_args()
+
+    # If input is directory, output image file list
     if args.din is not None:
         generate_list(args.din, ["train", "val", "test"], [64, 16, 20])
         generate_list(args.din, ["full"], [100])
         exit(0)
-    else:
-        # Setup root & third-party library
-        lib = setup_3rdparty(lib)
-        root = dirname(realpath(normpath(sys.argv[0])))
-        fin = realpath(normpath(args.fin))
 
-        # Run baseline method
-        #run_baseline(fin)
+    # Setup root & third-party library
+    lib = setup_3rdparty(lib)
+    root = dirname(realpath(normpath(sys.argv[0])))
+    fin = realpath(normpath(args.fin))
 
-        # Run thesis
-        #cmd = ["python", os.path.join(root, "thesis", "run_thesis.py"), fin]
-        #subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
+    # Run baseline method
+    #run_baseline(fin)
+
+    # Run thesis
+    cmd = ["python", os.path.join(root, "thesis", "run_thesis.py"), fin]
+    subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
+

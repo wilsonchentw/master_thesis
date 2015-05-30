@@ -13,6 +13,7 @@ from svmutil import *
 from liblinearutil import *
 import numpy as np
 import scipy
+from sklearn.cluster import KMeans
 import sklearn
 
 import descriptor
@@ -54,6 +55,22 @@ def load_dataset(prefix):
         #np.savez_compressed(filename, **dataset)
 
 
+def kmeans_bag_of_word(feature, dict_size):
+    num_image = feature.shape[0]
+    num_word = feature.shape[1]
+
+    feature = feature.reshape(num_image * num_word, -1)
+    codebook = KMeans(n_clusters=dict_size, copy_x=False, n_jobs=-1)
+    hard_code = codebook.fit_predict(feature).reshape(num_image, num_word)
+    hard_code = hard_code.reshape(num_image, num_word)
+    
+    bow = np.zeros((num_image, dict_size))
+    for idx, row in enumerate(hard_code):
+        bow[idx] = np.bincount(row, minlength=dict_size)
+        bow[idx] = bow[idx] / np.sum(bow[idx])
+    return bow
+
+
 if __name__ == "__main__":
 
     # Parse argument
@@ -67,11 +84,15 @@ if __name__ == "__main__":
     dataset = preload_list(args.fin)
     label = dataset.pop('label', np.array([])).tolist()
 
-    #dataset['hog'] = descriptor.extract_hog(dataset['path'])
+    dataset['hog'] = descriptor.extract_hog(dataset['path'])
     #train(label, dataset['hog'].tolist(), '-v 5 -q')
     #dataset['phog'] = descriptor.extract_phog(dataset['path'])
     #train(label, dataset['phog'].tolist(), '-v 5 -q')
-
-    #dataset['color'] = descriptor.extract_color(dataset['path'])
-    #train(label, dataset['color'].tolist(), '-v 5 -q')
     #print grid_parameter(label, dataset['phog'])
+
+
+    ## K-Means clustering
+    #num_image, dims = dataset['hog'].shape[0], dataset['hog'].shape[-1]
+    #hog = dataset['hog'].reshape(num_image, -1, dims)
+    #hog_kbow = kmeans_bag_of_word(hog, dict_size=256)
+    #train(label, hog_kbow.tolist(), '-v 5 -q')

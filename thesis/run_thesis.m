@@ -1,28 +1,31 @@
 function run_thesis(image_list)
-    setup_3rdparty(pwd)
+    setup_3rdparty(fullfile('~/Software'))
     [prefix, label, path] = parse_list(image_list);
 
     %sift = extract_sift(path);
     %lbp = extract_pyramid_lbp(path);
-    %color = extract_color(path);
-    hog = extract_hog(path);
+    color = extract_color(path);
+    %hog = extract_hog(path);
 
     %lbp_feature = reshape(cell2mat(reshape(lbp, 1, [])), [], size(lbp, 2));
     %train(double(label), sparse(double(lbp_feature)), '-v 5 -q', 'col');
-    hog_feature = reshape(cell2mat(hog), [], size(hog, 2));
-    train(double(label), sparse(double(hog_feature)), '-v 5 -q', 'col');
+    %hog_feature = reshape(cell2mat(hog), [], size(hog, 2));
+    %train(double(label), sparse(double(hog_feature)), '-v 5 -q', 'col');
+    color_feature = reshape(cell2mat(color), [], size(color, 2));
+    train(double(label), sparse(double(color_feature)), '-v 5 -q', 'col');
+
 end
 
 function setup_3rdparty(root_dir)
     % Add libsvm, liblinear, vlfeat library path
-    run(fullfile(root_dir, '../vlfeat/toolbox/vl_setup'));
-    addpath(fullfile(root_dir, '../liblinear/matlab'));
-    addpath(fullfile(root_dir, '../libsvm/matlab'));
+    run(fullfile(root_dir, 'vlfeat/toolbox/vl_setup'));
+    addpath(fullfile(root_dir, 'liblinear/matlab'));
+    addpath(fullfile(root_dir, 'libsvm/matlab'));
 
     % Add SPAMS(SPArse Modeling Software) path
-    addpath(fullfile(root_dir, '../spams/spams-matlab/build'));
-    addpath(fullfile(root_dir, '../spams/spams-matlab/test_release'));
-    addpath(fullfile(root_dir, '../spams/spams-matlab/src_release'));
+    addpath(fullfile(root_dir, 'spams-matlab/build'));
+    addpath(fullfile(root_dir, 'spams-matlab/test_release'));
+    addpath(fullfile(root_dir, 'spams-matlab/src_release'));
 end
 
 function [prefix, label, path] = parse_list(image_list)
@@ -137,7 +140,7 @@ function hog = extract_hog(path)
     for idx = 1:length(path)
         image = read_image(path{idx});
         hog{idx} = vl_hog(single(image), cell_size, ...
-                          'NumOrientations', 64, 'Variant', 'DalalTriggs');
+                          'NumOrientations', 128, 'Variant', 'DalalTriggs');
         hog{idx} = reshape(hog{idx}, [], 1);
     end
 end
