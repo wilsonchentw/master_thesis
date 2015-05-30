@@ -84,9 +84,10 @@ if __name__ == "__main__":
     dataset = preload_list(args.fin)
     label = dataset.pop('label', np.array([])).tolist()
 
+
     # K-Means clustering
     hog = descriptor.extract_hog(dataset['path'])
-    for dict_size in 2 ** np.arange(4, 11):
+    for dict_size in 2 ** np.arange(4, 12):
         print "dict_size = {0}".format(dict_size)
 
         num_image, dims = hog.shape[0], hog.shape[-1]
