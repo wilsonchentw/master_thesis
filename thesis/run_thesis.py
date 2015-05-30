@@ -84,15 +84,17 @@ if __name__ == "__main__":
     dataset = preload_list(args.fin)
     label = dataset.pop('label', np.array([])).tolist()
 
-    dataset['hog'] = descriptor.extract_hog(dataset['path'])
+    #dataset['hog'] = descriptor.extract_hog(dataset['path'])
     #train(label, dataset['hog'].tolist(), '-v 5 -q')
     #dataset['phog'] = descriptor.extract_phog(dataset['path'])
     #train(label, dataset['phog'].tolist(), '-v 5 -q')
     #print grid_parameter(label, dataset['phog'])
 
 
-    ## K-Means clustering
-    #num_image, dims = dataset['hog'].shape[0], dataset['hog'].shape[-1]
-    #hog = dataset['hog'].reshape(num_image, -1, dims)
-    #hog_kbow = kmeans_bag_of_word(hog, dict_size=256)
-    #train(label, hog_kbow.tolist(), '-v 5 -q')
+    # K-Means clustering
+    hog = descriptor.extract_hog(dataset['path'])
+    for dict_size in 2 ** np.arange(4, 11).astype(int):
+        num_image, dims = hog.shape[0], hog.shape[-1]
+        hog = hog.reshape(num_image, -1, dims)
+        hog_bow = kmeans_bag_of_word(hog, dict_size=64)
+        train(label, hog_bow.tolist(), '-v 5 -q')
