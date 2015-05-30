@@ -27,7 +27,8 @@ def extract_descriptor(pathlist, extract, batchsize=None):
 
 
 def get_hog(image):
-    hog = raw_hog(image, bins=128, block=(64, 64), step=(32, 32))
+    hog = raw_hog(image, bins=16, block=(16, 16), step=(16, 16))
+    #hog = raw_hog(image, bins=128, block=(64, 64), step=(32, 32))
     #hog /= np.linalg.norm(hog.reshape(-1))
     return hog
 

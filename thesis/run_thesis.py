@@ -60,7 +60,7 @@ def kmeans_bag_of_word(feature, dict_size):
     num_word = feature.shape[1]
 
     feature = feature.reshape(num_image * num_word, -1)
-    codebook = KMeans(n_clusters=dict_size, copy_x=False, n_jobs=4)
+    codebook = KMeans(n_clusters=dict_size, copy_x=False, n_jobs=5)
     hard_code = codebook.fit_predict(feature).reshape(num_image, num_word)
     hard_code = hard_code.reshape(num_image, num_word)
     
