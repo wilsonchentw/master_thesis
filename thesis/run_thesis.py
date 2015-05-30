@@ -93,7 +93,8 @@ if __name__ == "__main__":
 
     # K-Means clustering
     hog = descriptor.extract_hog(dataset['path'])
-    for dict_size in 2 ** np.arange(4, 11).astype(int):
+    for dict_size in 2 ** np.arange(2).astype(int):
+        print "dict_size = {0}".format(dict_size)
         num_image, dims = hog.shape[0], hog.shape[-1]
         hog = hog.reshape(num_image, -1, dims)
         hog_bow = kmeans_bag_of_word(hog, dict_size=64)
