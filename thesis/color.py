@@ -16,7 +16,8 @@ def channel_hist(image, bins, ranges, block, step):
         for block in blocks:
             patch = image[block]
             block_hist = cv2.calcHist([patch], [c], None, [bins[c]], ranges[c])
-            hist[c][block.dst] = block_hist.reshape(-1) / np.sum(block_hist)
+            block_hist = block_hist.reshape(-1) / (np.sum(block_hist) + eps)
+            hist[c][block.dst] = block_hist.reshape(-1)
     return hist
 
 
@@ -31,5 +32,5 @@ def color_cube(image, bins, ranges, block, step):
     for block in blocks:
         patch = image[block]
         block_hist = cv2.calcHist([patch], channels, None, bins, ranges)
-        hist[block.dst] = block_hist / np.sum(block_hist)
+        hist[block.dst] = block_hist / (np.sum(block_hist) + eps)
     return hist

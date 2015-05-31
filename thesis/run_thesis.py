@@ -84,15 +84,10 @@ if __name__ == "__main__":
     dataset = preload_list(args.fin)
     label = dataset.pop('label', np.array([])).tolist()
 
-
-    # K-Means clustering
     hog = descriptor.extract_hog(dataset['path'])
-    for dict_size in 2 ** np.arange(4, 12):
-        print "dict_size = {0}".format(dict_size)
+    hog = np.sqrt(hog)
+    train(label, hog.reshape(hog.shape[0], -1).tolist(), '-v 5 -q')
 
-        num_image, dims = hog.shape[0], hog.shape[-1]
-        hog = hog.reshape(num_image, -1, dims)
-        hog_bow = kmeans_bag_of_word(hog, dict_size)
-
-        hog_bow /= np.atleast_2d(np.linalg.norm(hog_bow, axis=1)).T
-        train(label, hog_bow.tolist(), '-v 5 -q')
+    #color = descriptor.extract_color(dataset['path'])
+    #color = np.sqrt(color)
+    #train(label, color.reshape(color.shape[0], -1).tolist(), '-v 5 -q')

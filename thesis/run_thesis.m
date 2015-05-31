@@ -3,16 +3,16 @@ function run_thesis(image_list)
     [prefix, label, path] = parse_list(image_list);
 
     %sift = extract_sift(path);
-    %lbp = extract_pyramid_lbp(path);
-    color = extract_color(path);
+    lbp = extract_pyramid_lbp(path);
+    %color = extract_color(path);
     %hog = extract_hog(path);
 
-    %lbp_feature = reshape(cell2mat(reshape(lbp, 1, [])), [], size(lbp, 2));
-    %train(double(label), sparse(double(lbp_feature)), '-v 5 -q', 'col');
+    lbp_feature = reshape(cell2mat(reshape(lbp, 1, [])), [], size(lbp, 2));
+    train(double(label), sparse(double(lbp_feature)), '-v 5 -q', 'col');
     %hog_feature = reshape(cell2mat(hog), [], size(hog, 2));
     %train(double(label), sparse(double(hog_feature)), '-v 5 -q', 'col');
-    color_feature = reshape(cell2mat(color), [], size(color, 2));
-    train(double(label), sparse(double(color_feature)), '-v 5 -q', 'col');
+    %color_feature = reshape(cell2mat(color), [], size(color, 2));
+    %train(double(label), sparse(double(color_feature)), '-v 5 -q', 'col');
 
 end
 
