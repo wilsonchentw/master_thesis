@@ -1,6 +1,7 @@
 import cv2
 import cv2.cv as cv
 import numpy as np
+import scipy
 
 from dip import *
 from util import *
@@ -49,6 +50,6 @@ def raw_hog(image, bins, block, step, soft=False):
 
         # Using Bhattacharya distance (L1-sqrt)
         hog[block.dst] /= (np.sum(hog[block.dst]) + eps)
-        #hog[block.dst] = np.sqrt(hog[block.dst])
+        hog[block.dst] = np.sqrt(hog[block.dst])
 
     return hog

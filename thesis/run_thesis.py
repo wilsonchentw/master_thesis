@@ -16,7 +16,6 @@ import scipy
 from sklearn.cluster import KMeans
 from sklearn.naive_bayes import GaussianNB
 from sklearn.cross_validation import StratifiedKFold
-from sklearn.metrics import classification_report
 import sklearn
 
 import descriptor
@@ -88,10 +87,9 @@ if __name__ == "__main__":
     label = dataset.pop('label', np.array([]))
     folds = StratifiedKFold(label, n_folds=5, shuffle=True)
 
-
     from hog import raw_hog
-    bin_grid = [8, 16, 32, 64, 128]
-    block_grid = [8, 16, 32, 64]
+    bin_grid = [32, 64, 128]
+    block_grid = [16, 32, 64]
     for bins, block in itertools.product(bin_grid, block_grid):
         block = (block, block)
         get_hog = lambda image: raw_hog(image, bins, block, block)

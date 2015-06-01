@@ -19,6 +19,7 @@ GABOR
  [  9.40625   9.875     9.34375   9.71875   9.75      9.1875    9.40625    10.4375 ]]
 
 -------------------------------------------------------------------------------------
+HOG parameter with linear svm
 ACC     BIN    BLOCK  STEP
 18.4    128    64     16
 17.9    128    64     32
@@ -99,3 +100,24 @@ ACC     BIN    BLOCK  STEP
 5.6     8      256    128
 5       8      256    64
 4.6     32     256    128
+
+--------------------------
+HOG with bag of codeword by kmeans
+dict_size = 16
+Cross Validation Accuracy = 12.0625%
+dict_size = 32
+Cross Validation Accuracy = 14.4375%
+dict_size = 64
+Cross Validation Accuracy = 17.4688%
+dict_size = 128
+Cross Validation Accuracy = 17.625%
+dict_size = 256
+Cross Validation Accuracy = 18.1562%
+dict_size = 512
+Cross Validation Accuracy = 18.5%
+dict_size = 1024
+Cross Validation Accuracy = 17.625%
+dict_size = 2048
+Cross Validation Accuracy = 17.3125%
+----------------------------
+
