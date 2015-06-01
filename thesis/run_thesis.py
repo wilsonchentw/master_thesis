@@ -14,6 +14,9 @@ from liblinearutil import *
 import numpy as np
 import scipy
 from sklearn.cluster import KMeans
+from sklearn.naive_bayes import GaussianNB
+from sklearn.cross_validation import StratifiedKFold
+from sklearn.metrics import classification_report
 import sklearn
 
 import descriptor
@@ -82,12 +85,27 @@ if __name__ == "__main__":
     args = parser.parse_args()
     prefix = os.path.basename(args.fin).partition('.')[0]
     dataset = preload_list(args.fin)
-    label = dataset.pop('label', np.array([])).tolist()
+    label = dataset.pop('label', np.array([]))
+    folds = StratifiedKFold(label, n_folds=5, shuffle=True)
 
-    hog = descriptor.extract_hog(dataset['path'])
-    hog = np.sqrt(hog)
-    train(label, hog.reshape(hog.shape[0], -1).tolist(), '-v 5 -q')
 
-    #color = descriptor.extract_color(dataset['path'])
-    #color = np.sqrt(color)
-    #train(label, color.reshape(color.shape[0], -1).tolist(), '-v 5 -q')
+    from hog import raw_hog
+    bin_grid = [8, 16, 32, 64, 128]
+    block_grid = [8, 16, 32, 64]
+    for bins, block in itertools.product(bin_grid, block_grid):
+        block = (block, block)
+        get_hog = lambda image: raw_hog(image, bins, block, block)
+
+        print "bins={0}, block={1}".format(bins, block)
+        hog = descriptor.extract_descriptor(dataset['path'], get_hog)
+        hog = hog.reshape(hog.shape[0], -1)
+
+        acc = []
+        for train_idx, test_idx in folds:
+            train_hog, test_hog = hog[train_idx], hog[test_idx]
+            train_label, test_label = label[train_idx], label[test_idx]
+
+            gauss_nb = GaussianNB().fit(train_hog, train_label)
+            acc.append(gauss_nb.score(test_hog, test_label))
+        print "Cross Validation Accuracy = {0}%".format(np.mean(acc) * 100)
+        train(label.tolist(), hog.tolist(), '-v 5 -q')
