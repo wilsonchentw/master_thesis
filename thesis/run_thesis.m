@@ -3,17 +3,23 @@ function run_thesis(image_list)
     [prefix, label, path] = parse_list(image_list);
 
     %sift = extract_sift(path);
-    lbp = extract_pyramid_lbp(path);
-    %color = extract_color(path);
-    %hog = extract_hog(path);
+    %lbp = extract_descriptor(path);
+    %hog = extract_descriptor(path);
+    %phow = extract_descriptor(path);
 
-    lbp_feature = reshape(cell2mat(reshape(lbp, 1, [])), [], size(lbp, 2));
-    train(double(label), sparse(double(lbp_feature)), '-v 5 -q', 'col');
-    %hog_feature = reshape(cell2mat(hog), [], size(hog, 2));
+    %lbp_feature = [lbp{:, :}];
+    %lbp_feature = cell2mat(reshape(lbp_feature, 1, []));
+    %lbp_feature = reshape(lbp_feature, [], size(lbp, 2));
+    %train(double(label), sparse(double(lbp_feature)), '-v 5 -q', 'col');
+
+    %hog_feature = reshape(hog, 1, 1, []);
+    %hog_feature = reshape(cell2mat(hog_feature), [], size(hog, 2));
+    %hog_feature = normc(double(hog_feature));
     %train(double(label), sparse(double(hog_feature)), '-v 5 -q', 'col');
-    %color_feature = reshape(cell2mat(color), [], size(color, 2));
-    %train(double(label), sparse(double(color_feature)), '-v 5 -q', 'col');
 
+    %phow_feature = reshape(cell2mat(phow), [], size(phow, 2));
+    %phow_feature = normc(double(phow_feature));
+    %train(double(label), sparse(double(phow_feature)), '-v 5 -q', 'col');
 end
 
 function setup_3rdparty(root_dir)
@@ -61,42 +67,47 @@ function image = read_image(path)
     image = normalize_image(raw_image, norm_size);
 end
 
-function sift = extract_sift(path)
-    sift = cell(1, length(path));
+function descriptor = extract_descriptor(path)
+    descriptors = cell(1, length(path));
     for idx = 1:length(path)
         image = read_image(path{idx});
         gray_image = rgb2gray(image);
 
-        % Extract SIFT descriptors
-        [frames, descriptors] = vl_sift(single(gray_image));
-        descriptors = double(descriptors) / 255.0;
-        sift{idx} = descriptors;
+        %descriptor{idx} = get_sift(single(gray_image));
+        %descriptor{idx} = get_pyramid_lbp(single(gray_image));
+        %descriptor{idx} = get_hog(single(image));
+        %descriptor{idx} = get_phow(im2single(image));
+
+        % TODO
+        %VL_LIOP
     end
 end
 
-function lbp = extract_pyramid_lbp(path)
+function ds = get_sift(image)
+    [fs, ds] = vl_sift(image);
+end
+
+function ds = get_pyramid_lbp(image)
     level = 3;
     scale = 1 / 2;
 
-    lbp = cell(level, length(path));
+    ds = cell(level, 1);
     blur_kernel = fspecial('gaussian', [9 9], 1.6);
-    for idx = 1:length(path)
-        image = read_image(path{idx});
-        gray_image = rgb2gray(image);
 
-        lbp{1, idx} = get_lbp(single(gray_image));
-        for lv = 2:level
-            gray_image = imfilter(gray_image, blur_kernel, 'symmetric');
-            gray_image = imresize(gray_image, scale);
-
-            lbp{lv, idx} = get_lbp(single(gray_image));
-        end
+    ds{1} = get_lbp(image);
+    for lv = 2:level
+        image = imfilter(image, blur_kernel, 'symmetric');
+        image = imresize(image, scale);
+        ds{lv} = get_lbp(image);
     end
 end
 
 function lbp = get_lbp(image)
-    step_size = 8;
-    window_size = 16;
+    %step_size = 8;
+    %window_size = 16;
+
+    step_size = 32;
+    window_size = 64;
 
     lbp_window = vl_lbp(image, window_size);
     lbp_overlap = vl_lbp(image(step_size:end, step_size:end), window_size);
@@ -104,44 +115,11 @@ function lbp = get_lbp(image)
     lbp = [reshape(lbp_window, [], 58)', reshape(lbp_overlap, [], 58)'];
 end
 
-function color = extract_color(path)
-    color = cell(1, length(path));
-    for idx = 1:length(path)
-        image = read_image(path{idx});
-        color{idx} = get_color(image);
-    end
+function ds = get_hog(image)
+    cell_size = 16;
+    ds = vl_hog(image, cell_size, 'numOrientations', 64);
 end
 
-function color = get_color(image)
-    num_bin = 32;
-    num_block = [4, 4];
-
-    image_size = size(image);
-    block_size = image_size(1:2) ./ num_block;
-    edges = linspace(0, 256, num_bin+1);
-
-    color = [];
-    for channel = 1:image_size(3)
-        patch = im2col(image(:, :, channel), block_size, 'distinct');
-
-        block_hist = zeros(num_bin, size(patch, 2));
-        for idx = 1:size(patch, 2)
-            block_hist(:, idx) = histcounts(patch(:, idx), edges)';
-        end
-        color(:, :, channel) = block_hist;
-    end
-    color = reshape(color, [], 1);
+function ds = get_phow(image)
+    [fs, ds] = vl_phow(image, 'Color', 'opponent', 'Sizes', [16 32], 'Step', 64);
 end
-
-function hog = extract_hog(path)
-    cell_size = 32;
-
-    hog = cell(1, length(path));
-    for idx = 1:length(path)
-        image = read_image(path{idx});
-        hog{idx} = vl_hog(single(image), cell_size, ...
-                          'NumOrientations', 128, 'Variant', 'DalalTriggs');
-        hog{idx} = reshape(hog{idx}, [], 1);
-    end
-end
-
