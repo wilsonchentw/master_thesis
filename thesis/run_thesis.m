@@ -2,15 +2,15 @@ function run_thesis(image_list)
     setup_3rdparty(fullfile('~/Software'))
     [prefix, label, path] = parse_list(image_list);
 
-    %sift = extract_sift(path);
-    %lbp = extract_descriptor(path);
-    %hog = extract_descriptor(path);
-    %phow = extract_descriptor(path);
+    sift = extract_descriptor(path, 'sift');
+    %lbp = extract_descriptor(path, 'lbp');
+    %hog = extract_descriptor(path, 'hog');
+    %phow = extract_descriptor(path, 'phow');
 
-    %lbp_feature = [lbp{:, :}];
-    %lbp_feature = cell2mat(reshape(lbp_feature, 1, []));
-    %lbp_feature = reshape(lbp_feature, [], size(lbp, 2));
-    %train(double(label), sparse(double(lbp_feature)), '-v 5 -q', 'col');
+    lbp_feature = [lbp{:, :}];
+    lbp_feature = cell2mat(reshape(lbp_feature, 1, []));
+    lbp_feature = reshape(lbp_feature, [], size(lbp, 2));
+    train(double(label), sparse(double(lbp_feature)), '-v 5 -q', 'col');
 
     %hog_feature = reshape(hog, 1, 1, []);
     %hog_feature = reshape(cell2mat(hog_feature), [], size(hog, 2));
@@ -20,6 +20,11 @@ function run_thesis(image_list)
     %phow_feature = reshape(cell2mat(phow), [], size(phow, 2));
     %phow_feature = normc(double(phow_feature));
     %train(double(label), sparse(double(phow_feature)), '-v 5 -q', 'col');
+
+    %save([prefix, '.mat'], 'sift', 'lbp')
+
+
+
 end
 
 function setup_3rdparty(root_dir)
@@ -67,19 +72,23 @@ function image = read_image(path)
     image = normalize_image(raw_image, norm_size);
 end
 
-function descriptor = extract_descriptor(path)
+function descriptor = extract_descriptor(path, ds_type)
     descriptors = cell(1, length(path));
     for idx = 1:length(path)
         image = read_image(path{idx});
         gray_image = rgb2gray(image);
 
-        %descriptor{idx} = get_sift(single(gray_image));
-        %descriptor{idx} = get_pyramid_lbp(single(gray_image));
-        %descriptor{idx} = get_hog(single(image));
-        %descriptor{idx} = get_phow(im2single(image));
-
-        % TODO
-        %VL_LIOP
+        if strcmp(ds_type, 'sift')
+            descriptor{idx} = get_sift(single(gray_image));
+        elseif strcmp(ds_type, 'lbp')
+            descriptor{idx} = get_pyramid_lbp(single(gray_image));
+        elseif strcmp(ds_type, 'hog')
+            descriptor{idx} = get_hog(single(image));
+        elseif strcmp(ds_type, 'phow')
+            descriptor{idx} = get_phow(im2single(image));
+        else
+            fprintf(1, 'Wrong descriptor name.');
+        end
     end
 end
 

@@ -27,8 +27,7 @@ def extract_descriptor(pathlist, extract, batchsize=None):
 
 
 def get_hog(image):
-    hog = raw_hog(image, bins=128, block=(64, 64), step=(64, 64))
-    #hog = raw_hog(image, bins=128, block=(64, 64), step=(32, 32))
+    hog = raw_hog(image, bins=128, block=(64, 64), step=(32, 32))
     return hog
 
 

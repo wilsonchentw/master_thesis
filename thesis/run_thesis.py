@@ -13,9 +13,12 @@ from svmutil import *
 from liblinearutil import *
 import numpy as np
 import scipy
+import scipy.io as sio
 from sklearn.cluster import KMeans
 from sklearn.naive_bayes import GaussianNB
 from sklearn.cross_validation import StratifiedKFold
+from sklearn.neighbors import NearestNeighbors
+from sklearn.metrics import classification_report, accuracy_score
 import sklearn
 
 import descriptor
@@ -57,19 +60,18 @@ def load_dataset(prefix):
         #np.savez_compressed(filename, **dataset)
 
 
-def kmeans_bag_of_word(feature, dict_size):
+def bag_of_word(feature, dict_size):
     num_image = feature.shape[0]
-    num_word = feature.shape[1]
 
-    feature = feature.reshape(num_image * num_word, -1)
     codebook = KMeans(n_clusters=dict_size, copy_x=False, n_jobs=5)
-    hard_code = codebook.fit_predict(feature).reshape(num_image, num_word)
-    hard_code = hard_code.reshape(num_image, num_word)
-    
+    codebook.fit(np.concatenate(feature))
+
     bow = np.zeros((num_image, dict_size))
-    for idx, row in enumerate(hard_code):
-        bow[idx] = np.bincount(row, minlength=dict_size)
-        bow[idx] = bow[idx] / np.sum(bow[idx])
+    for idx, f in enumerate(feature):
+        encode = codebook.predict(feature[idx])
+        bow[idx] = np.bincount(encode, minlength=dict_size)
+        bow[idx] = bow[idx].astype(float) / np.sum(bow[idx])
+
     return bow
 
 
@@ -87,23 +89,6 @@ if __name__ == "__main__":
     label = dataset.pop('label', np.array([]))
     folds = StratifiedKFold(label, n_folds=5, shuffle=True)
 
-    from hog import raw_hog
-    bin_grid = [32, 64, 128]
-    block_grid = [16, 32, 64]
-    for bins, block in itertools.product(bin_grid, block_grid):
-        block = (block, block)
-        get_hog = lambda image: raw_hog(image, bins, block, block)
-
-        print "bins={0}, block={1}".format(bins, block)
-        hog = descriptor.extract_descriptor(dataset['path'], get_hog)
-        hog = hog.reshape(hog.shape[0], -1)
-
-        acc = []
-        for train_idx, test_idx in folds:
-            train_hog, test_hog = hog[train_idx], hog[test_idx]
-            train_label, test_label = label[train_idx], label[test_idx]
-
-            gauss_nb = GaussianNB().fit(train_hog, train_label)
-            acc.append(gauss_nb.score(test_hog, test_label))
-        print "Cross Validation Accuracy = {0}%".format(np.mean(acc) * 100)
-        train(label.tolist(), hog.tolist(), '-v 5 -q')
+    #hog = descriptor.extract_hog(dataset['path'])
+    #hog = bag_of_word(hog.reshape(hog.shape[0], -1, hog.shape[-1]), dict_size=64)
+    #train(label.tolist(), hog.reshape(hog.shape[0], -1).tolist(), '-v 5 -q')
