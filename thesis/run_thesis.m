@@ -12,7 +12,7 @@ function run_thesis(image_list)
     % Feature Extraction
     % -------------------------------------------------------------------------
 
-    %sift = extract_descriptor(path, 'sift');
+    sift = extract_descriptor(path, 'sift');
     %lbp = extract_descriptor(path, 'lbp');
     %hog = extract_descriptor(path, 'hog');
     %phow = extract_descriptor(path, 'phow');
