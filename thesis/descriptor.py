@@ -27,7 +27,7 @@ def extract_descriptor(pathlist, extract, batchsize=None):
 
 
 def get_hog(image):
-    hog = raw_hog(image, bins=128, block=(64, 64), step=(32, 32))
+    hog = raw_hog(image, bins=256, block=(64, 64), step=(32, 32))
     return hog
 
 
@@ -51,14 +51,15 @@ def extract_phog(pathlist):
 def get_color(image):
     bins = (16, 16, 16)
     ranges = [[0, 100], [-127, 127], [-127, 127]]
-    block = (32, 32)
+    block = (16, 16)
 
     # Compensate for exclusive upper boundary
     ranges = np.array([[pair[0], pair[1] + eps] for pair in ranges])
 
     # Calculate color
-    hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
-    hist = channel_hist(hsv_image, bins, ranges, block, block)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+    hist = channel_hist(image, bins, ranges, block, block)
+    #hist = color_cube(image, bins, ranges, block, block)
     hist = np.concatenate(hist, axis=2)
 
     return np.array(hist)

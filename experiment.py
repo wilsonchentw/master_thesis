@@ -107,7 +107,17 @@ if __name__ == "__main__":
     # Run baseline method
     #run_baseline(fin)
 
-    # Run thesis
-    cmd = ["python", os.path.join(root, "thesis", "run_thesis.py"), fin]
+    # Run thesis in matlab
+    vl_script = os.path.join(lib['vlfeat'], "toolbox", "vl_setup")
+    setup_vl = "run('{0}')".format(vl_script)
+    setup_thesis = "addpath('{0}')".format(os.path.join(root, 'thesis'))
+    run_thesis = "run_thesis '{0}'".format(fin)
+
+    start_args = "-nodesktop -nosplash -singleCompThread -r"
+    matlab_cmd = "; ".join([setup_vl, setup_thesis, run_thesis])
+    cmd = ["matlab", start_args, '"{0}"'.format(matlab_cmd)]
     subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
 
+    # Run thesis in python
+    #cmd = ["python", os.path.join(root, "thesis", "run_thesis.py"), fin]
+    #subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)

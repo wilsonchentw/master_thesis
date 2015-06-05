@@ -52,4 +52,6 @@ def raw_hog(image, bins, block, step, soft=False):
         hog[block.dst] /= (np.sum(hog[block.dst]) + eps)
         hog[block.dst] = np.sqrt(hog[block.dst])
 
+
+
     return hog

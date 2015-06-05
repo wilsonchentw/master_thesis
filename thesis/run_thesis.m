@@ -15,7 +15,7 @@ function run_thesis(image_list)
     sift = extract_descriptor(path, 'sift');
     %lbp = extract_descriptor(path, 'lbp');
     %hog = extract_descriptor(path, 'hog');
-    %phow = extract_descriptor(path, 'phow');
+    %covdet = extract_descriptor(path, 'covdet');
 
     % -------------------------------------------------------------------------
     % Directly Training
@@ -38,33 +38,47 @@ function run_thesis(image_list)
     %save([prefix, '.mat'], 'sift', 'lbp')
 
     % -------------------------------------------------------------------------
-    % Encoding
+    % Bag-of-Word Encoding
     % -------------------------------------------------------------------------
 
-    train_idx = folds(1).train;
-    test_idx = folds(1).test;
+    %train_idx = folds(1).train;
+    %test_idx = folds(1).test;
 
-    % Generate K-means codebook
-    dict_size = 2048;
-    train_sift = cell2mat(sift(train_idx));
-    sift_dict = vl_ikmeans(train_sift, dict_size, 'method', 'elkan');
+    %% Generate K-means codebook
+    %dict_size = 8;
+    %train_sift = cell2mat(sift(train_idx));
+    %sift_dict = vl_ikmeans(train_sift, dict_size, 'method', 'elkan', 'verbose');
 
-    % Conduct bag-of-word
-    sift_bow = zeros(dict_size, length(sift));
-    for idx = 1:length(sift)
-        asgn = vl_ikmeanspush(sift{idx}, sift_dict);
-        hist = vl_ikmeanshist(dict_size, asgn);
-        sift_bow(:, idx) = double(hist) / sum(hist);
-    end
+    %% Conduct bag-of-word
+    %sift_bow = zeros(dict_size, length(sift));
+    %for idx = 1:length(sift)
+    %    %% Soft quantization
+    %    %sigma = 0.01;
+    %    %dist = double(vl_alldist2(sift_dict, int32(sift{idx}), 'L2'));
+    %    %asgn = exp((-0.5 * (dist .^ 2)) / sigma ^ 2) / sqrt(2.0 * pi * sigma);
+    %    %hist = sum(double(asgn) ./ repmat(sum(asgn), dict_size, 1), 2);
+    %    %sift_bow(:, idx) = hist / sum(hist);
 
-    % Approximated chi-square kernel mapping
-    sift_bow = vl_homkermap(sift_bow, 2, 'kernel', 'kchi2');
+    %    % Hard quantization
+    %    asgn = vl_ikmeanspush(sift{idx}, sift_dict);
+    %    hist = vl_ikmeanshist(dict_size, asgn);
+    %    sift_bow(:, idx) = double(hist) / sum(hist);
+    %end
 
-    % Evaluate with linear svm
-    train_sift = sparse(sift_bow(:, train_idx));
-    test_sift = sparse(sift_bow(:, test_idx));
-    model = train(double(label(train_idx)), train_sift, '-q', 'col');
-    predict(double(label(test_idx)), test_sift, model, '', 'col');
+    %% Approximated chi-square kernel mapping
+    %sift_bow = vl_homkermap(sift_bow, 2, 'kernel', 'kchi2');
+
+    %% Evaluate with linear svm
+    %train_sift = sparse(sift_bow(:, train_idx));
+    %test_sift = sparse(sift_bow(:, test_idx));
+    %model = train(double(label(train_idx)), train_sift, '-q', 'col');
+    %predict(double(label(test_idx)), test_sift, model, '', 'col');
+
+    % -------------------------------------------------------------------------
+    % Locality constrain linear coding
+    % -------------------------------------------------------------------------
+
+
 end
 
 function setup_3rdparty(root_dir)
@@ -152,8 +166,8 @@ function descriptor = extract_descriptor(path, ds_type)
                 descriptor{idx} = get_pyramid_lbp(single(gray_image));
             case 'hog'
                 descriptor{idx} = get_hog(single(image));
-            case 'phow'
-                descriptor{idx} = get_phow(im2single(image));
+            case 'covdet'
+                descriptor{idx} = get_covdet(im2single(image));
             otherwise
                 fprintf(1, 'Wrong descriptor name.');
                 return;
@@ -181,9 +195,6 @@ function ds = get_pyramid_lbp(image)
 end
 
 function lbp = get_lbp(image)
-    %step_size = 8;
-    %window_size = 16;
-
     step_size = 32;
     window_size = 64;
 
@@ -198,6 +209,7 @@ function ds = get_hog(image)
     ds = vl_hog(image, cell_size, 'numOrientations', 64);
 end
 
-function ds = get_phow(image)
-    [fs, ds] = vl_phow(image, 'Color', 'opponent', 'Sizes', [16 32], 'Step', 64);
+function ds = get_covdet(image)
+    %fs = vl_covdet
+    [fs, ds] = vl_phow(image, 'Color', 'gray', 'Sizes', [16 32], 'Step', 64);
 end
