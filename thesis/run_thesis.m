@@ -38,48 +38,28 @@ function run_thesis(image_list)
     %save([prefix, '.mat'], 'sift', 'lbp')
 
     % -------------------------------------------------------------------------
-    % Bag-of-Word Encoding
+    % Bag-of-Word with Hierarchical K-means Codebook
     % -------------------------------------------------------------------------
 
-    %train_idx = folds(1).train;
-    %test_idx = folds(1).test;
+    train_idx = folds(1).train;
+    test_idx = folds(1).test;
 
-    %% Generate K-means codebook
-    %dict_size = 8;
-    %train_sift = cell2mat(sift(train_idx));
-    %sift_dict = vl_ikmeans(train_sift, dict_size, 'method', 'elkan', 'verbose');
+    % Generate bag-of-word histogram with codebook
+    branch = 4;
+    level = 4;
+    sift_tree = generate_codebook(cell2mat(sift(train_idx)), branch, level);
+    sift_bow = kmeans_bag_of_word(sift_tree, sift);
 
-    %% Conduct bag-of-word
-    %sift_bow = zeros(dict_size, length(sift));
-    %for idx = 1:length(sift)
-    %    %% Soft quantization
-    %    %sigma = 0.01;
-    %    %dist = double(vl_alldist2(sift_dict, int32(sift{idx}), 'L2'));
-    %    %asgn = exp((-0.5 * (dist .^ 2)) / sigma ^ 2) / sqrt(2.0 * pi * sigma);
-    %    %hist = sum(double(asgn) ./ repmat(sum(asgn), dict_size, 1), 2);
-    %    %sift_bow(:, idx) = hist / sum(hist);
+    % Approximated chi-square kernel mapping
+    sift_bow = vl_homkermap(sift_bow, 2, 'kernel', 'kchi2');
 
-    %    % Hard quantization
-    %    asgn = vl_ikmeanspush(sift{idx}, sift_dict);
-    %    hist = vl_ikmeanshist(dict_size, asgn);
-    %    sift_bow(:, idx) = double(hist) / sum(hist);
-    %end
-
-    %% Approximated chi-square kernel mapping
-    %sift_bow = vl_homkermap(sift_bow, 2, 'kernel', 'kchi2');
-
-    %% Evaluate with linear svm
-    %train_sift = sparse(sift_bow(:, train_idx));
-    %test_sift = sparse(sift_bow(:, test_idx));
-    %model = train(double(label(train_idx)), train_sift, '-q', 'col');
-    %predict(double(label(test_idx)), test_sift, model, '', 'col');
-
-    % -------------------------------------------------------------------------
-    % Locality constrain linear coding
-    % -------------------------------------------------------------------------
-
-
+    % Evaluate with linear svm
+    train_sift = sparse(sift_bow(:, train_idx));
+    test_sift = sparse(sift_bow(:, test_idx));
+    model = train(double(label(train_idx)), train_sift, '-q', 'col');
+    predict(double(label(test_idx)), test_sift, model, '', 'col');
 end
+
 
 function setup_3rdparty(root_dir)
     % Add libsvm, liblinear, vlfeat library path
@@ -212,4 +192,22 @@ end
 function ds = get_covdet(image)
     %fs = vl_covdet
     [fs, ds] = vl_phow(image, 'Color', 'gray', 'Sizes', [16 32], 'Step', 64);
+end
+
+function tree = generate_codebook(vocab, branch, level)
+    leaves = branch ^ level;
+    tree = vl_hikmeans(vocab, branch, leaves, 'method', 'elkan', 'verbose');
+end
+
+function hbow = kmeans_bag_of_word(tree, descriptor)
+    leaves = tree.K ^ tree.depth;
+
+    hbow = zeros(leaves, length(descriptor));
+    for idx = 1:length(descriptor)
+        path = vl_hikmeanspush(tree, descriptor{idx});
+        hist = vl_hikmeanshist(tree, path);
+
+        leave_hist = hist(end - leaves + 1:end);
+        hbow(:, idx) = double(leave_hist) / sum(leave_hist);
+    end
 end
