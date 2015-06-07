@@ -12,7 +12,7 @@ function run_thesis(image_list)
     % Feature Extraction
     % -------------------------------------------------------------------------
 
-    sift = extract_descriptor(path, 'sift');
+    %sift = extract_descriptor(path, 'sift');
     %lbp = extract_descriptor(path, 'lbp');
     %hog = extract_descriptor(path, 'hog');
     %covdet = extract_descriptor(path, 'covdet');
@@ -38,29 +38,28 @@ function run_thesis(image_list)
     %save([prefix, '.mat'], 'sift', 'lbp')
 
     % -------------------------------------------------------------------------
-    % Bag-of-Word with Hierarchical K-means Codebook
+    % Bag-of-Word with Hierarchical K-means Codebook, Encoding with LLC
     % -------------------------------------------------------------------------
 
-    for cv = 1:length(folds) / length(folds)
-        train_idx = folds(cv).train;
-        test_idx = folds(cv).test;
+    %cv = 1;
+    %train_idx = folds(cv).train;
+    %test_idx = folds(cv).test;
 
-        % Generate bag-of-word histogram with codebook
-        branch = 2;
-        level = 10;
-        sift_dict = generate_codebook(cell2mat(sift(train_idx)), branch, level);
-        %sift_encode = bag_of_word(sift_dict, sift);
-        sift_encode = llc_encode(sift_dict, sift);
+    %% Generate bag-of-word histogram with codebook
+    %branch = 2;
+    %level = 10;
+    %sift_dict = kmeans_codebook(cell2mat(sift(train_idx)), branch, level);
+    %%sift_encode = bag_of_word(sift_dict, sift);
+    %sift_encode = llc_encode(sift_dict, sift);
 
-        % Approximated chi-square kernel mapping
-        %sift_bow = vl_homkermap(sift_bow, 2, 'kernel', 'kchi2');
+    %% Approximated chi-square kernel mapping
+    %%sift_encode = vl_homkermap(sift_encode, 2, 'kernel', 'kchi2');
 
-        % Evaluate with linear svm
-        train_sift = sparse(sift_encode(:, train_idx));
-        test_sift = sparse(sift_encode(:, test_idx));
-        model = train(double(label(train_idx)), train_sift, '-q', 'col');
-        predict(double(label(test_idx)), test_sift, model, '', 'col');
-    end
+    %% Evaluate with linear svm
+    %train_sift = sparse(sift_encode(:, train_idx));
+    %test_sift = sparse(sift_encode(:, test_idx));
+    %model = train(double(label(train_idx)), train_sift, '-q', 'col');
+    %predict(double(label(test_idx)), test_sift, model, '', 'col');
 end
 
 function setup_3rdparty(root_dir)
@@ -196,7 +195,7 @@ function ds = get_covdet(image)
     [fs, ds] = vl_phow(image, 'Color', 'gray', 'Sizes', [16 32], 'Step', 64);
 end
 
-function codebook = generate_codebook(vocab, branch, level)
+function codebook = kmeans_codebook(vocab, branch, level)
     leaves = branch ^ level;
     tree = vl_hikmeans(vocab, branch, leaves, 'method', 'elkan');
     codebook = get_leaves_center(tree);
@@ -231,22 +230,27 @@ function bow = bag_of_word(dict, vocabs)
 end
 
 function llc = llc_encode(dict, vocabs)
-    knn = 5;
-    sigma = 1.0;
-    lambda = 1.0;
-    dict_size = size(dict, 2);
-
     dict = double(dict) / 255.0;
-    llc = zeros(dict_size, length(vocabs));
+    llc = zeros(size(dict, 2), length(vocabs));
     for idx = 1:length(vocabs)
         x = double(vocabs{idx}) / 255.0;
+
+        % Exactly solution of LLC
+        %sigma = 1.0;
+        %lambda = 1.0;
         %llc_coeff = llc_exact(dict, x, sigma, lambda);
+
+        % Approximate solution of LLC
+        knn = 5;
         llc_coeff = llc_approx(dict, x, knn);
 
-        % Average pooling & L2 normalize
+        % Pooling
         llc(:, idx) = mean(llc_coeff, 2);
+        %llc(:, idx) = max(llc_coeff, [], 2);
+
+        % Normalization
         llc(:, idx) = llc(:, idx) / norm(llc(:, idx));
-break
+        %llc(:, idx) = llc(:, idx) / sum(llc(:, idx));
     end
 end
 
@@ -277,19 +281,13 @@ function llc = llc_approx(B, X, knn)
     llc = zeros(b_num, x_num);
     for idx = 1:size(X, 2)
         xi = X(:, idx);
+        nn = nearest_neighbors(:, idx);
 
-        di = vl_alldist2(B, xi, 'L2');
-        [~, nn] = sort(di, 'ascend');
- 
-        nn_kd = nearest_neighbors(:, idx);
-        [nn_kd nn(1:knn)]
-
-        z = B(:, nn(1:knn)) - repmat(xi, 1, knn);   % Shift properties
-        C = z' * z;                                 % Local covariance
-        C = C + eye(knn) * trace(C) * 1e-4;         % Regularization
+        z = B(:, nn) - repmat(xi, 1, knn);   % Shift properties
+        C = z' * z;                          % Local covariance
+        C = C + eye(knn) * trace(C) * 1e-4;  % Regularization
         w = C \ ones(knn, 1);
 
-        llc(nn(1:knn), idx) = w / sum(w);
-break
+        llc(nn, idx) = w / sum(w);
     end
 end
