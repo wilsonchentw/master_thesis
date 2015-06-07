@@ -41,25 +41,27 @@ function run_thesis(image_list)
     % Bag-of-Word with Hierarchical K-means Codebook
     % -------------------------------------------------------------------------
 
-    train_idx = folds(1).train;
-    test_idx = folds(1).test;
+    for cv = 1:length(folds) / length(folds)
+        train_idx = folds(cv).train;
+        test_idx = folds(cv).test;
 
-    % Generate bag-of-word histogram with codebook
-    branch = 4;
-    level = 4;
-    sift_tree = generate_codebook(cell2mat(sift(train_idx)), branch, level);
-    sift_bow = kmeans_bag_of_word(sift_tree, sift);
+        % Generate bag-of-word histogram with codebook
+        branch = 2;
+        level = 10;
+        sift_dict = generate_codebook(cell2mat(sift(train_idx)), branch, level);
+        %sift_encode = bag_of_word(sift_dict, sift);
+        sift_encode = llc_encode(sift_dict, sift);
 
-    % Approximated chi-square kernel mapping
-    sift_bow = vl_homkermap(sift_bow, 2, 'kernel', 'kchi2');
+        % Approximated chi-square kernel mapping
+        %sift_bow = vl_homkermap(sift_bow, 2, 'kernel', 'kchi2');
 
-    % Evaluate with linear svm
-    train_sift = sparse(sift_bow(:, train_idx));
-    test_sift = sparse(sift_bow(:, test_idx));
-    model = train(double(label(train_idx)), train_sift, '-q', 'col');
-    predict(double(label(test_idx)), test_sift, model, '', 'col');
+        % Evaluate with linear svm
+        train_sift = sparse(sift_encode(:, train_idx));
+        test_sift = sparse(sift_encode(:, test_idx));
+        model = train(double(label(train_idx)), train_sift, '-q', 'col');
+        predict(double(label(test_idx)), test_sift, model, '', 'col');
+    end
 end
-
 
 function setup_3rdparty(root_dir)
     % Add libsvm, liblinear, vlfeat library path
@@ -194,20 +196,100 @@ function ds = get_covdet(image)
     [fs, ds] = vl_phow(image, 'Color', 'gray', 'Sizes', [16 32], 'Step', 64);
 end
 
-function tree = generate_codebook(vocab, branch, level)
+function codebook = generate_codebook(vocab, branch, level)
     leaves = branch ^ level;
-    tree = vl_hikmeans(vocab, branch, leaves, 'method', 'elkan', 'verbose');
+    tree = vl_hikmeans(vocab, branch, leaves, 'method', 'elkan');
+    codebook = get_leaves_center(tree);
 end
 
-function hbow = kmeans_bag_of_word(tree, descriptor)
-    leaves = tree.K ^ tree.depth;
+function centers = get_leaves_center(tree)
+    if tree.depth == 1
+        centers = tree.centers;
+    else
+        centers = [];
+        queue = tree.sub;
+        while ~isempty(queue)
+            if isempty(queue(1).sub)
+                centers = [centers queue(1).centers];
+            else
+                queue = [queue queue(1).sub];
+            end
+            queue(1) = [];
+        end
+    end
+end
 
-    hbow = zeros(leaves, length(descriptor));
-    for idx = 1:length(descriptor)
-        path = vl_hikmeanspush(tree, descriptor{idx});
-        hist = vl_hikmeanshist(tree, path);
+function bow = bag_of_word(dict, vocabs)
+    dict_size = size(dict, 2);
 
-        leave_hist = hist(end - leaves + 1:end);
-        hbow(:, idx) = double(leave_hist) / sum(leave_hist);
+    bow = zeros(dict_size, length(vocabs));
+    for idx = 1:length(vocabs)
+        asgn = vl_ikmeanspush(vocabs{idx}, dict);
+        hist = vl_ikmeanshist(dict_size, asgn);
+        bow(:, idx) = double(hist) / sum(hist);
+    end
+end
+
+function llc = llc_encode(dict, vocabs)
+    knn = 5;
+    sigma = 1.0;
+    lambda = 1.0;
+    dict_size = size(dict, 2);
+
+    dict = double(dict) / 255.0;
+    llc = zeros(dict_size, length(vocabs));
+    for idx = 1:length(vocabs)
+        x = double(vocabs{idx}) / 255.0;
+        %llc_coeff = llc_exact(dict, x, sigma, lambda);
+        llc_coeff = llc_approx(dict, x, knn);
+
+        % Average pooling & L2 normalize
+        llc(:, idx) = mean(llc_coeff, 2);
+        llc(:, idx) = llc(:, idx) / norm(llc(:, idx));
+break
+    end
+end
+
+function llc = llc_exact(B, X, sigma, lambda)
+    x_num = size(X, 2);
+    b_num = size(B, 2);
+
+    llc = zeros(b_num, x_num);
+    for idx = 1:size(X, 2)
+        xi = X(:, idx);
+        di = exp(vl_alldist2(B, xi, 'L2') / sigma);
+        di = di / max(di);
+
+        z = B - repmat(xi, 1, b_num);                % Shift properties
+        Ci = z' * z;                                 % Local covariance
+        Ci = Ci + eye(b_num) * trace(Ci) * 1e-4;     % Regularization
+        ci = (Ci + lambda * diag(di .* di)) \ ones(b_num, 1); 
+        llc(:, idx) = ci / sum(ci);
+    end
+end
+
+function llc = llc_approx(B, X, knn)
+    x_num = size(X, 2);
+    b_num = size(B, 2);
+
+    kd_tree = vl_kdtreebuild(B);
+    nearest_neighbors = vl_kdtreequery(kd_tree, B, X, 'NumNeighbors', knn);
+    llc = zeros(b_num, x_num);
+    for idx = 1:size(X, 2)
+        xi = X(:, idx);
+
+        di = vl_alldist2(B, xi, 'L2');
+        [~, nn] = sort(di, 'ascend');
+ 
+        nn_kd = nearest_neighbors(:, idx);
+        [nn_kd nn(1:knn)]
+
+        z = B(:, nn(1:knn)) - repmat(xi, 1, knn);   % Shift properties
+        C = z' * z;                                 % Local covariance
+        C = C + eye(knn) * trace(C) * 1e-4;         % Regularization
+        w = C \ ones(knn, 1);
+
+        llc(nn(1:knn), idx) = w / sum(w);
+break
     end
 end
