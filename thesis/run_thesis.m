@@ -47,7 +47,7 @@ function run_thesis(image_list)
 
         % Generate  codebook
         branch = 2;
-        level = 4;
+        level = 10;
         dict = kmeans_codebook(cell2mat(phow(train_idx)), branch, level);
 
         % Encoding with codebook
