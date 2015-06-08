@@ -41,16 +41,16 @@ function run_thesis(image_list)
     % Bag-of-Word with Hierarchical K-means Codebook, Encoding with LLC
     % -------------------------------------------------------------------------
 
-    for cv = 1:length(folds) / length(folds)
+    for cv = 1:length(folds)
         train_idx = folds(cv).train;
         test_idx = folds(cv).test;
 
-        % Generate bag-of-word histogram with codebook
+        % Generate  codebook
         branch = 2;
-        level = 10;
+        level = 4;
         dict = kmeans_codebook(cell2mat(phow(train_idx)), branch, level);
-        dict = llc_codebook(cell2mat(phow(train_idx)), branch ^ level);
 
+        % Encoding with codebook
         %encode = bag_of_word(dict, sift);
         encode = llc_encode(dict, phow);
 
@@ -194,8 +194,10 @@ function ds = get_hog(image)
 end
 
 function ds = get_phow(image)
-    [fs, ds] = vl_phow(image, 'Color', 'gray', 'Sizes', [8 12 16], ...
-                       'Step', 8, 'WindowSize', 2, 'Magnif', 6);
+    [fs, ds] = vl_phow(image, 'Color', 'gray', 'Sizes', [12], ...
+                       'Step', 16, 'WindowSize', 2, 'Magnif', 6);
+    %[fs, ds] = vl_phow(image, 'Color', 'gray', 'Sizes', [8 12 16], ...
+    %                   'Step', 8, 'WindowSize', 2, 'Magnif', 6);
 end
 
 function codebook = kmeans_codebook(vocab, branch, level)
