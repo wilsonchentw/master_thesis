@@ -15,7 +15,7 @@ function run_thesis(image_list)
     %sift = extract_descriptor(path, 'sift');
     %lbp = extract_descriptor(path, 'lbp');
     %hog = extract_descriptor(path, 'hog');
-    %covdet = extract_descriptor(path, 'covdet');
+    phow = extract_descriptor(path, 'phow');
 
     % -------------------------------------------------------------------------
     % Directly Training
@@ -41,25 +41,28 @@ function run_thesis(image_list)
     % Bag-of-Word with Hierarchical K-means Codebook, Encoding with LLC
     % -------------------------------------------------------------------------
 
-    %cv = 1;
-    %train_idx = folds(cv).train;
-    %test_idx = folds(cv).test;
+    for cv = 1:length(folds) / length(folds)
+        train_idx = folds(cv).train;
+        test_idx = folds(cv).test;
 
-    %% Generate bag-of-word histogram with codebook
-    %branch = 2;
-    %level = 10;
-    %sift_dict = kmeans_codebook(cell2mat(sift(train_idx)), branch, level);
-    %%sift_encode = bag_of_word(sift_dict, sift);
-    %sift_encode = llc_encode(sift_dict, sift);
+        % Generate bag-of-word histogram with codebook
+        branch = 2;
+        level = 10;
+        dict = kmeans_codebook(cell2mat(phow(train_idx)), branch, level);
+        dict = llc_codebook(cell2mat(phow(train_idx)), branch ^ level);
 
-    %% Approximated chi-square kernel mapping
-    %%sift_encode = vl_homkermap(sift_encode, 2, 'kernel', 'kchi2');
+        %encode = bag_of_word(dict, sift);
+        encode = llc_encode(dict, phow);
 
-    %% Evaluate with linear svm
-    %train_sift = sparse(sift_encode(:, train_idx));
-    %test_sift = sparse(sift_encode(:, test_idx));
-    %model = train(double(label(train_idx)), train_sift, '-q', 'col');
-    %predict(double(label(test_idx)), test_sift, model, '', 'col');
+        % Approximated chi-square kernel mapping
+        %encode = vl_homkermap(ds_encode, 2, 'kernel', 'kchi2');
+
+        % Evaluate with linear svm
+        train_inst = sparse(encode(:, train_idx));
+        test_inst = sparse(encode(:, test_idx));
+        model = train(double(label(train_idx)), train_inst, '-q', 'col');
+        predict(double(label(test_idx)), test_inst, model, '', 'col');
+    end
 end
 
 function setup_3rdparty(root_dir)
@@ -147,8 +150,8 @@ function descriptor = extract_descriptor(path, ds_type)
                 descriptor{idx} = get_pyramid_lbp(single(gray_image));
             case 'hog'
                 descriptor{idx} = get_hog(single(image));
-            case 'covdet'
-                descriptor{idx} = get_covdet(im2single(image));
+            case 'phow'
+                descriptor{idx} = get_phow(im2single(image));
             otherwise
                 fprintf(1, 'Wrong descriptor name.');
                 return;
@@ -190,14 +193,15 @@ function ds = get_hog(image)
     ds = vl_hog(image, cell_size, 'numOrientations', 64);
 end
 
-function ds = get_covdet(image)
-    %fs = vl_covdet
-    [fs, ds] = vl_phow(image, 'Color', 'gray', 'Sizes', [16 32], 'Step', 64);
+function ds = get_phow(image)
+    [fs, ds] = vl_phow(image, 'Color', 'gray', 'Sizes', [8 12 16], ...
+                       'Step', 8, 'WindowSize', 2, 'Magnif', 6);
 end
 
 function codebook = kmeans_codebook(vocab, branch, level)
     leaves = branch ^ level;
-    tree = vl_hikmeans(vocab, branch, leaves, 'method', 'elkan');
+
+    tree = vl_hikmeans(vocab, branch, leaves, 'Method', 'lloyd', 'MaxIters', 400);
     codebook = get_leaves_center(tree);
 end
 
