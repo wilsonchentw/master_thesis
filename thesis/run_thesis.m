@@ -15,7 +15,10 @@ function run_thesis(image_list)
     %sift = extract_descriptor(path, 'sift');
     %lbp = extract_descriptor(path, 'lbp');
     %hog = extract_descriptor(path, 'hog');
-    phow = extract_descriptor(path, 'phow');
+    %phow = extract_descriptor(path, 'phow');
+
+    lbp = extract_descriptor(path, 'lbp');
+    lbp = cellfun(@(x) {cell2mat(x')}, lbp);
 
     % -------------------------------------------------------------------------
     % Directly Training
@@ -41,28 +44,51 @@ function run_thesis(image_list)
     % Bag-of-Word with Hierarchical K-means Codebook, Encoding with LLC
     % -------------------------------------------------------------------------
 
-    for cv = 1:length(folds)
-        train_idx = folds(cv).train;
-        test_idx = folds(cv).test;
+    %cv = 1;
+    %train_idx = folds(cv).train;
+    %test_idx = folds(cv).test;
 
-        % Generate  codebook
-        branch = 2;
-        level = 10;
-        dict = kmeans_codebook(cell2mat(phow(train_idx)), branch, level);
+    %branch = 2;
+    %level = 12;
+    %dict = kmeans_dict(cell2mat(phow(train_idx)), branch, level);
 
-        % Encoding with codebook
-        %encode = bag_of_word(dict, sift);
-        encode = llc_encode(dict, phow);
+    %% Encoding with codebook
+    %%bow = bow_encode(dict, sift);
+    %llc = llc_encode(dict, phow);
 
-        % Approximated chi-square kernel mapping
-        %encode = vl_homkermap(ds_encode, 2, 'kernel', 'kchi2');
+    %% Approximated chi-square kernel mapping
+    %encode = vl_homkermap(llc, 3, 'kernel', 'kchi2', 'gamma', 1.0);
 
-        % Evaluate with linear svm
-        train_inst = sparse(encode(:, train_idx));
-        test_inst = sparse(encode(:, test_idx));
-        model = train(double(label(train_idx)), train_inst, '-q', 'col');
-        predict(double(label(test_idx)), test_inst, model, '', 'col');
-    end
+    %% Evaluate with linear svm
+    %train_inst = sparse(encode(:, train_idx));
+    %test_inst = sparse(encode(:, test_idx));
+    %model = train(double(label(train_idx)), train_inst, '-c 1 -q', 'col');
+    %predict(double(label(test_idx)), test_inst, model, '', 'col');
+
+    % -------------------------------------------------------------------------
+    % Sparse Coding with SPAMS
+    % -------------------------------------------------------------------------
+
+    %cv = 1;
+    %train_idx = folds(cv).train;
+    %test_idx = folds(cv).test;
+
+    %dict_param = struct('K', 1024, 'lambda', 0.25, 'lambda2', 0, ...
+    %                    'iter', 1000, 'mode', 2, 'modeD', 0, ...
+    %                    'modeParam', 0, 'clean', true, 'numThreads', 4, ...
+    %                    'verbose', false);
+    %dict = sparse_coding_dict(double(cell2mat(phow(train_idx))), dict_param);
+    %encode = sc_encode(dict, phow, dict_param);
+
+    %% Approximated chi-square kernel mapping
+    %encode = vl_homkermap(encode, 3, 'kernel', 'kchi2', 'gamma', 1);
+
+    %% Evaluate with linear svm
+    %train_inst = sparse(encode(:, train_idx));
+    %test_inst = sparse(encode(:, test_idx));
+    %model = train(double(label(train_idx)), train_inst, '-c 1 -q', 'col');
+    %predict(double(label(test_idx)), test_inst, model, '', 'col');
+
 end
 
 function setup_3rdparty(root_dir)
@@ -72,9 +98,9 @@ function setup_3rdparty(root_dir)
     addpath(fullfile(root_dir, 'libsvm/matlab'));
 
     % Add SPAMS(SPArse Modeling Software) path
-    addpath(fullfile(root_dir, 'spams-matlab/build'));
     addpath(fullfile(root_dir, 'spams-matlab/test_release'));
     addpath(fullfile(root_dir, 'spams-matlab/src_release'));
+    addpath(fullfile(root_dir, 'spams-matlab/build'));
 end
 
 function [prefix, label, path] = parse_list(image_list)
@@ -200,11 +226,22 @@ function ds = get_phow(image)
     %                   'Step', 8, 'WindowSize', 2, 'Magnif', 6);
 end
 
-function codebook = kmeans_codebook(vocab, branch, level)
+function dict = kmeans_dict(vocab, branch, level)
     leaves = branch ^ level;
 
     tree = vl_hikmeans(vocab, branch, leaves, 'Method', 'lloyd', 'MaxIters', 400);
-    codebook = get_leaves_center(tree);
+    dict = get_leaves_center(tree);
+end
+
+function dict = sparse_coding_dict(vocab, dict_param)
+    % Rescale for avoiding numerical difficulty
+    vocab = vocab / 255.0;
+
+    % Generate sparse coding basis
+    dict = mexTrainDL(vocab, dict_param);
+
+    % Rescale to original range
+    dict = dict * 255.0;
 end
 
 function centers = get_leaves_center(tree)
@@ -224,7 +261,7 @@ function centers = get_leaves_center(tree)
     end
 end
 
-function bow = bag_of_word(dict, vocabs)
+function bow = bow_encode(dict, vocabs)
     dict_size = size(dict, 2);
 
     bow = zeros(dict_size, length(vocabs));
@@ -232,6 +269,20 @@ function bow = bag_of_word(dict, vocabs)
         asgn = vl_ikmeanspush(vocabs{idx}, dict);
         hist = vl_ikmeanshist(dict_size, asgn);
         bow(:, idx) = double(hist) / sum(hist);
+    end
+end
+
+function sc = sc_encode(dict, vocabs, param)
+    dict = dict / 255.0;
+    sc = zeros(size(dict, 2), length(vocabs));
+    for idx = 1:length(vocabs)
+        vocab = double(vocabs{idx}) / 255.0;
+        alpha = mexLasso(vocab, dict, param);
+
+        % Pooling & normalization
+        sc(:, idx) = mean(alpha, 2);
+        sc(:, idx) = sc(:, idx) / sum(sc(:, idx));
+        %sc(:, idx) = sc(:, idx) / norm(sc(:, idx));
     end
 end
 
@@ -255,8 +306,8 @@ function llc = llc_encode(dict, vocabs)
         %llc(:, idx) = max(llc_coeff, [], 2);
 
         % Normalization
-        llc(:, idx) = llc(:, idx) / norm(llc(:, idx));
-        %llc(:, idx) = llc(:, idx) / sum(llc(:, idx));
+        %llc(:, idx) = llc(:, idx) / norm(llc(:, idx));
+        llc(:, idx) = llc(:, idx) / sum(llc(:, idx));
     end
 end
 
