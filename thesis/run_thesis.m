@@ -1,7 +1,7 @@
 function run_thesis(image_list)
 
     % -------------------------------------------------------------------------
-    % Parse image file list
+    %  Parse File & Generate Stratify K-fold split
     % -------------------------------------------------------------------------
 
     setup_3rdparty(fullfile('~/Software'))
@@ -9,30 +9,24 @@ function run_thesis(image_list)
     folds = cross_validation(label, 5);
 
     % -------------------------------------------------------------------------
-    % Feature Extraction
+    %  Feature Extraction
     % -------------------------------------------------------------------------
 
-    %sift = extract_descriptor(path, 'sift');
+    sift = extract_descriptor(path, 'sift');
     %lbp = extract_descriptor(path, 'lbp');
     %hog = extract_descriptor(path, 'hog');
     %phow = extract_descriptor(path, 'phow');
-
-    lbp = extract_descriptor(path, 'lbp');
-    lbp = cellfun(@(x) {cell2mat(x')}, lbp);
+    %color_lbp = extract_descriptor(path, 'color_lbp');
+    ds = sift;
 
     % -------------------------------------------------------------------------
-    % Directly Training
+    %  Directly Training
     % -------------------------------------------------------------------------
 
-    %lbp_feature = [lbp{:, :}];
-    %lbp_feature = cell2mat(reshape(lbp_feature, 1, []));
-    %lbp_feature = reshape(lbp_feature, [], size(lbp, 2));
-    %train(double(label), sparse(double(lbp_feature)), '-v 5 -q', 'col');
-
-    %hog_feature = reshape(hog, 1, 1, []);
-    %hog_feature = reshape(cell2mat(hog_feature), [], size(hog, 2));
-    %hog_feature = normc(double(hog_feature));
-    %train(double(label), sparse(double(hog_feature)), '-v 5 -q', 'col');
+    %lbp = cellfun(@(x) {cell2mat(x')}, lbp);
+    %lbp = cellfun(@(x) {uint8(x .^ 1 * 255)}, lbp);
+    %lbp = reshape(cell2mat(lbp), [], length(lbp));
+    %train(double(label), sparse(double(lbp)), '-v 5 -q', 'col');
 
     %phow_feature = reshape(cell2mat(phow), [], size(phow, 2));
     %phow_feature = normc(double(phow_feature));
@@ -41,55 +35,61 @@ function run_thesis(image_list)
     %save([prefix, '.mat'], 'sift', 'lbp')
 
     % -------------------------------------------------------------------------
-    % Bag-of-Word with Hierarchical K-means Codebook, Encoding with LLC
+    %  Bag-of-Word with Hierarchical K-means Codebook, Encoding with LLC
     % -------------------------------------------------------------------------
 
-    %cv = 1;
-    %train_idx = folds(cv).train;
-    %test_idx = folds(cv).test;
+    cv = 1;
+    train_idx = folds(cv).train;
+    test_idx = folds(cv).test;
 
-    %branch = 2;
-    %level = 12;
-    %dict = kmeans_dict(cell2mat(phow(train_idx)), branch, level);
+    branch = 2;
+    level = 12 - 4;
+    dict = kmeans_dict(cell2mat(ds(train_idx)), branch, level);
 
-    %% Encoding with codebook
-    %%bow = bow_encode(dict, sift);
-    %llc = llc_encode(dict, phow);
+    % Encoding with codebook
+    %bow = bow_encode(dict, ds);
+    llc = llc_encode(dict, ds);
 
-    %% Approximated chi-square kernel mapping
+    % Approximated chi-square kernel mapping
     %encode = vl_homkermap(llc, 3, 'kernel', 'kchi2', 'gamma', 1.0);
+    encode = llc;
 
-    %% Evaluate with linear svm
-    %train_inst = sparse(encode(:, train_idx));
-    %test_inst = sparse(encode(:, test_idx));
-    %model = train(double(label(train_idx)), train_inst, '-c 1 -q', 'col');
-    %predict(double(label(test_idx)), test_inst, model, '', 'col');
+    % Evaluate with linear svm
+    train_inst = sparse(encode(:, train_idx));
+    test_inst = sparse(encode(:, test_idx));
+    model = train(double(label(train_idx)), train_inst, '-c 1 -q', 'col');
+    predict(double(label(test_idx)), test_inst, model, '', 'col');
 
     % -------------------------------------------------------------------------
-    % Sparse Coding with SPAMS
+    %  Sparse Coding with SPAMS
     % -------------------------------------------------------------------------
 
-    %cv = 1;
-    %train_idx = folds(cv).train;
-    %test_idx = folds(cv).test;
+    %for cv = 1:length(folds)
+    %    train_idx = folds(cv).train;
+    %    test_idx = folds(cv).test;
 
-    %dict_param = struct('K', 1024, 'lambda', 0.25, 'lambda2', 0, ...
-    %                    'iter', 1000, 'mode', 2, 'modeD', 0, ...
-    %                    'modeParam', 0, 'clean', true, 'numThreads', 4, ...
-    %                    'verbose', false);
-    %dict = sparse_coding_dict(double(cell2mat(phow(train_idx))), dict_param);
-    %encode = sc_encode(dict, phow, dict_param);
+    %    dict_param = struct('K', 1024 / 4, 'lambda', 0.25, 'lambda2', 0, ...
+    %                        'iter', 1000 / 2, 'mode', 2, 'modeD', 0, ...
+    %                        'modeParam', 0, 'clean', true, 'numThreads', 4, ...
+    %                        'verbose', false);
+    %    dict = sparse_coding_dict(double(cell2mat(ds(train_idx))), dict_param);
+    %    encode = sc_encode(dict, ds, dict_param);
 
-    %% Approximated chi-square kernel mapping
-    %encode = vl_homkermap(encode, 3, 'kernel', 'kchi2', 'gamma', 1);
+    %    % Approximated chi-square kernel mapping
+    %    encode = vl_homkermap(encode, 3, 'kernel', 'kchi2', 'gamma', 1);
 
-    %% Evaluate with linear svm
-    %train_inst = sparse(encode(:, train_idx));
-    %test_inst = sparse(encode(:, test_idx));
-    %model = train(double(label(train_idx)), train_inst, '-c 1 -q', 'col');
-    %predict(double(label(test_idx)), test_inst, model, '', 'col');
+    %    % Evaluate with linear svm
+    %    train_inst = sparse(encode(:, train_idx));
+    %    test_inst = sparse(encode(:, test_idx));
+    %    model = train(double(label(train_idx)), train_inst, '-c 1 -q', 'col');
+    %    predict(double(label(test_idx)), test_inst, model, '', 'col');
+    %end
 
 end
+
+% ----------------------------------------------------------------------------
+%  Various Helper function
+% ----------------------------------------------------------------------------
 
 function setup_3rdparty(root_dir)
     % Add libsvm, liblinear, vlfeat library path
@@ -112,6 +112,14 @@ function [prefix, label, path] = parse_list(image_list)
     [~, prefix, ~] = fileparts(image_list);
 end
 
+function image = read_image(path)
+    norm_size = [256, 256];
+
+    % TODO: Check if image is valid 3-channel image
+    raw_image = imread(path);
+    image = normalize_image(raw_image, norm_size);
+end
+
 function norm_image = normalize_image(image, norm_size, crop)
     if nargin < 3, crop=true; end
 
@@ -126,14 +134,6 @@ function norm_image = normalize_image(image, norm_size, crop)
         resized_image = imresize(image, scale);
         norm_image = resized_image(y, x, :);
     end
-end
-
-function image = read_image(path)
-    norm_size = [256, 256];
-
-    % TODO: Check if image is valid 3-channel image
-    raw_image = imread(path);
-    image = normalize_image(raw_image, norm_size);
 end
 
 function folds = cross_validation(label, num_fold)
@@ -163,6 +163,10 @@ function folds = cross_validation(label, num_fold)
     end
 end
 
+% ----------------------------------------------------------------------------
+%  Extract Various Descriptors
+% ----------------------------------------------------------------------------
+
 function descriptor = extract_descriptor(path, ds_type)
     descriptors = cell(1, length(path));
     for idx = 1:length(path)
@@ -178,6 +182,8 @@ function descriptor = extract_descriptor(path, ds_type)
                 descriptor{idx} = get_hog(single(image));
             case 'phow'
                 descriptor{idx} = get_phow(im2single(image));
+            case 'color_lbp'
+                descriptor{idx} = get_color_lbp(im2single(image));
             otherwise
                 fprintf(1, 'Wrong descriptor name.');
                 return;
@@ -205,13 +211,14 @@ function ds = get_pyramid_lbp(image)
 end
 
 function lbp = get_lbp(image)
-    step_size = 32;
-    window_size = 64;
+    step_size = 16;
+    window_size = 16;
 
-    lbp_window = vl_lbp(image, window_size);
-    lbp_overlap = vl_lbp(image(step_size:end, step_size:end), window_size);
-
-    lbp = [reshape(lbp_window, [], 58)', reshape(lbp_overlap, [], 58)'];
+    lbp = [];
+    for offset = 1:step_size:window_size
+        lbp_step = vl_lbp(image(offset:end, offset:end), window_size);
+        lbp = [lbp reshape(lbp_step, [], 58)'];
+    end
 end
 
 function ds = get_hog(image)
@@ -226,22 +233,20 @@ function ds = get_phow(image)
     %                   'Step', 8, 'WindowSize', 2, 'Magnif', 6);
 end
 
+function ds = get_color_lbp(image)
+    image = single(vl_xyz2lab(vl_rgb2xyz(image), 'd50'));
+    ds = get_pyramid_lbp(image(:, :, 2));
+end
+
+% ----------------------------------------------------------------------------
+%  Generate a descriptor dictionary
+% ----------------------------------------------------------------------------
+
 function dict = kmeans_dict(vocab, branch, level)
     leaves = branch ^ level;
 
     tree = vl_hikmeans(vocab, branch, leaves, 'Method', 'lloyd', 'MaxIters', 400);
     dict = get_leaves_center(tree);
-end
-
-function dict = sparse_coding_dict(vocab, dict_param)
-    % Rescale for avoiding numerical difficulty
-    vocab = vocab / 255.0;
-
-    % Generate sparse coding basis
-    dict = mexTrainDL(vocab, dict_param);
-
-    % Rescale to original range
-    dict = dict * 255.0;
 end
 
 function centers = get_leaves_center(tree)
@@ -261,6 +266,21 @@ function centers = get_leaves_center(tree)
     end
 end
 
+function dict = sparse_coding_dict(vocab, dict_param)
+    % Rescale for avoiding numerical difficulty
+    vocab = vocab / 255.0;
+
+    % Generate sparse coding basis
+    dict = mexTrainDL(vocab, dict_param);
+
+    % Rescale to original range
+    dict = dict * 255.0;
+end
+
+% ----------------------------------------------------------------------------
+%  Descriptor Encoding
+% ----------------------------------------------------------------------------
+
 function bow = bow_encode(dict, vocabs)
     dict_size = size(dict, 2);
 
@@ -269,6 +289,7 @@ function bow = bow_encode(dict, vocabs)
         asgn = vl_ikmeanspush(vocabs{idx}, dict);
         hist = vl_ikmeanshist(dict_size, asgn);
         bow(:, idx) = double(hist) / sum(hist);
+        %bow(:, idx) = double(hist) / norm(hist);
     end
 end
 
@@ -281,8 +302,9 @@ function sc = sc_encode(dict, vocabs, param)
 
         % Pooling & normalization
         sc(:, idx) = mean(alpha, 2);
-        sc(:, idx) = sc(:, idx) / sum(sc(:, idx));
-        %sc(:, idx) = sc(:, idx) / norm(sc(:, idx));
+        %sc(:, idx) = max(alpha, [], 2);
+        sc(:, idx) = sc(:, idx) / norm(sc(:, idx));
+        %sc(:, idx) = sc(:, idx) / sum(sc(:, idx));
     end
 end
 
@@ -301,13 +323,11 @@ function llc = llc_encode(dict, vocabs)
         knn = 5;
         llc_coeff = llc_approx(dict, x, knn);
 
-        % Pooling
+        % Pooling & normalization
         llc(:, idx) = mean(llc_coeff, 2);
         %llc(:, idx) = max(llc_coeff, [], 2);
-
-        % Normalization
-        %llc(:, idx) = llc(:, idx) / norm(llc(:, idx));
-        llc(:, idx) = llc(:, idx) / sum(llc(:, idx));
+        llc(:, idx) = llc(:, idx) / norm(llc(:, idx));
+        %llc(:, idx) = llc(:, idx) / sum(llc(:, idx));
     end
 end
 
@@ -348,3 +368,4 @@ function llc = llc_approx(B, X, knn)
         llc(nn, idx) = w / sum(w);
     end
 end
+
