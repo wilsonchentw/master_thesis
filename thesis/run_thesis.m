@@ -12,14 +12,14 @@ function run_thesis(image_list)
     %  Feature Extraction
     % -------------------------------------------------------------------------
 
-    %sift = extract_descriptor(path, 'sift');
-    %lbp = extract_descriptor(path, 'lbp');
+    %sift = extract_sift(path);
+    %lbp = extract_lbp(path, 3, 1 / 2);
     %hog = extract_descriptor(path, 'hog');
     %phow = extract_descriptor(path, 'phow');
     %color_lbp = extract_descriptor(path, 'color_lbp');
 
     %save([prefix, '.mat'], 'sift', 'lbp');
-    ds = extract_descriptor(path, 'color_lbp');
+
 
     % -------------------------------------------------------------------------
     %  Directly Training
@@ -37,7 +37,7 @@ function run_thesis(image_list)
     %test_idx = folds(cv).test;
 
     %branch = 2;
-    %level = 12 - 4;
+    %level = 12 - 6;
     %dict = kmeans_dict(cell2mat(ds(train_idx)), branch, level);
 
     %% Encoding with codebook
@@ -167,6 +167,7 @@ function ds = extract_descriptor(path, ds_type)
         image = read_image(path{idx});
 
         switch ds_type
+
             case 'sift'
                 gray_image = single(rgb2gray(image));
                 ds{idx} = get_sift(gray_image);
@@ -176,14 +177,6 @@ function ds = extract_descriptor(path, ds_type)
                 ds{idx} = get_pyramid_lbp(gray_image);
 
                 % Ignore spatial and scale information
-                ds{idx} = cellfun(@(x) {reshape(x, [], size(x, 3))'}, ds{idx});
-                ds{idx} = cell2mat(ds{idx});
-                ds{idx} = uint8(round(sqrt(ds{idx}) * 255));
-
-            case 'color_lbp'
-                ds{idx} = get_pyramid_lbp(im2single(image));
-
-                % Ignore spatial / scale information, and normalize by sqrt
                 ds{idx} = cellfun(@(x) {reshape(x, [], size(x, 3))'}, ds{idx});
                 ds{idx} = cell2mat(ds{idx});
                 ds{idx} = uint8(round(sqrt(ds{idx}) * 255));
@@ -202,35 +195,48 @@ function ds = extract_descriptor(path, ds_type)
     end
 end
 
-function ds = get_sift(image)
-    [fs, ds] = vl_sift(image);
+
+function sift = extract_sift(path)
+    sift = cell(1, length(path));
+    for idx = 1:length(path)
+        image = read_image(path{idx});
+        image = vl_xyz2lab(vl_rgb2xyz(im2single(image)), 'd50');
+        gray_image = single(image(:, :, 1) / 100);
+
+        % Extract SIFT of gray image
+        [fs, ds] = vl_sift(gray_image);
+        sift{idx} = ds;
+    end
 end
 
-function ds = get_pyramid_lbp(image)
-    level = 3;
-    scale = 1 / 2;
+function lbp = extract_lbp(path, level, scale);
+    lbp = cell(1, length(path));
+    for idx = 1:length(path)
+        image = im2single(read_image(path{idx}));
 
-    ds = cell(1, level);
-    blur_kernel = fspecial('gaussian', [9 9], 1.6);
-
-    for lv = 1:level
-        ds{lv} = get_color_lbp(image);
-        if lv < level
+        % Extract descriptor on scale space
+        lbp{idx} = get_color_lbp(image);
+        blur_kernel = fspecial('gaussian', [9 9], 1.6);
+        for lv = 2:level
             image = imfilter(image, blur_kernel, 'symmetric');
             image = imresize(image, scale);
-            image = abs(image);     % For avoiding negative bug
+            lbp{idx} = [lbp{idx} get_color_lbp(image)];
         end
+
+        % Ignore spatial and scale information
+        num_channel = size(lbp{idx}, 1);
+        lbp{idx} = cellfun(@(x) {reshape(x, [], 58)'}, lbp{idx});
+        lbp{idx} = cell2mat(lbp{idx});
     end
 end
 
-function ds = get_color_lbp(image)
-    image = single(vl_xyz2lab(vl_rgb2xyz(image), 'd50'));
+function lbp = get_color_lbp(image)
+    image = rgb2lab(image);
 
-    ds = [];
-    for idx = 1:size(image, 3)
-        ds = cat(3, ds, get_lbp(image(:, :, idx)));
+    lbp = cell(size(image, 3), 1);
+    for ch = 1:size(image, 3)
+        lbp{ch} = get_lbp(image(:, :, ch));
     end
-    ds = ds ./ repmat(sum(ds, 3), 1, 1, size(ds, 3));
 end
 
 function lbp = get_lbp(image)
@@ -250,6 +256,16 @@ function lbp = get_lbp(image)
         end
     end
 end
+
+function
+
+
+
+
+
+
+
+
 
 function ds = get_hog(image)
     cell_size = 16;
