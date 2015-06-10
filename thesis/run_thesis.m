@@ -12,53 +12,47 @@ function run_thesis(image_list)
     %  Feature Extraction
     % -------------------------------------------------------------------------
 
-    sift = extract_descriptor(path, 'sift');
+    %sift = extract_descriptor(path, 'sift');
     %lbp = extract_descriptor(path, 'lbp');
     %hog = extract_descriptor(path, 'hog');
     %phow = extract_descriptor(path, 'phow');
     %color_lbp = extract_descriptor(path, 'color_lbp');
-    ds = sift;
+
+    %save([prefix, '.mat'], 'sift', 'lbp');
+    ds = extract_descriptor(path, 'color_lbp');
 
     % -------------------------------------------------------------------------
     %  Directly Training
     % -------------------------------------------------------------------------
 
-    %lbp = cellfun(@(x) {cell2mat(x')}, lbp);
-    %lbp = cellfun(@(x) {uint8(x .^ 1 * 255)}, lbp);
-    %lbp = reshape(cell2mat(lbp), [], length(lbp));
-    %train(double(label), sparse(double(lbp)), '-v 5 -q', 'col');
-
-    %phow_feature = reshape(cell2mat(phow), [], size(phow, 2));
-    %phow_feature = normc(double(phow_feature));
-    %train(double(label), sparse(double(phow_feature)), '-v 5 -q', 'col');
-
-    %save([prefix, '.mat'], 'sift', 'lbp')
+    %ds = reshape(cell2mat(ds), [], length(ds));
+    %train(double(label), sparse(double(ds)), '-v 5 -q', 'col');
 
     % -------------------------------------------------------------------------
     %  Bag-of-Word with Hierarchical K-means Codebook, Encoding with LLC
     % -------------------------------------------------------------------------
 
-    cv = 1;
-    train_idx = folds(cv).train;
-    test_idx = folds(cv).test;
+    %cv = 1;
+    %train_idx = folds(cv).train;
+    %test_idx = folds(cv).test;
 
-    branch = 2;
-    level = 12 - 4;
-    dict = kmeans_dict(cell2mat(ds(train_idx)), branch, level);
+    %branch = 2;
+    %level = 12 - 4;
+    %dict = kmeans_dict(cell2mat(ds(train_idx)), branch, level);
 
-    % Encoding with codebook
-    %bow = bow_encode(dict, ds);
-    llc = llc_encode(dict, ds);
+    %% Encoding with codebook
+    %%bow = bow_encode(dict, ds);
+    %llc = llc_encode(dict, ds);
 
-    % Approximated chi-square kernel mapping
-    %encode = vl_homkermap(llc, 3, 'kernel', 'kchi2', 'gamma', 1.0);
-    encode = llc;
+    %% Approximated chi-square kernel mapping
+    %%encode = vl_homkermap(llc, 3, 'kernel', 'kchi2', 'gamma', 1.0);
+    %encode = llc;
 
-    % Evaluate with linear svm
-    train_inst = sparse(encode(:, train_idx));
-    test_inst = sparse(encode(:, test_idx));
-    model = train(double(label(train_idx)), train_inst, '-c 1 -q', 'col');
-    predict(double(label(test_idx)), test_inst, model, '', 'col');
+    %% Evaluate with linear svm
+    %train_inst = sparse(encode(:, train_idx));
+    %test_inst = sparse(encode(:, test_idx));
+    %model = train(double(label(train_idx)), train_inst, '-c 1 -q', 'col');
+    %predict(double(label(test_idx)), test_inst, model, '', 'col');
 
     % -------------------------------------------------------------------------
     %  Sparse Coding with SPAMS
@@ -167,23 +161,40 @@ end
 %  Extract Various Descriptors
 % ----------------------------------------------------------------------------
 
-function descriptor = extract_descriptor(path, ds_type)
-    descriptors = cell(1, length(path));
+function ds = extract_descriptor(path, ds_type)
+    ds = cell(1, length(path));
     for idx = 1:length(path)
         image = read_image(path{idx});
-        gray_image = rgb2gray(image);
 
         switch ds_type
             case 'sift'
-                descriptor{idx} = get_sift(single(gray_image));
+                gray_image = single(rgb2gray(image));
+                ds{idx} = get_sift(gray_image);
+
             case 'lbp'
-                descriptor{idx} = get_pyramid_lbp(single(gray_image));
-            case 'hog'
-                descriptor{idx} = get_hog(single(image));
-            case 'phow'
-                descriptor{idx} = get_phow(im2single(image));
+                gray_image = rgb2gray(im2single(image));
+                ds{idx} = get_pyramid_lbp(gray_image);
+
+                % Ignore spatial and scale information
+                ds{idx} = cellfun(@(x) {reshape(x, [], size(x, 3))'}, ds{idx});
+                ds{idx} = cell2mat(ds{idx});
+                ds{idx} = uint8(round(sqrt(ds{idx}) * 255));
+
             case 'color_lbp'
-                descriptor{idx} = get_color_lbp(im2single(image));
+                ds{idx} = get_pyramid_lbp(im2single(image));
+
+                % Ignore spatial / scale information, and normalize by sqrt
+                ds{idx} = cellfun(@(x) {reshape(x, [], size(x, 3))'}, ds{idx});
+                ds{idx} = cell2mat(ds{idx});
+                ds{idx} = uint8(round(sqrt(ds{idx}) * 255));
+
+            case 'hog'
+                %ds{idx} = get_hog(single(image));
+                %ds{idx} = reshape(ds{idx}, [], size(ds{idx}, 3))';
+
+            case 'phow'
+                ds{idx} = get_phow(im2single(image));
+
             otherwise
                 fprintf(1, 'Wrong descriptor name.');
                 return;
@@ -199,25 +210,44 @@ function ds = get_pyramid_lbp(image)
     level = 3;
     scale = 1 / 2;
 
-    ds = cell(level, 1);
+    ds = cell(1, level);
     blur_kernel = fspecial('gaussian', [9 9], 1.6);
 
-    ds{1} = get_lbp(image);
-    for lv = 2:level
-        image = imfilter(image, blur_kernel, 'symmetric');
-        image = imresize(image, scale);
-        ds{lv} = get_lbp(image);
+    for lv = 1:level
+        ds{lv} = get_color_lbp(image);
+        if lv < level
+            image = imfilter(image, blur_kernel, 'symmetric');
+            image = imresize(image, scale);
+            image = abs(image);     % For avoiding negative bug
+        end
     end
 end
 
-function lbp = get_lbp(image)
-    step_size = 16;
-    window_size = 16;
+function ds = get_color_lbp(image)
+    image = single(vl_xyz2lab(vl_rgb2xyz(image), 'd50'));
 
-    lbp = [];
-    for offset = 1:step_size:window_size
-        lbp_step = vl_lbp(image(offset:end, offset:end), window_size);
-        lbp = [lbp reshape(lbp_step, [], 58)'];
+    ds = [];
+    for idx = 1:size(image, 3)
+        ds = cat(3, ds, get_lbp(image(:, :, idx)));
+    end
+    ds = ds ./ repmat(sum(ds, 3), 1, 1, size(ds, 3));
+end
+
+function lbp = get_lbp(image)
+    cell_size = 16;
+    window_size = 2;
+
+    lbp_cell = vl_lbp(image, cell_size) .^ 2;
+    lbp = zeros(size(lbp_cell) - [window_size - 1, window_size - 1, 0]);
+    for x = 1:size(lbp_cell, 2) - window_size + 1
+        for y = 1:size(lbp_cell, 1) - window_size + 1
+            y_to = y + window_size - 1;
+            x_to = x + window_size - 1;
+
+            lbp_block = lbp_cell(y:y_to, x:x_to, :);
+            lbp_block = sum(reshape(lbp_block, [], size(lbp_block, 3)));
+            lbp(x, y, :) = lbp_block / sum(lbp_block);
+        end
     end
 end
 
@@ -231,11 +261,6 @@ function ds = get_phow(image)
                        'Step', 16, 'WindowSize', 2, 'Magnif', 6);
     %[fs, ds] = vl_phow(image, 'Color', 'gray', 'Sizes', [8 12 16], ...
     %                   'Step', 8, 'WindowSize', 2, 'Magnif', 6);
-end
-
-function ds = get_color_lbp(image)
-    image = single(vl_xyz2lab(vl_rgb2xyz(image), 'd50'));
-    ds = get_pyramid_lbp(image(:, :, 2));
 end
 
 % ----------------------------------------------------------------------------
@@ -368,4 +393,8 @@ function llc = llc_approx(B, X, knn)
         llc(nn, idx) = w / sum(w);
     end
 end
+
+% ----------------------------------------------------------------------------
+%  
+% ----------------------------------------------------------------------------
 
