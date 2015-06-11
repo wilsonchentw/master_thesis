@@ -18,9 +18,10 @@ function run_thesis(image_list)
     %phow = extract_phow(path);
 
     %save([prefix, '.mat'], 'sift', 'lbp');
+
     ds = extract_lbp(path);
-    ds = [ds{:}];
-    ds = ds(1, :);
+    ds = cellfun(@(x) {cell2mat(x)}, ds);
+    %ds = cellfun(@(x) x(1), ds);
 
     % -------------------------------------------------------------------------
     %  Directly Training
@@ -43,46 +44,21 @@ function run_thesis(image_list)
     %  Bag-of-Word with Hierarchical K-means Codebook, Encoding with LLC
     % -------------------------------------------------------------------------
 
-    for cv = 1:length(folds)
-        train_idx = folds(cv).train;
-        test_idx = folds(cv).test;
-
-        branch = 2;
-        level = 12 - 2;
-        dict = kmeans_dict(cell2mat(ds(train_idx)), branch, level);
-
-        % Encoding with codebook
-        %bow = bow_encode(dict, ds);
-        llc = llc_encode(dict, ds);
-
-        % Approximated chi-square kernel mapping
-        encode = vl_homkermap(llc, 3, 'kernel', 'kinters', 'gamma', 1);
-        %encode = llc;
-
-        % Evaluate with linear svm
-        train_inst = sparse(encode(:, train_idx));
-        test_inst = sparse(encode(:, test_idx));
-        model = train(double(label(train_idx)), train_inst, '-c 1 -q', 'col');
-        predict(double(label(test_idx)), test_inst, model, '', 'col');
-    end
-
-    % -------------------------------------------------------------------------
-    %  Sparse Coding with SPAMS
-    % -------------------------------------------------------------------------
-
     %for cv = 1:length(folds)
     %    train_idx = folds(cv).train;
     %    test_idx = folds(cv).test;
 
-    %    dict_param = struct('K', 1024 / 4, 'lambda', 0.25, 'lambda2', 0, ...
-    %                        'iter', 1000 / 2, 'mode', 2, 'modeD', 0, ...
-    %                        'modeParam', 0, 'clean', true, 'numThreads', 4, ...
-    %                        'verbose', false);
-    %    dict = sparse_coding_dict(double(cell2mat(ds(train_idx))), dict_param);
-    %    encode = sc_encode(dict, ds, dict_param);
+    %    branch = 2;
+    %    level = 12 - 2;
+    %    dict = kmeans_dict(cell2mat(ds(train_idx)), branch, level);
 
-    %    % Approximated chi-square kernel mapping
-    %    encode = vl_homkermap(encode, 3, 'kernel', 'kchi2', 'gamma', 1);
+    %    % Encoding with codebook
+    %    %bow = bow_encode(dict, ds);
+    %    llc = llc_encode(dict, ds);
+
+    %    % Approximated kernel mapping
+    %    %encode = llc;
+    %    encode = vl_homkermap(llc, 3, 'kernel', 'kinters', 'gamma', 1);
 
     %    % Evaluate with linear svm
     %    train_inst = sparse(encode(:, train_idx));
@@ -90,6 +66,31 @@ function run_thesis(image_list)
     %    model = train(double(label(train_idx)), train_inst, '-c 1 -q', 'col');
     %    predict(double(label(test_idx)), test_inst, model, '', 'col');
     %end
+
+    % -------------------------------------------------------------------------
+    %  Sparse Coding with SPAMS
+    % -------------------------------------------------------------------------
+
+    for cv = 1:length(folds)
+        train_idx = folds(cv).train;
+        test_idx = folds(cv).test;
+
+        dict_param = struct('K', 1024, 'lambda', 0.25, 'lambda2', 0, ...
+                            'iter', 1000 - 600, 'mode', 2, 'modeD', 0, ...
+                            'modeParam', 0, 'clean', true, 'numThreads', 4, ...
+                            'verbose', false);
+        dict = sparse_coding_dict(double(cell2mat(ds(train_idx))), dict_param);
+        encode = sc_encode(dict, ds, dict_param);
+
+        % Approximated kernel mapping
+        encode = vl_homkermap(encode, 3, 'kernel', 'kinters', 'gamma', 1);
+
+        % Evaluate with linear svm
+        train_inst = sparse(encode(:, train_idx));
+        test_inst = sparse(encode(:, test_idx));
+        model = train(double(label(train_idx)), train_inst, '-c 1 -q', 'col');
+        predict(double(label(test_idx)), test_inst, model, '', 'col');
+    end
 
 end
 
@@ -330,8 +331,8 @@ function sc = sc_encode(dict, vocabs, param)
         % Pooling & normalization
         sc(:, idx) = mean(alpha, 2);
         %sc(:, idx) = max(alpha, [], 2);
-        sc(:, idx) = sc(:, idx) / norm(sc(:, idx));
-        %sc(:, idx) = sc(:, idx) / sum(sc(:, idx));
+        %sc(:, idx) = sc(:, idx) / norm(sc(:, idx));
+        sc(:, idx) = sc(:, idx) / sum(sc(:, idx));
     end
 end
 
