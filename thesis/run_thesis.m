@@ -20,16 +20,15 @@ function run_thesis(image_list)
     %save([prefix, '.mat'], 'sift', 'lbp');
 
     descriptor = extract_lbp(path);
-
-    %descriptor = [descriptor{:}];
-    descriptor = cellfun(@(x) {cell2mat(x)}, descriptor);
+    descriptor = [descriptor{:}];
+    %descriptor = cellfun(@(x) {cell2mat(x)}, descriptor);
     %descriptor = cellfun(@(x) x(1), ds);
 
     % -------------------------------------------------------------------------
     %  Experiment with cross validation
     % -------------------------------------------------------------------------
 
-    for cv = 1:length(folds)
+    for cv = 1:length(folds) / length(folds)
         train_idx = folds(cv).train;
         test_idx = folds(cv).test;
 
@@ -46,15 +45,15 @@ function run_thesis(image_list)
 
             %% Hirarchical K-means codebook
             %branch = 2;
-            %level = 10;
+            %level = 10 - 4;
             %dict = kmeans_dict(cell2mat(ds(train_idx)), branch, level);
 
-            % Sparse coding basis
-            param = struct('K', 1024, 'lambda', 0.25, 'lambda2', 0, ...
-                           'iter', 400, 'mode', 2, 'modeD', 0, ...
-                           'modeParam', 0, 'clean', true, ...
-                           'numThreads', 4, 'verbose', false);
-            dict = sparse_coding_dict(double(cell2mat(ds(train_idx))), param);
+            %% Sparse coding basis
+            %param = struct('K', 1024, 'lambda', 0.25, 'lambda2', 0, ...
+            %               'iter', 400, 'mode', 2, 'modeD', 0, ...
+            %               'modeParam', 0, 'clean', true, ...
+            %               'numThreads', 4, 'verbose', false);
+            %dict = sparse_coding_dict(double(cell2mat(ds(train_idx))), param);
 
             % -----------------------------------------------------------------
             %  Encode descriptors
@@ -62,8 +61,8 @@ function run_thesis(image_list)
 
             %feature(:, :, ch) = double(reshape(cell2mat(ds), [], length(ds)));
             %feature(:, :, ch) = vq_encode(dict, ds);
-            %feature(:, :, ch) = llc_encode(dict, ds);
-            feature(:, :, ch) = sc_encode(dict, ds, param);
+            feature(:, :, ch) = llc_encode(dict, ds);
+            %feature(:, :, ch) = sc_encode(dict, ds, param);
 
             % Normalize channel feature
             feature(:, :, ch) = normalize_column(feature(:, :, ch), 'L1');
@@ -75,10 +74,9 @@ function run_thesis(image_list)
 
         train_inst = sparse(feature(:, train_idx));
         test_inst = sparse(feature(:, test_idx));
-        model = train(double(label(train_idx)), train_inst, '-c 1 -q', 'col');
+        model = train(double(label(train_idx)), train_inst, '-c 10 -q', 'col');
         predict(double(label(test_idx)), test_inst, model, '', 'col');
     end
-
 end
 
 % ----------------------------------------------------------------------------
@@ -276,23 +274,17 @@ function dict = kmeans_dict(vocab, branch, level)
 
     tree = vl_hikmeans(vocab, branch, leaves, ...
                        'Method', 'lloyd', 'MaxIters', 400);
-    dict = get_leaves_center(tree);
+    dict = get_tree_center(tree);
+    dict = dict(:, end - leaves + 1:end);
 end
 
-function centers = get_leaves_center(tree)
-    if tree.depth == 1
-        centers = tree.centers;
-    else
-        centers = [];
-        queue = tree.sub;
-        while ~isempty(queue)
-            if isempty(queue(1).sub)
-                centers = [centers queue(1).centers];
-            else
-                queue = [queue queue(1).sub];
-            end
-            queue(1) = [];
-        end
+function centers = get_tree_center(tree)
+    queue = tree.sub;
+    centers = tree.centers;
+    while ~isempty(queue)
+        centers = [centers queue(1).centers];
+        queue = [queue queue(1).sub];
+        queue(1) = [];
     end
 end
 
