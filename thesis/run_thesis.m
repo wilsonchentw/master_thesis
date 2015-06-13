@@ -19,9 +19,11 @@ function run_thesis(image_list)
 
     %save([prefix, '.mat'], 'sift', 'lbp');
 
-    ds = extract_lbp(path);
-    ds = cellfun(@(x) {cell2mat(x)}, ds);
-    %ds = cellfun(@(x) x(1), ds);
+    descriptor = extract_lbp(path);
+
+    %descriptor = [descriptor{:}];
+    descriptor = cellfun(@(x) {cell2mat(x)}, descriptor);
+    %descriptor = cellfun(@(x) x(1), ds);
 
     % -------------------------------------------------------------------------
     %  Experiment with cross validation
@@ -31,42 +33,48 @@ function run_thesis(image_list)
         train_idx = folds(cv).train;
         test_idx = folds(cv).test;
 
-        % ---------------------------------------------------------------------
-        %  Encoding & Pooling
-        % ---------------------------------------------------------------------
+        % Process each channel independently
+        feature = [];
+        for ch = 1:size(descriptor, 1)
 
-        %% Simply concatenate together
-        %encode = double(reshape(cell2mat(ds), [], length(ds)));
-        %encode = normalize_column(encode, 'L2');
+            % Extract single channel descriptors
+            ds = descriptor(ch, :);
 
+            % -----------------------------------------------------------------
+            %  Generate codebook
+            % -----------------------------------------------------------------
 
-        %% Generate hierarchical K-means codebook, encode with VQ / LLC
-        %branch = 2;
-        %level = 12 - 2;
-        %dict = kmeans_dict(cell2mat(ds(train_idx)), branch, level);
-        %%encode = vq_encode(dict, ds);
-        %encode = llc_encode(dict, ds);
+            %% Hirarchical K-means codebook
+            %branch = 2;
+            %level = 10;
+            %dict = kmeans_dict(cell2mat(ds(train_idx)), branch, level);
 
+            % Sparse coding basis
+            param = struct('K', 1024, 'lambda', 0.25, 'lambda2', 0, ...
+                           'iter', 400, 'mode', 2, 'modeD', 0, ...
+                           'modeParam', 0, 'clean', true, ...
+                           'numThreads', 4, 'verbose', false);
+            dict = sparse_coding_dict(double(cell2mat(ds(train_idx))), param);
 
-        % Generate sparse coding basis, encode with LASSO
-        dict_param = struct('K', 1024, 'lambda', 0.25, 'lambda2', 0, ...
-                            'iter', 1000 - 600, 'mode', 2, 'modeD', 0, ...
-                            'modeParam', 0, 'clean', true, ...
-                            'numThreads', 4, 'verbose', false);
-        dict = sparse_coding_dict(double(cell2mat(ds(train_idx))), dict_param);
-        encode = sc_encode(dict, ds, dict_param);
+            % -----------------------------------------------------------------
+            %  Encode descriptors
+            % -----------------------------------------------------------------
 
+            %feature(:, :, ch) = double(reshape(cell2mat(ds), [], length(ds)));
+            %feature(:, :, ch) = vq_encode(dict, ds);
+            %feature(:, :, ch) = llc_encode(dict, ds);
+            feature(:, :, ch) = sc_encode(dict, ds, param);
+
+            % Normalize channel feature
+            feature(:, :, ch) = normalize_column(feature(:, :, ch), 'L1');
+        end
 
         % Approximate kernel mapping
-        encode = normalize_column(encode, 'L1');    % Normalize
-        encode = vl_homkermap(encode, 3, 'kernel', 'kinters', 'gamma', 1);
+        feature = reshape(permute(feature, [1 3 2]), [], size(feature, 2));
+        feature = vl_homkermap(feature, 3, 'kernel', 'kinters', 'gamma', 1);
 
-        % ---------------------------------------------------------------------
-        %  Testing
-        % ---------------------------------------------------------------------
-
-        train_inst = sparse(encode(:, train_idx));
-        test_inst = sparse(encode(:, test_idx));
+        train_inst = sparse(feature(:, train_idx));
+        test_inst = sparse(feature(:, test_idx));
         model = train(double(label(train_idx)), train_inst, '-c 1 -q', 'col');
         predict(double(label(test_idx)), test_inst, model, '', 'col');
     end
@@ -386,4 +394,3 @@ end
 % ----------------------------------------------------------------------------
 %  
 % ----------------------------------------------------------------------------
-
