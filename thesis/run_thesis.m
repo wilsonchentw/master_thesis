@@ -24,68 +24,47 @@ function run_thesis(image_list)
     %ds = cellfun(@(x) x(1), ds);
 
     % -------------------------------------------------------------------------
-    %  Directly Training
-    % -------------------------------------------------------------------------
-
-    %for cv = 1:length(folds)
-    %    train_idx = folds(cv).train;
-    %    test_idx = folds(cv).test;
-
-    %    encode = double(reshape(cell2mat(ds), [], length(ds)));
-
-    %    train_inst = sparse(encode(:, train_idx));
-    %    test_inst = sparse(encode(:, test_idx));
-
-    %    model = train(double(label(train_idx)), train_inst, '-c 1 -q', 'col');
-    %    predict(double(label(test_idx)), test_inst, model, '', 'col');
-    %end
-
-    % -------------------------------------------------------------------------
-    %  Bag-of-Word with Hierarchical K-means Codebook, Encoding with LLC
-    % -------------------------------------------------------------------------
-
-    %for cv = 1:length(folds)
-    %    train_idx = folds(cv).train;
-    %    test_idx = folds(cv).test;
-
-    %    branch = 2;
-    %    level = 12 - 2;
-    %    dict = kmeans_dict(cell2mat(ds(train_idx)), branch, level);
-
-    %    % Encoding with codebook
-    %    %bow = bow_encode(dict, ds);
-    %    llc = llc_encode(dict, ds);
-
-    %    % Approximated kernel mapping
-    %    %encode = llc;
-    %    encode = vl_homkermap(llc, 3, 'kernel', 'kinters', 'gamma', 1);
-
-    %    % Evaluate with linear svm
-    %    train_inst = sparse(encode(:, train_idx));
-    %    test_inst = sparse(encode(:, test_idx));
-    %    model = train(double(label(train_idx)), train_inst, '-c 1 -q', 'col');
-    %    predict(double(label(test_idx)), test_inst, model, '', 'col');
-    %end
-
-    % -------------------------------------------------------------------------
-    %  Sparse Coding with SPAMS
+    %  Experiment with cross validation
     % -------------------------------------------------------------------------
 
     for cv = 1:length(folds)
         train_idx = folds(cv).train;
         test_idx = folds(cv).test;
 
+        % ---------------------------------------------------------------------
+        %  Encoding & Pooling
+        % ---------------------------------------------------------------------
+
+        %% Simply concatenate together
+        %encode = double(reshape(cell2mat(ds), [], length(ds)));
+        %encode = normalize_column(encode, 'L2');
+
+
+        %% Generate hierarchical K-means codebook, encode with VQ / LLC
+        %branch = 2;
+        %level = 12 - 2;
+        %dict = kmeans_dict(cell2mat(ds(train_idx)), branch, level);
+        %%encode = vq_encode(dict, ds);
+        %encode = llc_encode(dict, ds);
+
+
+        % Generate sparse coding basis, encode with LASSO
         dict_param = struct('K', 1024, 'lambda', 0.25, 'lambda2', 0, ...
                             'iter', 1000 - 600, 'mode', 2, 'modeD', 0, ...
-                            'modeParam', 0, 'clean', true, 'numThreads', 4, ...
-                            'verbose', false);
+                            'modeParam', 0, 'clean', true, ...
+                            'numThreads', 4, 'verbose', false);
         dict = sparse_coding_dict(double(cell2mat(ds(train_idx))), dict_param);
         encode = sc_encode(dict, ds, dict_param);
 
-        % Approximated kernel mapping
+
+        % Approximate kernel mapping
+        encode = normalize_column(encode, 'L1');    % Normalize
         encode = vl_homkermap(encode, 3, 'kernel', 'kinters', 'gamma', 1);
 
-        % Evaluate with linear svm
+        % ---------------------------------------------------------------------
+        %  Testing
+        % ---------------------------------------------------------------------
+
         train_inst = sparse(encode(:, train_idx));
         test_inst = sparse(encode(:, test_idx));
         model = train(double(label(train_idx)), train_inst, '-c 1 -q', 'col');
@@ -170,6 +149,19 @@ function folds = cross_validation(label, num_fold)
     end
 end
 
+function norm_xs = normalize_column(xs, norm_type)
+    switch norm_type
+        case 'L1'
+            norm_xs = xs ./ repmat(sum(xs), size(xs, 1), 1);
+        case 'L2'
+            norm_xs = xs ./ repmat(sqrt(sum(xs .^ 2)), size(xs, 1), 1);
+        otherwise
+            fprintf(1, 'Wrong normalize type\n');
+            norm_xs = xs;
+            return;
+    end
+end
+
 % ----------------------------------------------------------------------------
 %  Extract Various Descriptors
 % ----------------------------------------------------------------------------
@@ -199,6 +191,7 @@ function lbp = extract_lbp(path);
         blur_kernel = fspecial('gaussian', [9 9], 1.6);
         for lv = 1:level
             ds = [ds get_color_lbp(image)];
+
             image = imfilter(image, blur_kernel, 'symmetric');
             image = imresize(image, scale);
         end
@@ -273,7 +266,8 @@ end
 function dict = kmeans_dict(vocab, branch, level)
     leaves = branch ^ level;
 
-    tree = vl_hikmeans(vocab, branch, leaves, 'Method', 'lloyd', 'MaxIters', 400);
+    tree = vl_hikmeans(vocab, branch, leaves, ...
+                       'Method', 'lloyd', 'MaxIters', 400);
     dict = get_leaves_center(tree);
 end
 
@@ -309,15 +303,13 @@ end
 %  Descriptor Encoding
 % ----------------------------------------------------------------------------
 
-function bow = bow_encode(dict, vocabs)
+function vq = vq_encode(dict, vocabs)
     dict_size = size(dict, 2);
 
-    bow = zeros(dict_size, length(vocabs));
+    vq = zeros(dict_size, length(vocabs));
     for idx = 1:length(vocabs)
         asgn = vl_ikmeanspush(vocabs{idx}, dict);
-        hist = vl_ikmeanshist(dict_size, asgn);
-        %bow(:, idx) = double(hist) / sum(hist);
-        bow(:, idx) = double(hist) / norm(hist);
+        vq(:, idx) = vl_ikmeanshist(dict_size, asgn);
     end
 end
 
@@ -328,11 +320,9 @@ function sc = sc_encode(dict, vocabs, param)
         vocab = double(vocabs{idx}) / 255.0;
         alpha = mexLasso(vocab, dict, param);
 
-        % Pooling & normalization
+        % Pooling
         sc(:, idx) = mean(alpha, 2);
         %sc(:, idx) = max(alpha, [], 2);
-        %sc(:, idx) = sc(:, idx) / norm(sc(:, idx));
-        sc(:, idx) = sc(:, idx) / sum(sc(:, idx));
     end
 end
 
@@ -343,19 +333,15 @@ function llc = llc_encode(dict, vocabs)
         x = double(vocabs{idx}) / 255.0;
 
         % Exactly solution of LLC
-        %sigma = 1.0;
-        %lambda = 1.0;
-        %llc_coeff = llc_exact(dict, x, sigma, lambda);
+        %llc_coeff = llc_exact(dict, x, 1.0, 1.0);
 
         % Approximate solution of LLC
         knn = 5;
         llc_coeff = llc_approx(dict, x, knn);
 
-        % Pooling & normalization
+        % Pooling
         llc(:, idx) = mean(llc_coeff, 2);
         %llc(:, idx) = max(llc_coeff, [], 2);
-        %llc(:, idx) = llc(:, idx) / norm(llc(:, idx));
-        llc(:, idx) = llc(:, idx) / sum(llc(:, idx));
     end
 end
 

@@ -113,6 +113,7 @@ if __name__ == "__main__":
     setup_thesis = "addpath('{0}')".format(os.path.join(root, 'thesis'))
     run_thesis = "run_thesis '{0}'".format(fin)
 
+    #start_args = "-nodesktop -nosplash -r"
     start_args = "-nodesktop -nosplash -singleCompThread -r"
     matlab_cmd = "; ".join([setup_vl, setup_thesis, run_thesis])
     cmd = ["matlab", start_args, '"{0}"'.format(matlab_cmd)]
