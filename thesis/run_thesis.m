@@ -19,62 +19,72 @@ function run_thesis(image_list)
 
     %save([prefix, '.mat'], 'sift', 'lbp');
 
-    descriptor = extract_lbp(path);
-    descriptor = [descriptor{:}];
-    %descriptor = cellfun(@(x) {cell2mat(x)}, descriptor);
-    %descriptor = cellfun(@(x) x(1), ds);
+    ds = extract_lbp(path);
+    ds = cellfun(@(x) {cell2mat(x)}, ds);
+    %ds = [ds{:}];
+    %ds = cellfun(@(x) x(1), ds);
 
     % -------------------------------------------------------------------------
     %  Experiment with cross validation
     % -------------------------------------------------------------------------
 
-    for cv = 1:length(folds) / length(folds)
+    for cv = 1:length(folds)
         train_idx = folds(cv).train;
         test_idx = folds(cv).test;
 
-        % Process each channel independently
-        feature = [];
-        for ch = 1:size(descriptor, 1)
+        % ---------------------------------------------------------------------
+        %  Generate codebook
+        % ---------------------------------------------------------------------
 
-            % Extract single channel descriptors
-            ds = descriptor(ch, :);
+        vocabs = reshape(ds(:, train_idx), 1, []);
 
-            % -----------------------------------------------------------------
-            %  Generate codebook
-            % -----------------------------------------------------------------
+        %% Hirarchical K-means codebook
+        %branch = 2;
+        %level = 10;
+        %dict = kmeans_dict(cell2mat(vocabs), branch, level);
 
-            %% Hirarchical K-means codebook
-            %branch = 2;
-            %level = 10 - 4;
-            %dict = kmeans_dict(cell2mat(ds(train_idx)), branch, level);
+        %% Sparse coding basis
+        %param = struct('K', 1024, 'lambda', 0.25, 'lambda2', 0, ...
+        %               'iter', 400, 'mode', 2, 'modeD', 0, ...
+        %               'batchsize', 512, 'modeParam', 0, 'clean', true, ...
+        %               'numThreads', 4, 'verbose', false);
+        %dict = sparse_coding_dict(double(cell2mat(vocabs)), param);
 
-            %% Sparse coding basis
-            %param = struct('K', 1024, 'lambda', 0.25, 'lambda2', 0, ...
-            %               'iter', 400, 'mode', 2, 'modeD', 0, ...
-            %               'modeParam', 0, 'clean', true, ...
-            %               'numThreads', 4, 'verbose', false);
-            %dict = sparse_coding_dict(double(cell2mat(ds(train_idx))), param);
+        % Gaussian mixture model basis
+        num_cluster = 1024 / 4;
+        [means, covs, priors] = vl_gmm(double(cell2mat(vocabs)), num_cluster);
 
-            % -----------------------------------------------------------------
-            %  Encode descriptors
-            % -----------------------------------------------------------------
+        % ---------------------------------------------------------------------
+        %  Encode descriptors
+        % ---------------------------------------------------------------------
 
-            %feature(:, :, ch) = double(reshape(cell2mat(ds), [], length(ds)));
-            %feature(:, :, ch) = vq_encode(dict, ds);
-            feature(:, :, ch) = llc_encode(dict, ds);
-            %feature(:, :, ch) = sc_encode(dict, ds, param);
+        feature = cell(size(ds, 1), 1);
+        for ch = 1:size(ds, 1)
+            ds_ch = ds(ch, :);
 
-            % Normalize channel feature
-            feature(:, :, ch) = normalize_column(feature(:, :, ch), 'L1');
+            % Encode each channel descriptor with CONCAT / VQ / LLC / SC
+            %feature{ch} = double(reshape(cell2mat(ds_ch), [], size(ds_ch, 2)));
+            %feature{ch} = vq_encode(dict, ds_ch);
+            %feature{ch} = llc_encode(dict, ds_ch);
+            %feature{ch} = sc_encode(dict, ds_ch, param);
+            feature{ch} = fv_encode(means, covs, priors, ds_ch);
+
+            % Normalization
+            %feature{ch} = normalize_column(feature{ch}, 'L1');
+            %feature{ch} = normalize_column(feature{ch}, 'L2');
         end
+        feature = cell2mat(feature);
 
-        % Approximate kernel mapping
-        feature = reshape(permute(feature, [1 3 2]), [], size(feature, 2));
-        feature = vl_homkermap(feature, 3, 'kernel', 'kinters', 'gamma', 1);
+        %% Approximate kernel mapping
+        %feature = vl_homkermap(feature, 3, 'kernel', 'kinters', 'gamma', 1);
+
+        % ---------------------------------------------------------------------
+        %  Classification
+        % ---------------------------------------------------------------------
 
         train_inst = sparse(feature(:, train_idx));
         test_inst = sparse(feature(:, test_idx));
-        model = train(double(label(train_idx)), train_inst, '-c 10 -q', 'col');
+        model = train(double(label(train_idx)), train_inst, '-c 1 -q', 'col');
         predict(double(label(test_idx)), test_inst, model, '', 'col');
     end
 end
@@ -193,21 +203,20 @@ function lbp = extract_lbp(path);
     for idx = 1:length(path)
         image = im2single(read_image(path{idx}));
 
-        ds = [];
+        ds = [get_color_lbp(image)];
         blur_kernel = fspecial('gaussian', [9 9], 1.6);
-        for lv = 1:level
-            ds = [ds get_color_lbp(image)];
-
+        for lv = 2:level
             image = imfilter(image, blur_kernel, 'symmetric');
             image = imresize(image, scale);
+            ds = [ds get_color_lbp(image)];
         end
 
-        % Ignore spatial and scale information
+        % Ignore spatial & scale information
         ds = cellfun(@(x) {reshape(x, [], 58)'}, ds);
         for ch = 1:size(ds, 1)
+            % L1-sqrt & cast type to uint8
             d = cell2mat(ds(ch, :));
-            d = uint8(round(sqrt(d) * 255));    % Normalize & Casting type
-            lbp{idx}{ch, 1} = d;
+            lbp{idx}{ch, 1} = uint8(round(sqrt(d) * 255));
         end
     end
 end
@@ -380,6 +389,16 @@ function llc = llc_approx(B, X, knn)
         w = C \ ones(knn, 1);
 
         llc(nn, idx) = w / sum(w);
+    end
+end
+
+function fv = fv_encode(means, covs, priors, vocabs)
+    dims = size(means, 1);
+    num_gauss = size(means, 2);
+    fv = zeros(num_gauss * dims * 2, length(vocabs));
+    for idx = 1:length(vocabs)
+        ds = double(vocabs{idx});
+        fv(:, idx) = vl_fisher(ds, means, covs, priors, 'Improved', 'Fast');
     end
 end
 
