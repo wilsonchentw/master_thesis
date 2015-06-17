@@ -43,16 +43,16 @@ function run_thesis(image_list)
         %level = 10;
         %dict = kmeans_dict(cell2mat(vocabs), branch, level);
 
-        %% Sparse coding basis
-        %param = struct('K', 1024, 'lambda', 0.25, 'lambda2', 0, ...
-        %               'iter', 400, 'mode', 2, 'modeD', 0, ...
-        %               'batchsize', 512, 'modeParam', 0, 'clean', true, ...
-        %               'numThreads', 4, 'verbose', false);
-        %dict = sparse_coding_dict(double(cell2mat(vocabs)), param);
+        % Sparse coding basis
+        param = struct('K', 1024, 'lambda', 0.25, 'lambda2', 0, ...
+                       'iter', 400, 'mode', 2, 'modeD', 0, ...
+                       'batchsize', 512, 'modeParam', 0, 'clean', true, ...
+                       'numThreads', 4, 'verbose', false);
+        dict = sparse_coding_dict(double(cell2mat(vocabs)), param);
 
-        % Gaussian mixture model basis
-        num_cluster = 1024 / 4;
-        [means, covs, priors] = vl_gmm(double(cell2mat(vocabs)), num_cluster);
+        %% Gaussian mixture model basis
+        %num_cluster = 1024 / 4;
+        %[means, covs, priors] = vl_gmm(double(cell2mat(vocabs)), num_cluster);
 
         % ---------------------------------------------------------------------
         %  Encode descriptors
@@ -66,17 +66,17 @@ function run_thesis(image_list)
             %feature{ch} = double(reshape(cell2mat(ds_ch), [], size(ds_ch, 2)));
             %feature{ch} = vq_encode(dict, ds_ch);
             %feature{ch} = llc_encode(dict, ds_ch);
-            %feature{ch} = sc_encode(dict, ds_ch, param);
-            feature{ch} = fv_encode(means, covs, priors, ds_ch);
+            feature{ch} = sc_encode(dict, ds_ch, param);
+            %feature{ch} = fv_encode(means, covs, priors, ds_ch);
 
             % Normalization
-            %feature{ch} = normalize_column(feature{ch}, 'L1');
+            feature{ch} = normalize_column(feature{ch}, 'L1');
             %feature{ch} = normalize_column(feature{ch}, 'L2');
         end
         feature = cell2mat(feature);
 
-        %% Approximate kernel mapping
-        %feature = vl_homkermap(feature, 3, 'kernel', 'kinters', 'gamma', 1);
+        % Approximate kernel mapping
+        feature = vl_homkermap(feature, 3, 'kernel', 'kinters', 'gamma', 1);
 
         % ---------------------------------------------------------------------
         %  Classification
