@@ -84,7 +84,7 @@ function run_thesis(image_list)
 
         train_inst = sparse(feature(:, train_idx));
         test_inst = sparse(feature(:, test_idx));
-        model = train(double(label(train_idx)), train_inst, '-c 1 -q', 'col');
+        model = train(double(label(train_idx)), train_inst, '-c 10 -q', 'col');
         predict(double(label(test_idx)), test_inst, model, '', 'col');
     end
 end
