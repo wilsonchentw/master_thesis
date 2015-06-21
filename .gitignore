@@ -1,6 +1,6 @@
 # Ignore dataset-dependent file and directory
-legacy/*
-dataset/*
+legacy
+dataset
 
 *.list
 *.mat
