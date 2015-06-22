@@ -23,8 +23,10 @@ function run_thesis(image_list)
         train_idx = folds(cv).train;
         test_idx = folds(cv).test;
 
+        % Generate descriptor basis
         basis = generate_basis(ds(:, train_idx));
 
+        % Generate feature vector
         feature = encode_descriptor(basis, ds);
 
         % Approximate kernel mapping
@@ -41,9 +43,9 @@ function run_thesis(image_list)
         model = train(train_label, train_inst, '-s 1 -c 10 -q', 'col');
 
         % Generate top-N accuracy
-        %[g, acc, prob] = predict(test_label, test_inst, model, '-b 0', 'col');
-        rank_label = rank_candidate(test_inst, model);
-        acc = calculate_accuracy(test_label', rank_label)
+        [g, acc, prob] = predict(test_label, test_inst, model, '', 'col');
+        %rank_label = rank_candidate(test_inst, model);
+        %acc = calculate_accuracy(test_label', rank_label);
     end
 end
 
@@ -63,8 +65,8 @@ function basis = generate_basis(ds)
         %basis{ch} = double(dict) / 255.0;
 
         % Sparse coding basis
-        param = struct('K', 1024, 'lambda', 0.25, 'lambda2', 0, ...
-                       'iter', 400, 'mode', 2, 'modeD', 0, ...
+        param = struct('K', 1024 / 16, 'lambda', 0.25, 'lambda2', 0, ...
+                        'iter', 400, 'mode', 2, 'modeD', 0, ...
                        'batchsize', 512, 'modeParam', 0, 'clean', true, ...
                        'numThreads', 4, 'verbose', false);
         basis{ch} = mexTrainDL(vocabs, param);
@@ -86,13 +88,13 @@ function feature = encode_descriptor(dict, ds)
         %% Vector quantization (VQ)
         %feature{ch} = vq_encode(dict{ch}, vocabs);
 
+        %% Locality-constrained linear coding (LLC)
+        %feature{ch} = llc_encode(dict{ch}, vocabs);
+
         % Least absolute shrinkage and selection operator (LASSO)
         param = struct('lambda', 0.25, 'lambda2', 0, ...
                        'mode', 2, 'numThreads', 4);
         feature{ch} = lasso_encode(dict{ch}, vocabs, param);
-
-        %% Locality-constrained linear coding (LLC)
-        %feature{ch} = llc_encode(dict{ch}, vocabs);
 
         % Normalization
         feature{ch} = normalize_column(feature{ch}, 'L1');
