@@ -2,51 +2,57 @@ function run_thesis(image_list)
     [prefix, label, path] = parse_list(image_list);
     folds = cross_validation(label, 5);
 
-    % -------------------------------------------------------------------------
-    %  Extract descriptors
-    % -------------------------------------------------------------------------
-
-    % Local binary pattern
-    ds = extract_lbp(path);
-
-    % Merge channel descriptor together
-    ds = cellfun(@(x) {cell2mat(x)}, ds);   
-
-    %% Split channel descriptor apart
-    %ds = [ds{:}];
-
-    % -------------------------------------------------------------------------
-    %  Cross validation
-    % -------------------------------------------------------------------------
+tic
+    fprintf('Extract LAB-LBP\n');
+    lbp = extract_lbp(path);
+toc
 
     for cv = 1:length(folds)
         train_idx = folds(cv).train;
         test_idx = folds(cv).test;
 
-        % Generate descriptor basis
-        basis = generate_basis(ds(:, train_idx));
+        % Augmented data by flip LBP
+        ds = [lbp{1, :}, lbp{2, train_idx}];
+        aug_label = [label; label(train_idx)];
+        aug_train_idx = setdiff(1:size(ds, 2), test_idx)';
+        %aug_train_idx = train_idx;      % Delete augmented training data
 
-        % Generate feature vector
+        % Generate descriptor basis & feature vector
+tic
+        fprintf('\n\nGenerate descriptor basis\n');
+        basis = generate_basis(ds(:, aug_train_idx));
+toc
+tic
+        fprintf('\nGenerate feature vector\n');
         feature = encode_descriptor(basis, ds);
+toc
 
+tic
+        fprintf('\nKernel mapping, classification, prediction\n');
         % Approximate kernel mapping
         feature = cell2mat(feature);
         feature = vl_homkermap(feature, 3, 'kernel', 'kinters', 'gamma', 1);
 
         % Linear classification
-        train_inst = sparse(feature(:, train_idx));
+        train_inst = sparse(feature(:, aug_train_idx));
+        train_label = double(aug_label(aug_train_idx));
         test_inst = sparse(feature(:, test_idx));
-        train_label = double(label(train_idx));
-        test_label = double(label(test_idx));
+        test_label = double(aug_label(test_idx));
 
-        % Generate model
+        % Generate model & top-N accuracy
         model = train(train_label, train_inst, '-s 1 -c 10 -q', 'col');
 
-        % Generate top-N accuracy
-        [g, acc, prob] = predict(test_label, test_inst, model, '', 'col');
-        %rank_label = rank_candidate(test_inst, model);
-        %acc = calculate_accuracy(test_label', rank_label);
+        %[g, acc, prob] = predict(test_label, test_inst, model, '', 'col');
+        rank_label = rank_candidate(test_inst, model);
+        acc = calculate_accuracy(test_label', rank_label);
+toc
+
+        top_acc(cv, :) = acc(1:min([10, length(acc)])) * 100;
+
+        fprintf('\nTop-N accuracy\n');
+        disp(top_acc(cv, :));
     end
+    top_acc = [top_acc; mean(top_acc)]
 end
 
 
@@ -65,10 +71,14 @@ function basis = generate_basis(ds)
         %basis{ch} = double(dict) / 255.0;
 
         % Sparse coding basis
-        param = struct('K', 1024 / 16, 'lambda', 0.25, 'lambda2', 0, ...
-                        'iter', 400, 'mode', 2, 'modeD', 0, ...
-                       'batchsize', 512, 'modeParam', 0, 'clean', true, ...
-                       'numThreads', 4, 'verbose', false);
+        iter = 400;
+        iter = round(size(vocabs, 2) / 512);
+        fprintf('iter = %d\n', iter);
+
+        param = struct('K', 1024 / 4, 'lambda', 0.25, 'lambda2', 0, ...
+                       'iter', iter, 'mode', 2, ...
+                       'modeD', 0, 'batchsize', 512, 'modeParam', 0, ...
+                       'clean', true, 'numThreads', 4, 'verbose', false);
         basis{ch} = mexTrainDL(vocabs, param);
     end
 end
