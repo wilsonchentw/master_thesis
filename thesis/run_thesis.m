@@ -2,10 +2,7 @@ function run_thesis(image_list)
     [prefix, label, path] = parse_list(image_list);
     folds = cross_validation(label, 5);
 
-tic
-    fprintf('Extract LAB-LBP\n');
     lbp = extract_lbp(path);
-toc
 
     for cv = 1:length(folds)
         train_idx = folds(cv).train;
@@ -17,19 +14,11 @@ toc
         aug_train_idx = setdiff(1:size(ds, 2), test_idx)';
         %aug_train_idx = train_idx;      % Delete augmented training data
 
-        % Generate descriptor basis & feature vector
-tic
-        fprintf('\n\nGenerate descriptor basis\n');
+        % Generate descriptor basis
         basis = generate_basis(ds(:, aug_train_idx));
-toc
-tic
-        fprintf('\nGenerate feature vector\n');
-        feature = encode_descriptor(basis, ds);
-toc
 
-tic
-        fprintf('\nKernel mapping, classification, prediction\n');
-        % Approximate kernel mapping
+        % Encode descriptors and do approximate kernel mapping
+        feature = encode_descriptor(basis, ds);
         feature = cell2mat(feature);
         feature = vl_homkermap(feature, 3, 'kernel', 'kinters', 'gamma', 1);
 
@@ -39,22 +28,31 @@ tic
         test_inst = sparse(feature(:, test_idx));
         test_label = double(aug_label(test_idx));
 
-        % Generate model & top-N accuracy
+        % Generate model & predict cantidate
         model = train(train_label, train_inst, '-s 1 -c 10 -q', 'col');
-
-        %[g, acc, prob] = predict(test_label, test_inst, model, '', 'col');
         rank_label = rank_candidate(test_inst, model);
-        acc = calculate_accuracy(test_label', rank_label);
-toc
+        %[g, acc, v] = predict(test_label, test_inst, model, '', 'col');
 
-        top_acc(cv, :) = acc(1:min([10, length(acc)])) * 100;
-
-        fprintf('\nTop-N accuracy\n');
-        disp(top_acc(cv, :));
+        % Store classification report
+        report(cv) = classification_report(test_label', rank_label);
+        acc = report(cv).accuracy(1);
     end
-    top_acc = [top_acc; mean(top_acc)]
-end
 
+    acc = cat(1, report(:).accuracy);
+    cm = sum(cat(3, report(:).confusion_matrix), 3);
+    pr = cat(1, report(:).precision);
+    rc = cat(1, report(:).recall);
+
+    % Output metrics
+    var_name = {'Precision', 'Recall'};
+    metric = [mean(pr); mean(rc)]';
+    food = arrayfun(@(x) {sprintf('%d', x)}, 1:size(metric, 1));
+    metric = array2table(metric, 'VariableNames', var_name, 'RowNames', food)
+
+    top_n = min(size(acc, 2), 10);
+    top_acc = [acc(:, 1:top_n); mean(acc(:, 1:top_n))]
+
+end
 
 function basis = generate_basis(ds)
     num_basis = size(ds, 1);
@@ -71,14 +69,14 @@ function basis = generate_basis(ds)
         %basis{ch} = double(dict) / 255.0;
 
         % Sparse coding basis
-        iter = 400;
-        iter = round(size(vocabs, 2) / 512);
-        fprintf('iter = %d\n', iter);
-
+        batch_size = 16384;
+        iter = round(size(vocabs, 2) / batch_size);
         param = struct('K', 1024, 'lambda', 0.25, 'lambda2', 0, ...
-                       'iter', iter, 'mode', 2, ...
-                       'modeD', 0, 'batchsize', 512, 'modeParam', 0, ...
+                       'iter', iter, 'mode', 2, 'modeD', 0, ...
+                       'batchsize', batch_size, 'modeParam', 0, ...
                        'clean', true, 'numThreads', 4, 'verbose', false);
+        fprintf('K = %4d, iter = %4d, batch = %5d\n', ...
+                param.K, param.iter, param.batchsize);
         basis{ch} = mexTrainDL(vocabs, param);
     end
 end
