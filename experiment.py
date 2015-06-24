@@ -101,8 +101,6 @@ if __name__ == "__main__":
 
     if args.din is not None:
         din = expanduser(args.din)
-
-        generate_list(din, ["train", "val", "test"], [64, 16, 20])
         generate_list(din, ["full"], [100])
         exit(0)
     else:

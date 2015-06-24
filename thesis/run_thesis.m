@@ -1,8 +1,13 @@
 function run_thesis(image_list)
-    [prefix, label, path] = parse_list(image_list);
+    [~, prefix, ~] = fileparts(image_list);
+    [path, label, food] = parse_list(image_list);
     folds = cross_validation(label, 5);
 
-    lbp = extract_lbp(path);
+    disp('------------------------------------------------------------------')
+    tic
+        lbp = extract_lbp(path);
+    toc; 
+    fprintf('\n')
 
     for cv = 1:length(folds)
         train_idx = folds(cv).train;
@@ -12,30 +17,37 @@ function run_thesis(image_list)
         ds = [lbp{1, :}, lbp{2, train_idx}];
         aug_label = [label; label(train_idx)];
         aug_train_idx = setdiff(1:size(ds, 2), test_idx)';
-        %aug_train_idx = train_idx;      % Delete augmented training data
+        %aug_train_idx = train_idx;     % Delete augmented training data
 
-        % Generate descriptor basis
-        basis = generate_basis(ds(:, aug_train_idx));
+        tic
+            % Generate descriptor basis
+            basis = generate_basis(ds(:, aug_train_idx));
+        toc
 
-        % Encode descriptors and do approximate kernel mapping
-        feature = encode_descriptor(basis, ds);
-        feature = cell2mat(feature);
-        feature = vl_homkermap(feature, 3, 'kernel', 'kinters', 'gamma', 1);
+        tic
+            % Encode descriptors and do approximate kernel mapping
+            feature = encode_descriptor(basis, ds);
+            feature = cell2mat(feature);
+            feature = vl_homkermap(feature, 3, 'kernel', 'kinters', 'gamma', 1);
+        toc
 
-        % Linear classification
-        train_inst = sparse(feature(:, aug_train_idx));
-        train_label = double(aug_label(aug_train_idx));
-        test_inst = sparse(feature(:, test_idx));
-        test_label = double(aug_label(test_idx));
+        tic
+            % Linear classification
+            train_inst = sparse(feature(:, aug_train_idx));
+            train_label = double(aug_label(aug_train_idx));
+            test_inst = sparse(feature(:, test_idx));
+            test_label = double(aug_label(test_idx));
 
-        % Generate model & predict cantidate
-        model = train(train_label, train_inst, '-s 1 -c 10 -q', 'col');
-        rank_label = rank_candidate(test_inst, model);
-        %[g, acc, v] = predict(test_label, test_inst, model, '', 'col');
+            % Generate model & predict cantidate
+            model = train(train_label, train_inst, '-s 1 -c 10 -q', 'col');
+            rank_label = rank_candidate(test_inst, model);
+            %[g, acc, v] = predict(test_label, test_inst, model, '', 'col');
+        toc
 
         % Store classification report
         report(cv) = classification_report(test_label', rank_label);
         acc = report(cv).accuracy(1);
+        fprintf('Top-1 Accuracy: %.2f%%\n\n', acc * 100);
     end
 
     acc = cat(1, report(:).accuracy);
@@ -43,15 +55,14 @@ function run_thesis(image_list)
     pr = cat(1, report(:).precision);
     rc = cat(1, report(:).recall);
 
-    % Output metrics
+    % Average precision & recall
     var_name = {'Precision', 'Recall'};
     metric = [mean(pr); mean(rc)]';
-    food = arrayfun(@(x) {sprintf('%d', x)}, 1:size(metric, 1));
     metric = array2table(metric, 'VariableNames', var_name, 'RowNames', food)
 
+    % Top-N accuracy
     top_n = min(size(acc, 2), 10);
     top_acc = [acc(:, 1:top_n); mean(acc(:, 1:top_n))]
-
 end
 
 function basis = generate_basis(ds)
