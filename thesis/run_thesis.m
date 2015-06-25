@@ -79,7 +79,7 @@ function run_thesis(image_list)
     % TODO: CHECK IF SAVE REPORT TO DISK AS "PREFIX_result.mat"
     save([prefix, '_result.mat'], 'report');
 
-    % Output confusion matrix
+    % TODO: CHECK IF OUTPUT CONFUSION MATRIX
     cm = sum(cat(3, report(:).confusion_matrix), 3);
 
     % Output average precision & recall
@@ -94,6 +94,7 @@ function run_thesis(image_list)
     acc = cat(1, report(:).accuracy);
     top_acc = [acc(:, 1:top_n); mean(acc(:, 1:top_n))]
 end
+
 
 function basis = generate_basis(ds)
     num_basis = size(ds, 1);

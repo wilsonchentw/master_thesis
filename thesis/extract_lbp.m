@@ -33,7 +33,7 @@ function lbp = extract_lbp(path)
 end
 
 function lbp = get_color_lbp(image)
-    %image = rgb2lab(image);
+    image = rgb2lab(image);
 
     lbp = cell(size(image, 3), 1);
     for ch = 1:size(image, 3)
