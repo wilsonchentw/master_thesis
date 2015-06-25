@@ -51,7 +51,7 @@ function run_thesis(image_list)
     end
 
     acc = cat(1, report(:).accuracy);
-    cm = sum(cat(3, report(:).confusion_matrix), 3);
+    cm = sum(cat(3, report(:).confusion_matrix), 3)
     pr = cat(1, report(:).precision);
     rc = cat(1, report(:).recall);
 
