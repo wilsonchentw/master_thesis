@@ -3,11 +3,10 @@ function run_thesis(image_list)
     [path, label, food] = parse_list(image_list);
     folds = cross_validation(label, 5);
 
-    disp('------------------------------------------------------------------')
+    fprintf('-------------------------------------------------------------\n');
     tic
         lbp = extract_lbp(path);
     toc; 
-    fprintf('\n')
 
     for cv = 1:length(folds)
         train_idx = folds(cv).train;
@@ -50,18 +49,22 @@ function run_thesis(image_list)
         fprintf('Top-1 Accuracy: %.2f%%\n\n', acc * 100);
     end
 
-    acc = cat(1, report(:).accuracy);
+    % Save report for furthur research
+    %save([prefix, '_result.mat'], 'report');
+
+    % Confusion matrix
     cm = sum(cat(3, report(:).confusion_matrix), 3)
-    pr = cat(1, report(:).precision);
-    rc = cat(1, report(:).recall);
 
     % Average precision & recall
     var_name = {'Precision', 'Recall'};
+    pr = cat(1, report(:).precision);
+    rc = cat(1, report(:).recall);
     metric = [mean(pr); mean(rc)]';
     metric = array2table(metric, 'VariableNames', var_name, 'RowNames', food)
 
     % Top-N accuracy
     top_n = min(size(acc, 2), 10);
+    acc = cat(1, report(:).accuracy);
     top_acc = [acc(:, 1:top_n); mean(acc(:, 1:top_n))]
 end
 
@@ -82,7 +85,7 @@ function basis = generate_basis(ds)
         % Sparse coding basis
         batch_size = 16384;
         iter = round(size(vocabs, 2) / batch_size);
-        param = struct('K', 1024, 'lambda', 0.25, 'lambda2', 0, ...
+        param = struct('K', 1024 / 64, 'lambda', 0.25, 'lambda2', 0, ...
                        'iter', iter, 'mode', 2, 'modeD', 0, ...
                        'batchsize', batch_size, 'modeParam', 0, ...
                        'clean', true, 'numThreads', 4, 'verbose', false);
