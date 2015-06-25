@@ -50,7 +50,7 @@ function run_thesis(image_list)
     end
 
     % Save report for furthur research
-    %save([prefix, '_result.mat'], 'report');
+    save([prefix, '_result.mat'], 'report');
 
     % Confusion matrix
     cm = sum(cat(3, report(:).confusion_matrix), 3)
