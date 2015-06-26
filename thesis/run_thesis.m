@@ -127,7 +127,6 @@ function basis = generate_basis(ds)
         fprintf('K = %4d, iter = %4d, batch = %5d\n', ...
                 param.K, param.iter, param.batchsize);
         basis{ch} = mexTrainDL(vocabs, param);
-
     end
 end
 
