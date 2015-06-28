@@ -1,11 +1,11 @@
-function demo(path)
+function demo(image_path)
 
     % Setup up third-party library and load dataset
     setup_3rdparty();
     load('50data_medium.mat');
 
     % Read image, normalize image size and cropping center
-    image = read_image(path);
+    image = read_image(image_path);
 
     % Extract color LBP
     ds = get_pyramid_lbp(image);
@@ -23,5 +23,6 @@ function demo(path)
 
     % Display output
     category_rank = category_name(category_idx)';
-    disp(category_rank{1})
+    disp(category_rank{1});
+
 end

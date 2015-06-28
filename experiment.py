@@ -115,25 +115,14 @@ if __name__ == "__main__":
         vl_setup = "run('{0}')".format(vl_setup)
         run_thesis = "run_thesis('{0}')".format(fin)
 
+        # Thesis
         start_args = "-nodesktop -nosplash -singleCompThread"
         matlab_cmd = "; ".join([vl_setup, run_thesis])
         cmd = ["matlab", start_args, "-r", matlab_cmd]
         subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
-        
-"""
-def run_baseline(fin):
-    # Run baseline
-    vl_script = os.path.join(lib['vlfeat'], "toolbox", "vl_setup")
-    setup_vl = "run('{0}')".format(vl_script)
-    setup_baseline = "addpath('{0}')".format(os.path.join(root, 'baseline'))
-    run_baseline = "run_baseline '{0}'".format(fin)
-
-    start_args = "-nodesktop -nosplash -singleCompThread -r"
-    matlab_cmd = "; ".join([setup_vl, setup_baseline, run_baseline, 'quit'])
-    cmd = ["matlab", start_args, '"{0}"'.format(matlab_cmd)]
-    subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
-
-# Run thesis in python
-#cmd = ["python", os.path.join(root, "thesis", "run_thesis.py"), fin]
-#subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
-"""
+ 
+        ## Baseline
+        #run_baseline = "run_baseline '{0}'".format(fin)
+        #matlab_cmd = "; ".join([vl_setup, run_baseline])
+        #cmd = ["matlab", start_args, "-r", matlab_cmd]
+        #subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
