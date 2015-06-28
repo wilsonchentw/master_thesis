@@ -109,19 +109,20 @@ if __name__ == "__main__":
 
         # Setup third-party library path
         lib = setup_3rdparty(lib)
-        setup_path(root, ["util", "thesis", "baseline"])
 
         vl_setup = os.path.join(lib['vlfeat'], "toolbox", "vl_setup")
         vl_setup = "run('{0}')".format(vl_setup)
-        run_thesis = "run_thesis('{0}')".format(fin)
+        start_args = "-nodesktop -nosplash -singleCompThread"
 
         # Thesis
-        start_args = "-nodesktop -nosplash -singleCompThread"
+        setup_path(root, ["util", "thesis"])
+        run_thesis = "run_thesis('{0}')".format(fin)
         matlab_cmd = "; ".join([vl_setup, run_thesis])
         cmd = ["matlab", start_args, "-r", matlab_cmd]
         subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
  
         ## Baseline
+        #setup_path(root, ["util", "baseline"])
         #run_baseline = "run_baseline '{0}'".format(fin)
         #matlab_cmd = "; ".join([vl_setup, run_baseline])
         #cmd = ["matlab", start_args, "-r", matlab_cmd]

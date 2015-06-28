@@ -2,16 +2,20 @@ function baseline(image_list)
     % Parse image list into structure array    
     dataset = parse_image_list(image_list);
 
-    % Extract descriptors if mat-file of dataset doesn't exist
-    dataset_name = strrep(image_list, '.list', '');
-    dataset_mat = [dataset_name, '.mat'];
-    if exist(dataset_mat, 'file') ~= 2
-        norm_size = [256 256];
-        dataset = extract_descriptors(dataset, norm_size);
-        save([dataset_name, '.mat'], '-v7.3');
-    else
-        load([dataset_name, '.mat']);
-    end
+    fprintf('%s\n%s\n', repmat(['-'], 1, 80), datestr(datetime('now')));
+    tic
+        % Extract descriptors if mat-file of dataset doesn't exist
+        dataset_name = strrep(image_list, '.list', '');
+        dataset_mat = [dataset_name, '.mat'];
+        if exist(dataset_mat, 'file') ~= 2
+            norm_size = [256 256];
+            dataset = extract_descriptors(dataset, norm_size);
+            %save([dataset_name, '.mat'], '-v7.3');
+        else
+            %load([dataset_name, '.mat']);
+        end
+    toc
+    fprintf('\n');
 
     % For each fold, generate features by descriptors
     num_fold = 5;
@@ -28,10 +32,14 @@ function baseline(image_list)
                         'iter', 1000, 'mode', 2, 'modeD', 0, ...
                         'modeParam', 0, 'clean', true, 'numThreads', 4, ...
                         'verbose', false);
-        sift.dict = mexTrainDL([dataset(f.train).sift], sift.p);
-        sift.alpha = mexLasso([dataset.sift], sift.dict, sift.p); 
-        sift.n = [dataset.sift_num];
-        encode.sift = sparse(pooling(sift.alpha, sift.n)');
+        tic
+            sift.dict = mexTrainDL([dataset(f.train).sift], sift.p);
+        toc
+        tic
+            sift.alpha = mexLasso([dataset.sift], sift.dict, sift.p); 
+            sift.n = [dataset.sift_num];
+            encode.sift = sparse(pooling(sift.alpha, sift.n)');
+        toc
 
         % LBP descriptors with sparse coding
         lbp = struct('dim', 2048, 'p', [], 'dict', [], 'alpha', [], 'n', []);
@@ -39,23 +47,27 @@ function baseline(image_list)
                        'iter', 1000, 'mode', 2, 'modeD', 0, ...
                        'modeParam', 0, 'clean', true, 'numThreads', 4, ...
                        'verbose', false);
-        lbp.dict = mexTrainDL([dataset(f.train).lbp], lbp.p);
-        lbp.alpha = mexLasso([dataset.lbp], lbp.dict, lbp.p);
-        lbp.n = [dataset.lbp_num];
-        encode.lbp = sparse(pooling(lbp.alpha, lbp.n)');
+        tic
+            lbp.dict = mexTrainDL([dataset(f.train).lbp], lbp.p);
+        toc
+        tic
+            lbp.alpha = mexLasso([dataset.lbp], lbp.dict, lbp.p);
+            lbp.n = [dataset.lbp_num];
+            encode.lbp = sparse(pooling(lbp.alpha, lbp.n)');
+        toc
 
         % Color histogram & Gabor filter bank response
         encode.color = sparse([dataset.color]');
         encode.gabor = sparse([dataset.gabor]');
 
-        % Write subproblem for grid.py & warm start
-        for idx = 1:numel(encode_name)
-            name = encode_name{idx};
-            trainfile = [dataset_name, '_', name, '_', num2str(v), '.train'];
-            testfile = [dataset_name, '_', name, '_', num2str(v), '.test'];
-            libsvmwrite(trainfile, label(f.train), encode.(name)(f.train, :));
-            libsvmwrite(testfile, label(f.test), encode.(name)(f.test, :));
-        end
+        %% Write subproblem for grid.py & warm start
+        %for idx = 1:numel(encode_name)
+        %    name = encode_name{idx};
+        %    trainfile = [dataset_name, '_', name, '_', num2str(v), '.train'];
+        %    testfile = [dataset_name, '_', name, '_', num2str(v), '.test'];
+        %    libsvmwrite(trainfile, label(f.train), encode.(name)(f.train, :));
+        %    libsvmwrite(testfile, label(f.test), encode.(name)(f.test, :));
+        %end
 
         % Extract validation set for linear blending on base learner
         num_fold_val = 4;
@@ -69,15 +81,19 @@ function baseline(image_list)
                         'gabor', '-c 8 -g 0.002 -b 1 -q');
         train_label = label(f.train);
         for idx = 1:numel(encode_name)
-            name = encode_name{idx};
-            train_inst = encode.(name)(f.train, :);
-            base.(name) = svmtrain(train_label, train_inst, option.(name));
+            tic
+                name = encode_name{idx};
+                train_inst = encode.(name)(f.train, :);
+                base.(name) = svmtrain(train_label, train_inst, option.(name));
+            toc
         end
 
         % Linear blending by multi-class Adaboost with SAMME
-        t_max = 5000;
-        ballot = linear_blend(t_max, base, label, encode, f);
-        ballot_list(v, :) = ballot;
+        tic
+            t_max = 5000;
+            ballot = linear_blend(t_max, base, label, encode, f);
+            ballot_list(v, :) = ballot;
+        toc
 
         % Testing with weighted ballot & probability estimation by libsvm
         prob_est = zeros(numel(f.test), length(unique(label)));
@@ -86,8 +102,10 @@ function baseline(image_list)
             name = encode_name{base_idx};
             test_inst = encode.(name)(f.test, :);
             model = base.(name);
-            [g, acc, p] = svmpredict(test_label, test_inst, model, '-b 1');
-            prob_est = prob_est + ballot.(name)*p;
+            tic
+                [g, acc, p] = svmpredict(test_label, test_inst, model, '-b 1');
+                prob_est = prob_est + ballot.(name)*p;
+            toc
         end
 
         % Calculate top-N accuracy
