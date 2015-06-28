@@ -50,5 +50,5 @@ if __name__ == "__main__":
             for idx, f in enumerate(fout):
                 num = num_image[idx] + (1 if idx in sample else 0)
                 for image in image_list[:num]:
-                    f.write("{0} {1}\n".format(image, label))
+                    f.write("{0} {1}\n".format(image, label + 1))
                 image_list = image_list[num:]
