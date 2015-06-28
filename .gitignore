@@ -4,9 +4,8 @@ dataset
 
 *.list
 *.mat
-*.train
-*.test
 *.npz
+*.jpg
 
 # Ignore byte code compiled by Python
 *.pyc
