@@ -10,7 +10,8 @@ function descriptor = extract_lbp(gray_image)
     descriptor = zeros(58, length(y)*length(x));
     for idx = 1:length(x)*length(y)
         patch = block(ys(idx), xs(idx));
-        patch_lbp = vl_lbp(patch, window_size) .^ 2;
+        patch_lbp = double(vl_lbp(patch, window_size) .^ 2);
         descriptor(:, idx) = permute(patch_lbp, [3 1 2]);
+        descriptor(:, idx) = descriptor(:, idx) / norm(descriptor(:, idx));
     end
 end
