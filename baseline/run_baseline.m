@@ -23,14 +23,13 @@ function baseline(image_list)
     for v = 1:num_fold
         f = struct('train', folds(v).train, 'test', folds(v).test, 'val', []);
         label = double([dataset.label]');
-        num_inst = length(label);
         encode = struct('sift', [], 'lbp', [], 'color', [], 'gabor', []);
         encode_name = fieldnames(encode);
 
         % SIFT descriptors with sparse coding
         batchsize = 16384;
         iter = round(sum([dataset.sift_num]) / batchsize);
-        sift = struct('dim', 1024, 'p', [], 'dict', [], 'alpha', [], 'n', []);
+        sift = struct('dim', 1024 / 256, 'p', [], 'dict', [], 'alpha', [], 'n', []);
         sift.p = struct('K', sift.dim, 'lambda', 0.25, 'lambda2', 0, ...
                         'iter', iter, 'batchsize', batchsize, 'mode', 2, ...
                         'modeD', 0, 'modeParam', 0, 'clean', true, ...
@@ -42,16 +41,13 @@ function baseline(image_list)
             sift.alpha = mexLasso([dataset.sift], sift.dict, sift.p); 
             sift.n = [dataset.sift_num];
             encode.sift = pooling(sift.alpha, sift.n)';
-
-            sift_mean = repmat(mean(encode.sift(f.train, :)), num_inst, 1);
-            sift_std = repmat(std(encode.sift(f.train, :)), num_inst, 1);
-            encode.sift = sparse((encode.sift - sift_mean)./sift_std);
+            encode.sift = sparse(zscore(encode.sift));
         toc
 
         % LBP descriptors with sparse coding
         batchsize = 16384;
         iter = round(sum([dataset.lbp_num]) / batchsize);
-        lbp = struct('dim', 2048, 'p', [], 'dict', [], 'alpha', [], 'n', []);
+        lbp = struct('dim', 2048 / 256, 'p', [], 'dict', [], 'alpha', [], 'n', []);
         lbp.p = struct('K', lbp.dim, 'lambda', 0.25, 'lambda2', 0, ...
                        'iter', iter, 'batchsize', batchsize, 'mode', 2, ...
                        'modeD', 0, 'modeParam', 0, 'clean', true, ...
@@ -63,22 +59,15 @@ function baseline(image_list)
             lbp.alpha = mexLasso([dataset.lbp], lbp.dict, lbp.p);
             lbp.n = [dataset.lbp_num];
             encode.lbp = pooling(lbp.alpha, lbp.n)';
-
-            lbp_mean = repmat(mean(encode.lbp(f.train, :)), num_inst, 1);
-            lbp_std = repmat(std(encode.lbp(f.train, :)), num_inst, 1);
-            encode.lbp = sparse((encode.lbp - lbp_mean)./lbp_std);
+            encode.lbp = sparse(zscore(encode.lbp));
         toc
 
         % Color histogram & Gabor filter bank response
         encode.color = [dataset.color]';
-        color_mean = repmat(mean(encode.color(f.train, :)), num_inst, 1);
-        color_std = repmat(std(encode.color(f.train, :)), num_inst, 1);
-        encode.color = sparse((encode.color - color_mean)./color_std);
+        encode.color = sparse(zscore(encode.color));
 
         encode.gabor = sparse([dataset.gabor]');
-        gabor_mean = repmat(mean(encode.gabor(f.train, :)), num_inst, 1);
-        gabor_std = repmat(std(encode.gabor(f.train, :)), num_inst, 1);
-        encode.gabor = sparse((encode.gabor - gabor_mean)./gabor_std);
+        encode.gabor = sparse(zscore(encode.gabor));
 
         %% Write subproblem for grid.py & warm start
         %for idx = 1:numel(encode_name)
