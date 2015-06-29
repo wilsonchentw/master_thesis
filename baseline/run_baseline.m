@@ -23,42 +23,62 @@ function baseline(image_list)
     for v = 1:num_fold
         f = struct('train', folds(v).train, 'test', folds(v).test, 'val', []);
         label = double([dataset.label]');
+        num_inst = length(label);
         encode = struct('sift', [], 'lbp', [], 'color', [], 'gabor', []);
         encode_name = fieldnames(encode);
 
         % SIFT descriptors with sparse coding
+        batchsize = 16384;
+        iter = round(sum([dataset.sift_num]) / batchsize);
         sift = struct('dim', 1024, 'p', [], 'dict', [], 'alpha', [], 'n', []);
         sift.p = struct('K', sift.dim, 'lambda', 0.25, 'lambda2', 0, ...
-                        'iter', 1000, 'mode', 2, 'modeD', 0, ...
-                        'modeParam', 0, 'clean', true, 'numThreads', 4, ...
-                        'verbose', false);
+                        'iter', iter, 'batchsize', batchsize, 'mode', 2, ...
+                        'modeD', 0, 'modeParam', 0, 'clean', true, ...
+                        'numThreads', 4, 'verbose', false);
         tic
             sift.dict = mexTrainDL([dataset(f.train).sift], sift.p);
         toc
         tic
             sift.alpha = mexLasso([dataset.sift], sift.dict, sift.p); 
             sift.n = [dataset.sift_num];
-            encode.sift = sparse(pooling(sift.alpha, sift.n)');
+            encode.sift = pooling(sift.alpha, sift.n)';
+
+            sift_mean = repmat(mean(encode.sift(f.train, :)), num_inst, 1);
+            sift_std = repmat(std(encode.sift(f.train, :)), num_inst, 1);
+            encode.sift = sparse((encode.sift - sift_mean)./sift_std);
         toc
 
         % LBP descriptors with sparse coding
+        batchsize = 16384;
+        iter = round(sum([dataset.lbp_num]) / batchsize);
         lbp = struct('dim', 2048, 'p', [], 'dict', [], 'alpha', [], 'n', []);
         lbp.p = struct('K', lbp.dim, 'lambda', 0.25, 'lambda2', 0, ...
-                       'iter', 1000, 'mode', 2, 'modeD', 0, ...
-                       'modeParam', 0, 'clean', true, 'numThreads', 4, ...
-                       'verbose', false);
+                       'iter', iter, 'batchsize', batchsize, 'mode', 2, ...
+                       'modeD', 0, 'modeParam', 0, 'clean', true, ...
+                       'numThreads', 4, 'verbose', false);
         tic
             lbp.dict = mexTrainDL([dataset(f.train).lbp], lbp.p);
         toc
         tic
             lbp.alpha = mexLasso([dataset.lbp], lbp.dict, lbp.p);
             lbp.n = [dataset.lbp_num];
-            encode.lbp = sparse(pooling(lbp.alpha, lbp.n)');
+            encode.lbp = pooling(lbp.alpha, lbp.n)';
+
+            lbp_mean = repmat(mean(encode.lbp(f.train, :)), num_inst, 1);
+            lbp_std = repmat(std(encode.lbp(f.train, :)), num_inst, 1);
+            encode.lbp = sparse((encode.lbp - lbp_mean)./lbp_std);
         toc
 
         % Color histogram & Gabor filter bank response
-        encode.color = sparse([dataset.color]');
+        encode.color = [dataset.color]';
+        color_mean = repmat(mean(encode.color(f.train, :)), num_inst, 1);
+        color_std = repmat(std(encode.color(f.train, :)), num_inst, 1);
+        encode.color = sparse((encode.color - color_mean)./color_std);
+
         encode.gabor = sparse([dataset.gabor]');
+        gabor_mean = repmat(mean(encode.gabor(f.train, :)), num_inst, 1);
+        gabor_std = repmat(std(encode.gabor(f.train, :)), num_inst, 1);
+        encode.gabor = sparse((encode.gabor - gabor_mean)./gabor_std);
 
         %% Write subproblem for grid.py & warm start
         %for idx = 1:numel(encode_name)
@@ -81,6 +101,7 @@ function baseline(image_list)
                         'gabor', '-c 8 -g 0.002 -b 1 -q');
         train_label = label(f.train);
         for idx = 1:numel(encode_name)
+            fprintf('%s\n', encode_name{idx});
             tic
                 name = encode_name{idx};
                 train_inst = encode.(name)(f.train, :);
@@ -102,6 +123,8 @@ function baseline(image_list)
             name = encode_name{base_idx};
             test_inst = encode.(name)(f.test, :);
             model = base.(name);
+
+            fprintf('%s\n', encode_name{idx});
             tic
                 [g, ~, p] = svmpredict(test_label, test_inst, model, '-b 1');
                 prob_est = prob_est + ballot.(name)*p;

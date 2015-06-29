@@ -1,8 +1,8 @@
-function demo(image_path)
+function demo(image_path, dataset)
 
     % Setup up third-party library and load dataset
     setup_3rdparty();
-    load('50data_medium.mat');
+    load(dataset);
 
     % Read image, normalize image size and cropping center
     image = read_image(image_path);
