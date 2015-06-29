@@ -42,7 +42,7 @@ function baseline(image_list)
             sift.alpha = mexLasso([dataset.sift], sift.dict, sift.p);
             sift.n = [dataset.sift_num];
             encode.sift = pooling(sift.alpha, sift.n)';
-            encode.sift = scale_data(encode.sift, f);
+            encode.sift = sparse(scale_data(encode.sift, f));
         toc
 
 
@@ -60,12 +60,12 @@ function baseline(image_list)
             lbp.alpha = mexLasso([dataset.lbp], lbp.dict, lbp.p);
             lbp.n = [dataset.lbp_num];
             encode.lbp = pooling(lbp.alpha, lbp.n)';
-            encode.lbp = scale_data(encode.lbp, f);
+            encode.lbp = sparse(scale_data(encode.lbp, f));
         toc
 
 
         % Color histogram & Gabor filter bank response
-            encode.color = [dataset.color]';
+            encode.color = sparse([dataset.color]');
             encode.color = scale_data(encode.color, f);
         toc
             encode.gabor = sparse([dataset.gabor]');
