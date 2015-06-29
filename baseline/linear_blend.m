@@ -24,14 +24,20 @@ function alpha = linear_blend(t_max, base, label, inst, fold)
     for t = 1:t_max
         score = w'*is_correct;
         [err, weak] = min(1-score);
-        alpha = log((1-err)/err) + log(num_category-1);
-        if abs(alpha) < 1e-15
+
+        if err == 0
+            ballot(weak) = 1;
             break;
         else
-            w = w.*exp(alpha*(is_correct(:, weak) == false));
-            w = w/sum(w);
+            alpha = log((1-err)/err) + log(num_category-1);
+            w = w .* exp(alpha*(is_correct(:, weak) == false));
+            w = w / sum(w);
             ballot(weak) = ballot(weak) + alpha;
         end
+    end
+
+    if abs(sum(ballot)) > eps
+        ballot = ballot / sum(ballot);
     end
 
     alpha = [];

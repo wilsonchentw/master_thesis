@@ -27,47 +27,49 @@ function baseline(image_list)
         encode_name = fieldnames(encode);
 
         % SIFT descriptors with sparse coding
-        batchsize = 16384;
-        iter = round(sum([dataset.sift_num]) / batchsize);
-        sift = struct('dim', 1024, 'p', [], 'dict', [], 'alpha', [], 'n', []);
-        sift.p = struct('K', sift.dim, 'lambda', 0.25, 'lambda2', 0, ...
-                        'iter', iter, 'batchsize', batchsize, 'mode', 2, ...
-                        'modeD', 0, 'modeParam', 0, 'clean', true, ...
-                        'numThreads', 4, 'verbose', false);
         tic
+            batchsize = 16384;
+            iter = round(sum([dataset.sift_num]) / batchsize);
+            sift = struct('dim', 1024, 'p', [], ...
+                          'dict', [], 'alpha', [], 'n', []);
+            sift.p = struct('K', sift.dim, 'lambda', 0.25, 'lambda2', 0, ...
+                            'iter', iter, 'batchsize', batchsize, 'mode', 2, ...
+                            'modeD', 0, 'modeParam', 0, 'clean', true, ...
+                            'numThreads', 4, 'verbose', false);
             sift.dict = mexTrainDL([dataset(f.train).sift], sift.p);
         toc
-        tic
             sift.alpha = mexLasso([dataset.sift], sift.dict, sift.p); 
             sift.n = [dataset.sift_num];
             encode.sift = pooling(sift.alpha, sift.n)';
             encode.sift = sparse(zscore(encode.sift));
         toc
 
+
         % LBP descriptors with sparse coding
-        batchsize = 16384;
-        iter = round(sum([dataset.lbp_num]) / batchsize);
-        lbp = struct('dim', 2048, 'p', [], 'dict', [], 'alpha', [], 'n', []);
-        lbp.p = struct('K', lbp.dim, 'lambda', 0.25, 'lambda2', 0, ...
-                       'iter', iter, 'batchsize', batchsize, 'mode', 2, ...
-                       'modeD', 0, 'modeParam', 0, 'clean', true, ...
-                       'numThreads', 4, 'verbose', false);
-        tic
+            batchsize = 16384;
+            iter = round(sum([dataset.lbp_num]) / batchsize);
+            lbp = struct('dim', 2048, 'p', [], ...
+                         'dict', [], 'alpha', [], 'n', []);
+            lbp.p = struct('K', lbp.dim, 'lambda', 0.25, 'lambda2', 0, ...
+                           'iter', iter, 'batchsize', batchsize, 'mode', 2, ...
+                           'modeD', 0, 'modeParam', 0, 'clean', true, ...
+                           'numThreads', 4, 'verbose', false);
             lbp.dict = mexTrainDL([dataset(f.train).lbp], lbp.p);
         toc
-        tic
             lbp.alpha = mexLasso([dataset.lbp], lbp.dict, lbp.p);
             lbp.n = [dataset.lbp_num];
             encode.lbp = pooling(lbp.alpha, lbp.n)';
             encode.lbp = sparse(zscore(encode.lbp));
         toc
 
-        % Color histogram & Gabor filter bank response
-        encode.color = [dataset.color]';
-        encode.color = sparse(zscore(encode.color));
 
-        encode.gabor = sparse([dataset.gabor]');
-        encode.gabor = sparse(zscore(encode.gabor));
+        % Color histogram & Gabor filter bank response
+            encode.color = [dataset.color]';
+            encode.color = sparse(zscore(encode.color));
+        toc
+            encode.gabor = sparse([dataset.gabor]');
+            encode.gabor = sparse(zscore(encode.gabor));
+        toc
 
         %% Write subproblem for grid.py & warm start
         %for idx = 1:numel(encode_name)
@@ -84,41 +86,40 @@ function baseline(image_list)
         f.train = setdiff(f.train, f.val);
 
         % Learn RBF-SVM classifier as base learner
-        option = struct('sift', '-c 32 -g 8 -b 1 -q', ...
-                        'lbp', '-c 2048 -g 8 -b 1 -q', ...
-                        'color', '-c 128 -g 8 -b 1 -q', ...
-                        'gabor', '-c 8 -g 0.002 -b 1 -q');
-        train_label = label(f.train);
-        for idx = 1:numel(encode_name)
-            fprintf('%s\n', encode_name{idx});
-            tic
+        fprintf('\nBase learner\n');
+        tic
+            option = struct('sift', '-c 8 -b 1 -q', ...
+                            'lbp', '-c 8 -b 1 -q', ...
+                            'color', '-c 8 -b 1 -q', ...
+                            'gabor', '-c 8 -b 1 -q');
+            train_label = label(f.train);
+            for idx = 1:numel(encode_name)
                 name = encode_name{idx};
                 train_inst = encode.(name)(f.train, :);
                 base.(name) = svmtrain(train_label, train_inst, option.(name));
-            toc
-        end
+            end
+        toc
 
         % Linear blending by multi-class Adaboost with SAMME
-        tic
-            t_max = 5000;
+        fprintf('SAMME\n')
+            t_max = 10000;
             ballot = linear_blend(t_max, base, label, encode, f);
             ballot_list(v, :) = ballot;
         toc
 
         % Testing with weighted ballot & probability estimation by libsvm
-        prob_est = zeros(numel(f.test), length(unique(label)));
-        test_label = label(f.test);
-        for base_idx = 1:numel(encode_name)
-            name = encode_name{base_idx};
-            test_inst = encode.(name)(f.test, :);
-            model = base.(name);
-
-            fprintf('%s\n', encode_name{idx});
-            tic
+        fprintf('\nPredict\n');
+        tic
+            prob_est = zeros(numel(f.test), length(unique(label)));
+            test_label = label(f.test);
+            for base_idx = 1:numel(encode_name)
+                name = encode_name{base_idx};
+                test_inst = encode.(name)(f.test, :);
+                model = base.(name);
                 [g, ~, p] = svmpredict(test_label, test_inst, model, '-b 1');
                 prob_est = prob_est + ballot.(name)*p;
-            toc
-        end
+            end
+        toc
 
         num_test = numel(f.test);
         [~, rank] = sort(prob_est, 2, 'descend');
@@ -129,7 +130,9 @@ function baseline(image_list)
         top_acc(v, :) = cumsum(acc);
 
         top_n = min(10, size(top_acc, 2));
-        top_acc(v, 1:top_n)
+        fprintf('\nTop-1 accuracy: %.2f%%\n\n\n\n', top_acc(v, 1) * 100);
     end
-    [top_acc(:, 1:top_n); mean(top_acc(:, 1:top_n), 1)]
+
+    fprintf('Top-%d Accuracy: \n\n', top_n);
+    disp([top_acc(:, 1:top_n); mean(top_acc(:, 1:top_n), 1)])
 end
