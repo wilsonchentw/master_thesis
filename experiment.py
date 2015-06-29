@@ -114,15 +114,15 @@ if __name__ == "__main__":
         vl_setup = "run('{0}')".format(vl_setup)
         start_args = "-nodesktop -nosplash -singleCompThread"
 
-        # Thesis
-        setup_path(root, ["util", "thesis"])
-        run_thesis = "run_thesis('{0}')".format(fin)
-        matlab_cmd = "; ".join([vl_setup, run_thesis])
-        cmd = ["matlab", start_args, "-r", matlab_cmd]
-        subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
+        ## Thesis
+        #setup_path(root, ["util", "thesis"])
+        #run_thesis = "run_thesis('{0}')".format(fin)
+        #matlab_cmd = "; ".join([vl_setup, run_thesis])
+        #cmd = ["matlab", start_args, "-r", matlab_cmd]
+        #subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
  
         ## Baseline
-        #setup_path(root, ["util", "baseline"])
+        #setup_path(root, ["baseline"])
         #run_baseline = "run_baseline '{0}'".format(fin)
         #matlab_cmd = "; ".join([vl_setup, run_baseline])
         #cmd = ["matlab", start_args, "-r", matlab_cmd]

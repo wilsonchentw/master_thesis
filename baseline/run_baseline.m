@@ -103,21 +103,21 @@ function baseline(image_list)
             test_inst = encode.(name)(f.test, :);
             model = base.(name);
             tic
-                [g, acc, p] = svmpredict(test_label, test_inst, model, '-b 1');
+                [g, ~, p] = svmpredict(test_label, test_inst, model, '-b 1');
                 prob_est = prob_est + ballot.(name)*p;
             toc
         end
 
-        % Calculate top-N accuracy
         num_test = numel(f.test);
         [~, rank] = sort(prob_est, 2, 'descend');
-        acc = zeros(1, num_test);
         for rank_idx = 1:size(rank, 2)
-            acc(rank_idx) = sum(rank(:, rank_idx) == test_label)/num_test;
+            is_correct = (model.Label(rank(:, rank_idx)) == test_label);
+            acc(rank_idx) = sum(is_correct) / num_test;
         end
         top_acc(v, :) = cumsum(acc);
 
-        % Show experiment result
-        [top_acc(:, 1:10); mean(top_acc(:, 1:10), 1)]
+        top_n = min(10, size(top_acc, 2));
+        top_acc(v, 1:top_n)
     end
+    [top_acc(:, 1:top_n); mean(top_acc(:, 1:top_n), 1)]
 end
