@@ -10,7 +10,7 @@ function baseline(image_list)
         if exist(dataset_mat, 'file') ~= 2
             norm_size = [256 256];
             dataset = extract_descriptors(dataset, norm_size);
-            %save([dataset_name, '.mat'], '-v7.3');
+            save([dataset_name, '.mat'], '-v7.3');
         else
             %load([dataset_name, '.mat']);
         end
@@ -89,10 +89,10 @@ function baseline(image_list)
         % Learn RBF-SVM classifier as base learner
         fprintf('\nBase learner\n');
         tic
-            option = struct('sift', '-c 8 -b 1 -q', ...
-                            'lbp', '-c 8 -b 1 -q', ...
-                            'color', '-c 8 -b 1 -q', ...
-                            'gabor', '-c 8 -b 1 -q');
+            option = struct('sift', '-c 8 -g 0.0005 -b 1 -q', ...
+                            'lbp', '-c 32 -g 0.0001 -b 1 -q', ...
+                            'color', '-c 2 -g 0.0005 -b 1 -q', ...
+                            'gabor', '-c 8 -g 0.0005 -b 1 -q');
             train_label = label(f.train);
             for idx = 1:numel(encode_name)
                 name = encode_name{idx};
