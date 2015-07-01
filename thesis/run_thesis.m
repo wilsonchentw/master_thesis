@@ -57,6 +57,7 @@ function run_thesis(image_list)
             test_label = double(aug_label(test_idx));
 
             model = train(train_label, train_inst, '-s 1 -c 10 -q', 'col');
+        toc
             rank_label = rank_candidate(test_inst, model);
 
             % Use predict of liblinear to calculate accuracy

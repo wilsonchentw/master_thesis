@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Demo System</title>
+
+    <!-- jQuery -->
+    <script src="//code.jquery.com/jquery-2.1.4.js"></script>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.css">
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.js"></script>
+    <style>
+      html, body { height: 100%; }
+      #preview { background: #ddd; max-width: 80%; max-height: 80%; margin: 0 auto; }
+    </style>
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-sm-4">
+          <form class="form" action="upload.php" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+              <label class="text-center" for="input-file">
+                <div>Select an image file to upload</div>
+                <img id="preview" class="img-responsive" src="image/default.png" alt="preview">
+              </label>
+              <div class="btn btn-default btn-file center-block">
+                <input id="input-file" type="file" name="input-file" accept="image/*" />
+              </div>
+            </div>
+            <input class="btn btn-primary center-block" type="submit" name="submit" />
+          </form>
+        </div>
+        <div class="col-sm-4" style="background: #eee;">
+          Candidate Rank
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
