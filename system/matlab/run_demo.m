@@ -1,11 +1,11 @@
-function demo(image_path, dataset)
+function run_demo(path)
     try
-        % Setup up third-party library
-        setup_3rdparty();
-        load(dataset);
+        % Setup third party library and script path, then load model
+        initialize_environment();
+        load('50data_large.mat');
 
         % Read image, normalize image size and cropping center
-        image = read_image(image_path);
+        image = read_image(path);
 
         % Extract color LBP
         ds = get_pyramid_lbp(image);
@@ -18,13 +18,8 @@ function demo(image_path, dataset)
         feature = vl_homkermap(feature, 3, 'kernel', 'kinters', 'gamma', 1);
       
         % Predict label and output
-        label = rank_candidate(feature, model);
-        category_idx = arrayfun(@(x) find(category == x), label);
-
-        % Display output
-        category_rank = category_name(category_idx)';
-        disp(category_rank{1});
+        [label, score] = rank_candidate(feature, model)
     catch
-        fprintf('Error occurs\n');
+        fprintf('Error\n');
     end
 end

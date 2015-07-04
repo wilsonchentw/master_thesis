@@ -1,5 +1,5 @@
-function generate_model(image_list)
-    setup_3rdparty();
+function run_train(image_list)
+    initialize_environment();
 
     % Parse input image list
     [~, prefix, ~] = fileparts(image_list);
@@ -7,11 +7,10 @@ function generate_model(image_list)
     [category, category_name] = extract_label_name(path, label);
 
     % Extract descriptors, augment data with flip LBP
-    ds = extract_lbp(path);
-    ds = reshape(ds', 1, []);
+    ds = reshape(extract_lbp(path)', 1, []);
     label = [label; label];
 
-    % Generate basis and encode with LASSO
+    % Generate descriptor basis and encode descriptors
     basis = generate_basis(ds);
     feature = lasso_encode(basis, ds);
 
@@ -24,7 +23,7 @@ function generate_model(image_list)
 
     % Save model
     save([prefix, '.mat'], 'basis', 'model', 'category', 'category_name');
-end
+end 
 
 
 function [path, label] = parse_list(image_list)
@@ -48,21 +47,4 @@ function [category, category_name] = extract_label_name(path, label)
 
     [category, sort_idx] = sort(category);
     category_name(:) = category_name(sort_idx);
-end
-
-
-function basis = generate_basis(vocabs)
-    vocabs = cell2mat(reshape(vocabs, 1, []));
-
-    % Generate descriptor basis
-    batch_size = 16384;
-    iter = ceil(size(vocabs, 2) / batch_size);
-    param = struct('K', 1024, 'lambda', 0.25, 'lambda2', 0, ...
-                   'iter', iter, 'mode', 2, 'modeD', 0, ...
-                   'batchsize', batch_size, 'modeParam', 0, ...
-                   'clean', true, 'numThreads', 4, 'verbose', false);
-    fprintf('K = %4d, iter = %4d, batch = %5d\n', ...
-            param.K, param.iter, param.batchsize);
-
-    basis = mexTrainDL(vocabs, param);
 end
