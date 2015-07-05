@@ -30,7 +30,7 @@ if __name__ == "__main__":
 
     rootpath, fout, fold = check_option(args)
     cwdlist = [os.path.join(rootpath, d) for d in listdir(rootpath)]
-    for label, dirpath in enumerate(filter(isdir, cwdlist)):
+    for label, dirpath in enumerate(filter(isdir, cwdlist), 1):
 
         # Filter out weird type of file
         image_list = [os.path.join(dirpath, f) for f in listdir(dirpath)]
@@ -50,5 +50,5 @@ if __name__ == "__main__":
             for idx, f in enumerate(fout):
                 num = num_image[idx] + (1 if idx in sample else 0)
                 for image in image_list[:num]:
-                    f.write("{0} {1}\n".format(image, label + 1))
+                    f.write("{0} {1}\n".format(image, label))
                 image_list = image_list[num:]
