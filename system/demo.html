@@ -18,16 +18,23 @@
       .container-fluid, .row, .row>div, #input-form { height: 100%; }
       #input-form { position: relative; width: 100%; }
       #input-preview { width: 100%; }
-      #input-preview img { width: 100%; max-width: 100%; max-height: 100%; }
+      #input-preview img { max-width: 100%; max-height: 100%; }
       #input-confirm { padding-top: 5%; }
       #input-file [type=file] { display: none; }
-      #food-candidate .btn { text-align: left;}
+      #food-candidate .btn, #recommend .btn { 
+        border-radius:10px !important;
+        margin-bottom: 20px; 
+        text-align: left; 
+        font-size: 200%; 
+      }
+      #food-candidate .badge { font-size: 75%; }
     </style>
   </head>
   <body>
     <div class="container-fluid">
       <div class="row">
         <div class="col-sm-4">
+          <div class="well h2 text-center">Upload Area</div>
           <form id="input-form" action="upload.php" method="post" enctype="multipart/form-data">
             <!-- Preview area -->
             <label id="input-preview" class="thumbnail text-center text-danger" for="hidden-input-file">
@@ -69,26 +76,27 @@
             </div>
           </form>
         </div>
-        <div id="food-candidate" class="col-sm-4">
-            <h3>Food Candidate:</h3>
+        <div id="food-candidate" class="col-sm-3">
+            <div class="well h2 text-center">Food Candidate</div>
             <div class="btn-group-vertical"></div>
         </div>
-        <div id="recommend" class="col-sm-4">
-            <h3>Recommend Food:</h3>
+        <div id="recommend" class="col-sm-5">
+            <div class="well h2 text-center">Recommendation</div>
             <div class="btn-group-vertical"></div>
         </div>
       </div>
     </div>
 
     <script>
-        $(".btn-preview").click(function(){
-            url = $("#input-url [type=text]").val();
-            $("#input-preview img").attr('src', url);
-            $("#hidden-input-file").val("");
-        });
+        // $(".btn-preview").click(function(){
+        //     url = $("#input-url [type=text]").val();
+        //     $("#input-preview img").attr('src', url);
+        //     $("#hidden-input-file").val("");
+        // });
 
         $("#hidden-input-file").change(function(){
-            $("#food-candidate .btn-group-vertical").html("");
+            $(".btn-group-vertical").empty();
+
             if(this.files && this.files[0]){
                 var reader = new FileReader();
                 reader.onload = function(e){
@@ -101,11 +109,13 @@
 
         $("#input-confirm [type=reset]").click(function(){
             $("#input-preview img").attr('src', "image/default.png");
-            $("#food-candidate .btn-group-vertical").html("");
+            $(".btn-group-vertical").empty();
         });
 
         $("#input-form").submit(function(e){
             e.preventDefault();
+            $(".btn-group-vertical").html('<div class="h3">Loading ...</div>');
+            
             var formData = new FormData($("#input-form")[0]);
             var promise = $.ajax({
                 'url': "upload.php", 
@@ -122,16 +132,24 @@
         });
 
         function outputCandidate(ret){
-            $("#food-candidate .btn-group-vertical").html("");
+            $(".btn-group-vertical").empty();
             for(var idx = 0; idx < ret.length; idx++){
-                rank = "rank" + (idx + 1);
-                $("#food-candidate .btn-group-vertical").append(
-                    '<button class="btn btn-lg btn-primary">'
-                    + ret[idx]['name']
-                    + ' <span class="badge">'
-                    + ret[idx]['score']
-                    + '%</span></button><br>'
-                );
+                var rankClass = "rank-" + (idx + 1);
+                var rankScore = $('<span>' + ret[idx]['score'] + '%</span>')
+                    .addClass("badge");
+                var rankBtn = $('<button>' + ret[idx]['name'] + ' </button>')
+                    .addClass("btn btn-lg btn-primary " + rankClass)
+                    .append(rankScore)
+                    .appendTo("#food-candidate .btn-group-vertical")
+                    .click(function(e){
+                        // $("#food-candidate .btn, #recommend .btn").toggle();
+                        // $(this).show();
+                    });
+
+                var recommend = $('<button></button>')
+                    .addClass("btn btn-lg btn-default " + rankClass)
+                    .text(ret[idx]['recommend'])
+                    .appendTo("#recommend .btn-group-vertical");
             }
         }
     </script>

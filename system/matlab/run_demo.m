@@ -33,7 +33,7 @@ function run_demo(path)
         % Output
         num_candidate = min(length(label), 5);
         for idx = 1:num_candidate
-            name = category_name{label(idx) + 1};
+            name = category_name{label(idx)};
             fprintf('%d %s %.2f ', label(idx), name, norm_score(idx));
         end
         fprintf('\n');
