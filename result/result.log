@@ -1,0 +1,1162 @@
+01-Jul-2015 03:28:10
+Elapsed time is 1282.696827 seconds.
+
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 2466.246232 seconds.
+Elapsed time is 2968.467417 seconds.
+Elapsed time is 58.802372 seconds.
+Elapsed time is 59.055101 seconds.
+Top-1 Accuracy: 69.70%
+
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 2474.624993 seconds.
+Elapsed time is 2907.665162 seconds.
+Elapsed time is 59.439160 seconds.
+Elapsed time is 59.684659 seconds.
+Top-1 Accuracy: 72.10%
+
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 2473.036455 seconds.
+Elapsed time is 2887.465505 seconds.
+Elapsed time is 58.801948 seconds.
+Elapsed time is 59.050320 seconds.
+Top-1 Accuracy: 70.90%
+
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 2470.107610 seconds.
+Elapsed time is 2887.670447 seconds.
+Elapsed time is 58.887252 seconds.
+Elapsed time is 59.128626 seconds.
+Top-1 Accuracy: 72.50%
+
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 2466.909566 seconds.
+Elapsed time is 2892.908528 seconds.
+Elapsed time is 59.789701 seconds.
+Elapsed time is 60.038361 seconds.
+Top-1 Accuracy: 69.90%
+
+
+metric =
+
+                           Precision    Recall
+                           _________    ______
+
+    Chicken_rice             0.435       0.4
+    Sausage                0.78834      0.71
+    Gongbao_chicken        0.79016      0.87
+    Chasiu                 0.62078      0.63
+    Lasagne                0.65255      0.65
+    Shrimp                 0.62061      0.68
+    Potato_chip            0.62196      0.58
+    Fried_Rice             0.82026      0.86
+    Fried_food             0.77112      0.88
+    Popcorn                0.88296      0.87
+    Curry_rice             0.60214      0.56
+    Sashimi                0.77662      0.85
+    Bread                  0.69835      0.72
+    Subway                 0.71645      0.63
+    Sushi                  0.73885      0.79
+    Steamed_sandwich        0.7352      0.86
+    Croissants             0.63826      0.59
+    Poutine                0.78011      0.81
+    Fried_noodle           0.78953       0.8
+    Mapo_tofu              0.83461      0.86
+    Stinky_tofu            0.50722      0.56
+    Steak                  0.78095      0.87
+    Corn                    0.9389      0.85
+    Steamed_stuffed_bun    0.91545      0.95
+    Arepas                 0.57912      0.39
+    Braised_pork           0.75599      0.71
+    Egg_tart               0.80008      0.82
+    Chocolate              0.83975      0.84
+    Crab                   0.51828      0.47
+    Pizza                  0.69857      0.71
+    Lobster                0.54713      0.44
+    Som_tam                  0.648      0.63
+    Dumplings              0.88664      0.97
+    Spaghetti              0.75198      0.75
+    Fish&Chips             0.56926      0.54
+    Noodle_soup             0.7106      0.71
+    Shumai                 0.88561      0.88
+    Peking_duck            0.72539      0.79
+    Ice_cream              0.61037      0.52
+    Hamburger              0.81003       0.8
+    Sandwich               0.65322      0.57
+    Curry_chicken           0.5719      0.59
+    Goi_cuon               0.82715      0.81
+    Turnip_cake            0.69958      0.72
+    Salad                  0.72736      0.78
+    Buns                   0.73649      0.65
+    Donut                  0.66211      0.56
+    Omurice                0.58702      0.59
+    Hot&Sour_soup          0.77783      0.82
+    Rice_tamale            0.63413      0.62
+
+
+top_acc =
+
+    0.6970
+    0.7210
+    0.7090
+    0.7250
+    0.6990
+    0.7102
+
+-----------------------
+LAB-LBP
+
+26-Jun-2015 02:55:15
+Elapsed time is 1988.408937 seconds.
+
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 3112.141962 seconds.
+Elapsed time is 3824.436704 seconds.
+Elapsed time is 61.083484 seconds.
+Top-1 Accuracy: 68.90%
+
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 3231.408062 seconds.
+Elapsed time is 3802.529540 seconds.
+Elapsed time is 60.084325 seconds.
+Top-1 Accuracy: 67.80%
+
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 3307.638784 seconds.
+Elapsed time is 3849.222297 seconds.
+Elapsed time is 63.851514 seconds.
+Top-1 Accuracy: 69.00%
+
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 3325.948265 seconds.
+Elapsed time is 3844.030597 seconds.
+Elapsed time is 59.234245 seconds.
+Top-1 Accuracy: 69.60%
+
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 3314.496865 seconds.
+Elapsed time is 3767.847719 seconds.
+Elapsed time is 60.859923 seconds.
+Top-1 Accuracy: 68.50%
+
+
+metric =
+
+                           Precision    Recall
+                           _________    ______
+
+    Chicken_rice           0.47673      0.48
+    Sausage                0.75106      0.64
+    Gongbao_chicken        0.74882      0.84
+    Chasiu                 0.59156      0.61
+    Lasagne                0.67611      0.59
+    Shrimp                 0.72582      0.67
+    Potato_chip            0.64112      0.49
+    Fried_Rice             0.78804       0.8
+    Fried_food             0.75717      0.88
+    Popcorn                0.87202      0.82
+    Curry_rice             0.74169      0.69
+    Sashimi                0.76754      0.84
+    Bread                  0.65437      0.69
+    Subway                  0.6504      0.64
+    Sushi                  0.75345       0.7
+    Steamed_sandwich       0.68944      0.72
+    Croissants             0.75341      0.61
+    Poutine                0.69742      0.74
+    Fried_noodle           0.72522      0.76
+    Mapo_tofu               0.8759      0.85
+    Stinky_tofu            0.46534      0.48
+    Steak                  0.73359      0.83
+    Corn                   0.94191      0.88
+    Steamed_stuffed_bun    0.84816      0.89
+    Arepas                 0.48778      0.39
+    Braised_pork           0.68944       0.7
+    Egg_tart               0.79927      0.85
+    Chocolate              0.78839      0.84
+    Crab                   0.59126      0.55
+    Pizza                  0.65803      0.78
+    Lobster                0.50095       0.5
+    Som_tam                0.56612      0.48
+    Dumplings              0.85385      0.86
+    Spaghetti              0.74928      0.84
+    Fish&Chips             0.42697       0.4
+    Noodle_soup            0.64677      0.52
+    Shumai                 0.80231      0.85
+    Peking_duck             0.6684      0.65
+    Ice_cream              0.60019      0.52
+    Hamburger              0.75784      0.82
+    Sandwich               0.66894      0.55
+    Curry_chicken          0.57072      0.55
+    Goi_cuon               0.78778      0.82
+    Turnip_cake            0.67872      0.77
+    Salad                  0.76833       0.9
+    Buns                   0.75441      0.67
+    Donut                  0.64584      0.56
+    Omurice                 0.6009      0.55
+    Hot&Sour_soup          0.72646      0.82
+    Rice_tamale            0.49295       0.5
+
+
+top_acc =
+
+    0.6890
+    0.6780
+    0.6900
+    0.6960
+    0.6850
+    0.6876
+
+-------------------------------------
+
+split channel basis
+<2015/06/27 03:15:02> r02922088@linux17:~/r02922088/master_thesis$ ./experiment.py -f 50data_full.list
+MATLAB is selecting SOFTWARE OPENGL rendering.
+
+                                              < M A T L A B (R) >
+                                    Copyright 1984-2015 The MathWorks, Inc.
+                                    R2015a (8.5.0.197613) 64-bit (glnxa64)
+                                               February 12, 2015
+
+
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+
+
+        This is a Classroom License for instructional use only.
+        Research and commercial use is prohibited.
+
+--------------------------------------------------------------------------------
+27-Jun-2015 03:16:32
+Elapsed time is 1445.813785 seconds.
+
+K = 1024, iter =  603, batch = 16384
+K = 1024, iter =  603, batch = 16384
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 6555.480251 seconds.
+Elapsed time is 7418.576635 seconds.
+Elapsed time is 198.195654 seconds.
+Top-1 Accuracy: 68.10%
+
+K = 1024, iter =  603, batch = 16384
+K = 1024, iter =  603, batch = 16384
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 5510.929156 seconds.
+Elapsed time is 6533.780511 seconds.
+Elapsed time is 195.883441 seconds.
+Top-1 Accuracy: 71.40%
+
+K = 1024, iter =  603, batch = 16384
+K = 1024, iter =  603, batch = 16384
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 5599.958568 seconds.
+Elapsed time is 6370.102437 seconds.
+Elapsed time is 195.888550 seconds.
+Top-1 Accuracy: 70.20%
+
+K = 1024, iter =  603, batch = 16384
+K = 1024, iter =  603, batch = 16384
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 4525.665178 seconds.
+Elapsed time is 5335.591714 seconds.
+Elapsed time is 202.925529 seconds.
+Top-1 Accuracy: 70.90%
+
+K = 1024, iter =  603, batch = 16384
+K = 1024, iter =  603, batch = 16384
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 4115.044959 seconds.
+Elapsed time is 5115.568256 seconds.
+Elapsed time is 182.624309 seconds.
+Top-1 Accuracy: 70.60%
+
+
+metric =
+
+                           Precision    Recall
+                           _________    ______
+
+    Chicken_rice            0.4557      0.37
+    Sausage                0.75556      0.72
+    Gongbao_chicken        0.76982      0.86
+    Chasiu                 0.58496      0.54
+    Lasagne                0.68046      0.64
+    Shrimp                 0.68865       0.7
+    Potato_chip            0.67703      0.57
+    Fried_Rice             0.79886      0.88
+    Fried_food             0.75032      0.88
+    Popcorn                0.89556      0.86
+    Curry_rice               0.644      0.57
+    Sashimi                 0.7292       0.8
+    Bread                  0.74273      0.69
+    Subway                 0.70215      0.64
+    Sushi                   0.7776      0.75
+    Steamed_sandwich       0.76474      0.82
+    Croissants             0.65926      0.55
+    Poutine                0.73407       0.8
+    Fried_noodle           0.80584       0.8
+    Mapo_tofu              0.82516      0.86
+    Stinky_tofu             0.5185      0.57
+    Steak                  0.81082      0.86
+    Corn                   0.93647      0.85
+    Steamed_stuffed_bun    0.85779       0.9
+    Arepas                 0.58352      0.41
+    Braised_pork           0.73989      0.74
+    Egg_tart               0.72465      0.86
+    Chocolate              0.73714      0.79
+    Crab                   0.54831      0.48
+    Pizza                  0.72102       0.8
+    Lobster                 0.5283      0.42
+    Som_tam                0.67165      0.61
+    Dumplings              0.86629      0.95
+    Spaghetti              0.77968      0.78
+    Fish&Chips              0.4582      0.42
+    Noodle_soup            0.72207      0.72
+    Shumai                 0.83229      0.83
+    Peking_duck            0.67056      0.75
+    Ice_cream              0.59882      0.61
+    Hamburger              0.77803      0.81
+    Sandwich               0.63315      0.57
+    Curry_chicken          0.65704       0.6
+    Goi_cuon               0.73722      0.77
+    Turnip_cake            0.72183      0.73
+    Salad                  0.65064       0.7
+    Buns                   0.67704      0.69
+    Donut                  0.64823      0.54
+    Omurice                0.72495      0.63
+    Hot&Sour_soup          0.75941      0.85
+    Rice_tamale            0.56805      0.58
+
+top_acc =
+
+    0.6810
+    0.7140
+    0.7020
+    0.7090
+    0.7060
+    0.7024
+
+--------------------------------------
+
+<2015/06/27 20:50:31> r02922088@linux17:~/r02922088/master_thesis$ ./experiment.py -f 50data_full.list
+MATLAB is selecting SOFTWARE OPENGL rendering.
+
+                                              < M A T L A B (R) >
+                                    Copyright 1984-2015 The MathWorks, Inc.
+                                    R2015a (8.5.0.197613) 64-bit (glnxa64)
+                                               February 12, 2015
+
+
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+
+
+        This is a Classroom License for instructional use only.
+        Research and commercial use is prohibited.
+
+--------------------------------------------------------------------------------
+no_pyramid
+
+27-Jun-2015 20:51:39
+Elapsed time is 1111.936674 seconds.
+
+K = 1024, iter =  469, batch = 16384
+Elapsed time is 1966.582351 seconds.
+Elapsed time is 2356.241424 seconds.
+Elapsed time is 54.776923 seconds.
+Top-1 Accuracy: 65.80%
+K = 1024, iter =  469, batch = 16384
+Elapsed time is 1949.854925 seconds.
+Elapsed time is 2438.579733 seconds.
+Elapsed time is 66.701678 seconds.
+Top-1 Accuracy: 67.00%
+
+K = 1024, iter =  469, batch = 16384
+Elapsed time is 1958.304636 seconds.
+Elapsed time is 2348.620546 seconds.
+Elapsed time is 55.052882 seconds.
+Top-1 Accuracy: 67.40%
+
+K = 1024, iter =  469, batch = 16384
+Elapsed time is 1958.092860 seconds.
+Elapsed time is 2353.821169 seconds.
+Elapsed time is 55.227801 seconds.
+Top-1 Accuracy: 69.50%
+
+K = 1024, iter =  469, batch = 16384
+Elapsed time is 1968.491408 seconds.
+Elapsed time is 2347.543384 seconds.
+Elapsed time is 55.190035 seconds.
+Top-1 Accuracy: 67.50%
+
+metric =
+
+                           Precision    Recall
+                           _________    ______
+
+    Chicken_rice           0.41393      0.42
+    Sausage                 0.6584      0.61
+    Gongbao_chicken        0.79967      0.83
+    Chasiu                 0.60312      0.62
+    Lasagne                 0.6382      0.66
+    Shrimp                 0.56383      0.58
+    Potato_chip             0.5333      0.51
+    Fried_Rice             0.79817      0.82
+    Fried_food             0.74209      0.83
+    Popcorn                0.85419      0.87
+    Curry_rice             0.56761      0.51
+    Sashimi                0.73139       0.8
+    Bread                  0.66416       0.7
+    Subway                 0.63669       0.6
+    Sushi                  0.72666      0.74
+    Steamed_sandwich        0.7407      0.78
+    Croissants             0.64053      0.55
+    Poutine                0.67419      0.78
+    Fried_noodle            0.8235      0.77
+    Mapo_tofu              0.78381      0.83
+    Stinky_tofu            0.45217      0.55
+    Steak                   0.7871      0.82
+    Corn                   0.95475      0.85
+    Steamed_stuffed_bun     0.8862      0.91
+    Arepas                 0.46763      0.34
+    Braised_pork             0.639      0.68
+    Egg_tart               0.72429      0.79
+    Chocolate              0.74239      0.76
+    Crab                    0.5568      0.49
+    Pizza                  0.70995       0.7
+    Lobster                0.50183      0.42
+    Som_tam                0.55343      0.51
+    Dumplings              0.83517      0.89
+    Spaghetti              0.71429      0.77
+    Fish&Chips             0.52817      0.47
+    Noodle_soup            0.74362      0.67
+    Shumai                 0.82583      0.83
+    Peking_duck            0.63307      0.67
+    Ice_cream              0.58199      0.51
+    Hamburger               0.7403      0.78
+    Sandwich               0.65637      0.57
+    Curry_chicken          0.52612      0.48
+    Goi_cuon               0.78111      0.78
+    Turnip_cake            0.75682      0.72
+    Salad                  0.78005      0.88
+    Buns                   0.67393      0.63
+    Donut                  0.64024      0.51
+    Omurice                0.61052      0.55
+    Hot&Sour_soup          0.69945      0.82
+    Rice_tamale            0.53734      0.56
+
+
+top_acc =
+
+    0.6580
+    0.6700
+    0.6740
+    0.6950
+    0.6750
+    0.6744
+
+--------------------------------------------
+no-sqrt
+28-Jun-2015 03:21:32
+Elapsed time is 1095.350550 seconds.
+
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 829.117848 seconds.
+Elapsed time is 1025.362520 seconds.
+Elapsed time is 43.536061 seconds.
+Top-1 Accuracy: 52.70%
+
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 766.157196 seconds.
+Elapsed time is 1017.623542 seconds.
+Elapsed time is 41.289128 seconds.
+Top-1 Accuracy: 52.50%
+
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 765.240063 seconds.
+Elapsed time is 1030.044419 seconds.
+Elapsed time is 41.638656 seconds.
+Top-1 Accuracy: 52.50%
+
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 766.515417 seconds.
+Elapsed time is 1017.087777 seconds.
+Elapsed time is 41.854211 seconds.
+Top-1 Accuracy: 52.70%
+
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 766.206362 seconds.
+Elapsed time is 1020.347705 seconds.
+Elapsed time is 41.837087 seconds.
+Top-1 Accuracy: 53.90%
+
+
+metric =
+
+                           Precision    Recall
+                           _________    ______
+
+    Chicken_rice           0.23185      0.15
+    Sausage                0.57154      0.54
+    Gongbao_chicken        0.69526      0.76
+    Chasiu                 0.47793      0.43
+    Lasagne                0.41376      0.38
+    Shrimp                 0.46278      0.38
+    Potato_chip            0.40375      0.37
+    Fried_Rice             0.74828      0.63
+    Fried_food             0.67716      0.71
+    Popcorn                 0.7669      0.73
+    Curry_rice             0.41353      0.37
+    Sashimi                0.59993      0.72
+    Bread                  0.55288      0.57
+    Subway                 0.47416      0.48
+    Sushi                  0.50098      0.63
+    Steamed_sandwich       0.60936      0.59
+    Croissants             0.39796      0.34
+    Poutine                0.44828      0.48
+    Fried_noodle           0.62709      0.68
+    Mapo_tofu              0.68457      0.77
+    Stinky_tofu            0.32296      0.38
+    Steak                  0.63711      0.75
+    Corn                   0.76118       0.6
+    Steamed_stuffed_bun    0.84758      0.82
+    Arepas                 0.29739      0.22
+    Braised_pork           0.56828      0.53
+    Egg_tart               0.63849      0.64
+    Chocolate              0.66751      0.75
+    Crab                   0.33125      0.31
+    Pizza                  0.57036      0.55
+    Lobster                0.36831      0.31
+    Som_tam                0.32281      0.29
+    Dumplings              0.71413      0.82
+    Spaghetti              0.57867      0.62
+    Fish&Chips             0.35964      0.32
+    Noodle_soup            0.53479       0.6
+    Shumai                  0.6378       0.7
+    Peking_duck            0.54984      0.66
+    Ice_cream              0.35482      0.35
+    Hamburger              0.72139      0.69
+    Sandwich               0.38467      0.35
+    Curry_chicken           0.3858      0.35
+    Goi_cuon               0.48036      0.46
+    Turnip_cake             0.5075      0.58
+    Salad                  0.54876      0.61
+    Buns                   0.62882      0.53
+    Donut                  0.46096      0.37
+    Omurice                 0.4336      0.41
+    Hot&Sour_soup          0.61872      0.69
+    Rice_tamale            0.45023      0.46
+
+top_acc =
+
+    0.5270
+    0.5250
+    0.5250
+    0.5270
+    0.5390
+    0.5286
+
+-----------------------------
+no augment data
+                                             < M A T L A B (R) >
+                                    Copyright 1984-2015 The MathWorks, Inc.
+                                    R2015a (8.5.0.197613) 64-bit (glnxa64)
+                                               February 12, 2015
+
+
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+
+
+        This is a Classroom License for instructional use only.
+        Research and commercial use is prohibited.
+
+--------------------------------------------------------------------------------
+28-Jun-2015 06:21:30
+Elapsed time is 1276.253231 seconds.
+
+K = 1024, iter =  302, batch = 16384
+Elapsed time is 1244.251126 seconds.
+Elapsed time is 2906.689133 seconds.
+Elapsed time is 31.436663 seconds.
+Top-1 Accuracy: 67.80%
+
+K = 1024, iter =  302, batch = 16384
+Elapsed time is 1240.980164 seconds.
+Elapsed time is 2906.141688 seconds.
+Elapsed time is 31.681651 seconds.
+Top-1 Accuracy: 67.90%
+
+K = 1024, iter =  302, batch = 16384
+Elapsed time is 1243.915261 seconds.
+Elapsed time is 2892.137673 seconds.
+Elapsed time is 31.847440 seconds.
+Top-1 Accuracy: 67.70%
+
+K = 1024, iter =  302, batch = 16384
+Elapsed time is 1239.815357 seconds.
+Elapsed time is 2901.820081 seconds.
+Elapsed time is 32.040322 seconds.
+Top-1 Accuracy: 69.20%
+
+K = 1024, iter =  302, batch = 16384
+Elapsed time is 1242.272816 seconds.
+Elapsed time is 2908.697486 seconds.
+Elapsed time is 38.522707 seconds.
+Top-1 Accuracy: 69.30%
+
+
+metric =
+
+                           Precision    Recall
+                           _________    ______
+
+    Chicken_rice           0.48106      0.37
+    Sausage                0.68915      0.63
+    Gongbao_chicken        0.77872      0.84
+    Chasiu                  0.5561      0.56
+    Lasagne                0.65651       0.6
+    Shrimp                 0.64226      0.64
+    Potato_chip             0.5192       0.5
+    Fried_Rice             0.83046      0.88
+    Fried_food             0.72741      0.83
+    Popcorn                0.86463      0.88
+    Curry_rice             0.62528      0.53
+    Sashimi                0.77367      0.87
+    Bread                  0.64575       0.7
+    Subway                 0.65913      0.61
+    Sushi                  0.79368      0.73
+    Steamed_sandwich       0.75337      0.77
+    Croissants             0.66031      0.52
+    Poutine                0.76992      0.77
+    Fried_noodle           0.78232      0.81
+    Mapo_tofu              0.77347      0.82
+    Stinky_tofu            0.51708      0.58
+    Steak                  0.75182      0.81
+    Corn                   0.94947      0.85
+    Steamed_stuffed_bun    0.87843      0.92
+    Arepas                 0.53749      0.34
+    Braised_pork           0.73557      0.69
+    Egg_tart               0.75162      0.82
+    Chocolate              0.80193      0.83
+    Crab                    0.4805      0.45
+    Pizza                  0.68883       0.7
+    Lobster                0.50736      0.39
+    Som_tam                0.66821      0.53
+    Dumplings              0.84956      0.95
+    Spaghetti              0.73384      0.81
+    Fish&Chips             0.50727      0.46
+    Noodle_soup            0.72139      0.69
+    Shumai                 0.80297      0.88
+    Peking_duck            0.65662      0.74
+    Ice_cream              0.53161      0.52
+    Hamburger              0.77092      0.83
+    Sandwich               0.63492      0.52
+    Curry_chicken          0.51664      0.54
+    Goi_cuon               0.78214      0.85
+    Turnip_cake            0.70949      0.76
+    Salad                  0.76609      0.84
+    Buns                   0.62617      0.63
+    Donut                   0.6393      0.56
+    Omurice                0.51337      0.48
+    Hot&Sour_soup          0.71769      0.83
+    Rice_tamale            0.52226      0.53
+
+
+top_acc =
+
+    0.6780
+    0.6790
+    0.6770
+    0.6920
+    0.6930
+    0.6838
+
+--------------------------------------------------
+no-homkermap + L2
+MATLAB is selecting SOFTWARE OPENGL rendering.
+
+                                              < M A T L A B (R) >
+                                    Copyright 1984-2015 The MathWorks, Inc.
+                                    R2015a (8.5.0.197613) 64-bit (glnxa64)
+                                               February 12, 2015
+
+
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+
+
+        This is a Classroom License for instructional use only.
+        Research and commercial use is prohibited.
+
+--------------------------------------------------------------------------------
+28-Jun-2015 18:14:51
+Elapsed time is 1282.430156 seconds.
+
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 2537.892221 seconds.
+Elapsed time is 2884.163857 seconds.
+Elapsed time is 13.234305 seconds.
+Top-1 Accuracy: 61.20%
+
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 2470.745453 seconds.
+Elapsed time is 2907.858351 seconds.
+Elapsed time is 13.397700 seconds.
+Top-1 Accuracy: 62.50%
+
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 2476.006190 seconds.
+Elapsed time is 2913.813802 seconds.
+Elapsed time is 14.085234 seconds.
+Top-1 Accuracy: 60.10%
+
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 2465.661302 seconds.
+Elapsed time is 2891.646257 seconds.
+Elapsed time is 13.603826 seconds.
+Top-1 Accuracy: 61.40%
+
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 2469.287396 seconds.
+Elapsed time is 2982.197798 seconds.
+Elapsed time is 12.985654 seconds.
+Top-1 Accuracy: 60.00%
+
+
+metric =
+
+                           Precision    Recall
+                           _________    ______
+
+    Chicken_rice             0.358      0.41
+    Sausage                 0.6656      0.56
+    Gongbao_chicken        0.78359       0.8
+    Chasiu                  0.5062      0.55
+    Lasagne                0.59702      0.55
+    Shrimp                 0.59759      0.56
+    Potato_chip            0.47742      0.47
+    Fried_Rice             0.72344      0.76
+    Fried_food             0.74536      0.76
+    Popcorn                0.86192      0.88
+    Curry_rice             0.46874      0.47
+    Sashimi                0.77259      0.75
+    Bread                  0.55943       0.6
+    Subway                 0.53841      0.49
+    Sushi                   0.6668      0.72
+    Steamed_sandwich       0.56395       0.6
+    Croissants             0.50843      0.47
+    Poutine                0.75675      0.75
+    Fried_noodle           0.76318      0.75
+    Mapo_tofu              0.83382      0.76
+    Stinky_tofu            0.31724      0.38
+    Steak                  0.75265       0.7
+    Corn                   0.87924      0.76
+    Steamed_stuffed_bun     0.8557      0.83
+    Arepas                 0.32278      0.31
+    Braised_pork            0.5836      0.59
+    Egg_tart                0.7509       0.7
+    Chocolate                 0.68      0.71
+    Crab                   0.42555      0.43
+    Pizza                  0.69154      0.68
+    Lobster                0.39163       0.3
+    Som_tam                0.43222      0.41
+    Dumplings              0.87781      0.87
+    Spaghetti              0.63279      0.67
+    Fish&Chips             0.40916      0.41
+    Noodle_soup            0.50732      0.57
+    Shumai                 0.79723      0.82
+    Peking_duck            0.52224      0.61
+    Ice_cream              0.47924      0.44
+    Hamburger              0.71723      0.74
+    Sandwich                0.5494      0.47
+    Curry_chicken          0.53826      0.54
+    Goi_cuon                0.7288      0.73
+    Turnip_cake            0.68423      0.66
+    Salad                  0.79369      0.79
+    Buns                   0.62777      0.58
+    Donut                  0.53903      0.49
+    Omurice                0.49264      0.49
+    Hot&Sour_soup          0.72214      0.72
+    Rice_tamale            0.41135      0.46
+
+
+top_acc =
+
+    0.6120
+    0.6250
+    0.6010
+    0.6140
+    0.6000
+    0.6104
+
+------------------
+LBP L2-norm
+--------------------------------------------------------------------------------
+30-Jun-2015 12:16:01
+Elapsed time is 1095.314844 seconds.
+
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 2245.973399 seconds.
+Elapsed time is 3078.513968 seconds.
+Elapsed time is 58.753106 seconds.
+Top-1 Accuracy: 67.50%
+
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 2142.200268 seconds.
+Elapsed time is 4276.557981 seconds.
+Elapsed time is 57.805094 seconds.
+Top-1 Accuracy: 67.10%
+
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 3193.045754 seconds.
+Elapsed time is 3205.226052 seconds.
+Elapsed time is 63.536069 seconds.
+Top-1 Accuracy: 68.00%
+
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 3220.833126 seconds.
+Elapsed time is 4149.670393 seconds.
+Elapsed time is 57.242702 seconds.
+Top-1 Accuracy: 69.20%
+
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 3505.692280 seconds.
+Elapsed time is 2765.787128 seconds.
+Elapsed time is 58.321550 seconds.
+Top-1 Accuracy: 68.80%
+
+
+metric =
+
+                           Precision    Recall
+                           _________    ______
+
+    Chicken_rice           0.45425       0.4
+    Sausage                0.67786      0.67
+    Gongbao_chicken        0.77257      0.84
+    Chasiu                 0.57899      0.59
+    Lasagne                0.59508      0.54
+    Shrimp                 0.61851      0.65
+    Potato_chip            0.57478      0.57
+    Fried_Rice             0.80441      0.86
+    Fried_food             0.77522      0.82
+    Popcorn                0.86043      0.86
+    Curry_rice             0.61015      0.55
+    Sashimi                0.73707      0.78
+    Bread                  0.69024      0.73
+    Subway                  0.6373      0.65
+    Sushi                  0.73777      0.79
+    Steamed_sandwich       0.73278      0.78
+    Croissants             0.52486      0.45
+    Poutine                0.76926      0.83
+    Fried_noodle           0.77979      0.76
+    Mapo_tofu               0.8071      0.83
+    Stinky_tofu            0.47919      0.47
+    Steak                  0.72935      0.85
+    Corn                   0.90938      0.86
+    Steamed_stuffed_bun    0.87677      0.92
+    Arepas                 0.47128      0.34
+    Braised_pork            0.6786       0.7
+    Egg_tart               0.73524      0.81
+    Chocolate              0.81827      0.83
+    Crab                   0.48807      0.51
+    Pizza                  0.69527      0.66
+    Lobster                0.56872      0.42
+    Som_tam                0.66515      0.56
+    Dumplings              0.81316      0.92
+    Spaghetti              0.74114      0.73
+    Fish&Chips             0.56124      0.44
+    Noodle_soup            0.68259      0.66
+    Shumai                 0.84481      0.87
+    Peking_duck            0.65028      0.68
+    Ice_cream              0.58456      0.47
+    Hamburger              0.77017      0.82
+    Sandwich               0.62189      0.56
+    Curry_chicken          0.54879      0.53
+    Goi_cuon               0.76238      0.83
+    Turnip_cake            0.66445      0.72
+    Salad                  0.75397      0.81
+    Buns                   0.70985      0.59
+    Donut                  0.59637      0.49
+    Omurice                0.64796      0.62
+    Hot&Sour_soup          0.76051      0.82
+    Rice_tamale            0.54348      0.62
+
+
+top_acc =
+
+    0.6750
+    0.6710
+    0.6800
+    0.6920
+    0.6880
+    0.6812
+
+------------------------------------------------
+Baseline
+Elapsed time is 2592.188393 seconds.
+
+Elapsed time is 434.938542 seconds.
+Elapsed time is 845.682274 seconds.
+Elapsed time is 3080.155268 seconds.
+Elapsed time is 5100.508523 seconds.
+Elapsed time is 5102.163363 seconds.
+Elapsed time is 5103.298245 seconds.
+
+Base learner
+Elapsed time is 1004.403588 seconds.
+SAMME
+Accuracy = 41.4% (414/1000) (classification)
+Accuracy = 46% (460/1000) (classification)
+Accuracy = 30.4% (304/1000) (classification)
+Accuracy = 28.4% (284/1000) (classification)
+Elapsed time is 1055.111439 seconds.
+
+Predict
+Accuracy = 40.8% (408/1000) (classification)
+Accuracy = 46% (460/1000) (classification)
+Accuracy = 30.5% (305/1000) (classification)
+Accuracy = 28% (280/1000) (classification)
+Elapsed time is 52.003019 seconds.
+
+Top-1 accuracy: 58.60%
+
+
+
+Elapsed time is 434.996803 seconds.
+Elapsed time is 843.789070 seconds.
+Elapsed time is 3089.652115 seconds.
+Elapsed time is 5111.011559 seconds.
+Elapsed time is 5112.507405 seconds.
+Elapsed time is 5113.480137 seconds.
+
+Base learner
+Elapsed time is 1001.641587 seconds.
+SAMME
+Accuracy = 40.6% (406/1000) (classification)
+Accuracy = 47.1% (471/1000) (classification)
+Accuracy = 31.9% (319/1000) (classification)
+Accuracy = 29.1% (291/1000) (classification)
+Elapsed time is 1054.255546 seconds.
+
+Predict
+Accuracy = 40% (400/1000) (classification)
+Accuracy = 45.5% (455/1000) (classification)
+Accuracy = 29.2% (292/1000) (classification)
+Accuracy = 24.8% (248/1000) (classification)
+Elapsed time is 52.159066 seconds.
+
+Top-1 accuracy: 57.30%
+
+
+
+Elapsed time is 436.156885 seconds.
+Elapsed time is 838.738434 seconds.
+Elapsed time is 3091.202500 seconds.
+Elapsed time is 5136.184663 seconds.
+Elapsed time is 5137.593201 seconds.
+Elapsed time is 5138.582768 seconds.
+
+Base learner
+Elapsed time is 1001.203649 seconds.
+SAMME
+Accuracy = 39.6% (396/1000) (classification)
+Accuracy = 47.7% (477/1000) (classification)
+Accuracy = 30.7% (307/1000) (classification)
+Accuracy = 29.3% (293/1000) (classification)
+Elapsed time is 1053.686542 seconds.
+
+Predict
+Accuracy = 39% (390/1000) (classification)
+Accuracy = 46.3% (463/1000) (classification)
+Accuracy = 31.5% (315/1000) (classification)
+Accuracy = 25.3% (253/1000) (classification)
+Elapsed time is 51.588802 seconds.
+
+Top-1 accuracy: 57.80%
+
+
+
+Elapsed time is 435.866831 seconds.
+Elapsed time is 840.060987 seconds.
+Elapsed time is 3082.128461 seconds.
+Elapsed time is 5101.507050 seconds.
+Elapsed time is 5102.926506 seconds.
+Elapsed time is 5103.979936 seconds.
+
+Base learner
+Elapsed time is 1002.460159 seconds.
+SAMME
+Accuracy = 40.3% (403/1000) (classification)
+Accuracy = 43.7% (437/1000) (classification)
+Accuracy = 33.6% (336/1000) (classification)
+Accuracy = 26.1% (261/1000) (classification)
+Elapsed time is 1055.688558 seconds.
+
+Predict
+Accuracy = 41.3% (413/1000) (classification)
+Accuracy = 48.3% (483/1000) (classification)
+Accuracy = 31% (310/1000) (classification)
+Accuracy = 26.4% (264/1000) (classification)
+Elapsed time is 51.494907 seconds.
+
+Top-1 accuracy: 59.90%
+
+
+
+Elapsed time is 435.205490 seconds.
+Elapsed time is 839.901007 seconds.
+Elapsed time is 3070.556901 seconds.
+Elapsed time is 5271.975898 seconds.
+Elapsed time is 5273.503367 seconds.
+Elapsed time is 5274.560928 seconds.
+
+Base learner
+Elapsed time is 1049.659391 seconds.
+SAMME
+Accuracy = 39.4% (394/1000) (classification)
+Accuracy = 46.3% (463/1000) (classification)
+Accuracy = 30.3% (303/1000) (classification)
+Accuracy = 27.5% (275/1000) (classification)
+Elapsed time is 1109.488213 seconds.
+
+Predict
+Accuracy = 40.9% (409/1000) (classification)
+Accuracy = 45.2% (452/1000) (classification)
+Accuracy = 30.6% (306/1000) (classification)
+Accuracy = 25.7% (257/1000) (classification)
+Elapsed time is 56.802253 seconds.
+
+Top-1 accuracy: 59.90%
+
+
+
+Top-10 Accuracy:
+
+    0.5860    0.7130    0.7820    0.8300    0.8600    0.8840    0.9050    0.9120    0.9260    0.9340
+    0.5730    0.7150    0.7830    0.8190    0.8490    0.8720    0.8890    0.9000    0.9130    0.9220
+    0.5780    0.7060    0.7820    0.8270    0.8560    0.8800    0.8980    0.9080    0.9170    0.9360
+    0.5990    0.7430    0.8010    0.8390    0.8690    0.8900    0.9060    0.9160    0.9290    0.9420
+    0.5990    0.7220    0.7910    0.8380    0.8790    0.8970    0.9070    0.9260    0.9390    0.9470
+    0.5870    0.7198    0.7878    0.8306    0.8626    0.8846    0.9010    0.9124    0.9248    0.9362
+
+------------------------------------------
+--------------------------------------------------------------------------------
+Max pooling
+01-Jul-2015 13:58:51
+Elapsed time is 1274.397866 seconds.
+
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 2615.273301 seconds.
+Elapsed time is 3222.047604 seconds.
+Elapsed time is 81.541229 seconds.
+Elapsed time is 81.814145 seconds.
+Top-1 Accuracy: 64.40%
+
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 2815.810714 seconds.
+Elapsed time is 3259.601517 seconds.
+Elapsed time is 78.444987 seconds.
+Elapsed time is 78.752971 seconds.
+Top-1 Accuracy: 67.20%
+
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 2798.964856 seconds.
+Elapsed time is 2998.355551 seconds.
+Elapsed time is 75.809255 seconds.
+Elapsed time is 76.060383 seconds.
+Top-1 Accuracy: 65.90%
+
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 2613.472689 seconds.
+Elapsed time is 3022.873782 seconds.
+Elapsed time is 76.086112 seconds.
+Elapsed time is 76.336908 seconds.
+Top-1 Accuracy: 66.70%
+
+K = 1024, iter =  603, batch = 16384
+Elapsed time is 9380.116821 seconds.
+Elapsed time is 6080.675954 seconds.
+Elapsed time is 77.241577 seconds.
+Elapsed time is 77.504238 seconds.
+Top-1 Accuracy: 65.00%
+
+
+metric =
+
+                           Precision    Recall
+                           _________    ______
+
+    Chicken_rice           0.42659      0.37
+    Sausage                0.70174       0.6
+    Gongbao_chicken        0.73357       0.8
+    Chasiu                 0.54601      0.59
+    Lasagne                0.50543      0.53
+    Shrimp                  0.6377      0.63
+    Potato_chip            0.57932      0.52
+    Fried_Rice             0.73939      0.77
+    Fried_food             0.75072      0.83
+    Popcorn                    0.8      0.84
+    Curry_rice              0.6501      0.54
+    Sashimi                0.68943      0.81
+    Bread                  0.66568      0.66
+    Subway                 0.58855      0.57
+    Sushi                  0.68797      0.75
+    Steamed_sandwich       0.67993      0.83
+    Croissants             0.54755      0.46
+    Poutine                0.70489      0.78
+    Fried_noodle           0.73217      0.76
+    Mapo_tofu              0.86773      0.79
+    Stinky_tofu             0.3999      0.36
+    Steak                  0.66497      0.75
+    Corn                   0.90944      0.84
+    Steamed_stuffed_bun    0.88209      0.96
+    Arepas                 0.39587      0.33
+    Braised_pork           0.72607      0.74
+    Egg_tart               0.73177      0.83
+    Chocolate               0.8591      0.85
+    Crab                   0.50533      0.47
+    Pizza                  0.62753      0.67
+    Lobster                0.49753      0.38
+    Som_tam                0.53936       0.5
+    Dumplings              0.90522      0.93
+    Spaghetti              0.67702      0.76
+    Fish&Chips             0.43084       0.4
+    Noodle_soup            0.66901       0.7
+    Shumai                 0.80713      0.88
+    Peking_duck            0.61211      0.67
+    Ice_cream              0.55487      0.48
+    Hamburger              0.76971      0.74
+    Sandwich               0.59596      0.49
+    Curry_chicken          0.58076      0.57
+    Goi_cuon               0.70736      0.76
+    Turnip_cake            0.66554      0.65
+    Salad                  0.67659      0.76
+    Buns                    0.7185      0.65
+    Donut                  0.64816      0.56
+    Omurice                0.53283      0.44
+    Hot&Sour_soup          0.78927      0.78
+    Rice_tamale            0.60687      0.59
+
+
+top_acc =
+
+    0.6440
+    0.6720
+    0.6590
+    0.6670
+    0.6500
+    0.6584
+
+------------------------------------------------
+basis = 3072
+07-Jul-2015 00:27:06
+Elapsed time is 1305.607400 seconds.
+
+K = 3072, iter =  603, batch = 16384
+Elapsed time is 10008.249898 seconds.
+Elapsed time is 17093.737450 seconds.
+Elapsed time is 142.191646 seconds.
+Top-1 Accuracy: 75.00%
+-------------------------------------------------
+

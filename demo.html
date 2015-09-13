@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Demo System</title>
+
+    <!-- Bootstrap & jQuery -->
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.css">
+    <script src="//code.jquery.com/jquery-1.11.3.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.js" charset="utf-8"></script>
+
+    <style>
+      html, body { width: 100%; min-height: 100%; }
+      .container-fluid, .row, .row>div, #input-form { height: 100%; }
+      #input-form { position: relative; width: 100%; }
+      #input-preview { width: 100%; }
+      #input-preview img { max-width: 100%; max-height: 100%; }
+      #input-confirm { padding-top: 5%; }
+      #input-file [type=file] { display: none; }
+      #food-candidate .btn, #recommend .btn { 
+        border-radius:10px !important;
+        margin-bottom: 20px; 
+        text-align: left; 
+        font-size: 200%; 
+      }
+      #food-candidate .badge { font-size: 75%; }
+    </style>
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-sm-4">
+          <div class="well h3 text-center">Upload</div>
+          <form id="input-form" action="upload.php" method="post" enctype="multipart/form-data">
+            <!-- Preview area -->
+            <label id="input-preview" class="thumbnail text-center text-danger" for="hidden-input-file">
+              <img class="img-responsive" src="image/default.png" alt="Invalid photo">
+            </label>
+
+            <!-- File as image input -->
+            <label id="input-file" class="btn btn-default btn-lg btn-block">
+              <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>
+              <span>&nbsp; Upload from local</span>
+              <input id="hidden-input-file" type="file" name="file" accept="image/*" />
+            </label>
+			
+            <!-- Button of submit or reset -->
+            <div id="input-confirm" class="btn-group btn-group-lg btn-group-justified">
+              <div class="btn-group btn-group-lg">
+                <button class="btn btn-primary" type="submit" name="submit">
+                  <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+                  <span>Submit</span>
+                </button>
+              </div>
+              <div class="btn-group btn-group-lg">
+                <button class="btn btn-danger" type="reset">
+                  <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                  <span>Reset</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div id="food-candidate" class="col-sm-3">
+            <div class="well h3 text-center">Recognize</div>
+            <div class="btn-group-vertical"></div>
+        </div>
+        <div id="recommend" class="col-sm-5">
+            <div class="well h3 text-center">Recommend</div>
+            <div class="btn-group-vertical"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+        // $(".btn-preview").click(function(){
+        //     url = $("#input-url [type=text]").val();
+        //     $("#input-preview img").attr('src', url);
+        //     $("#hidden-input-file").val("");
+        // });
+
+        $("#hidden-input-file").change(function(){
+            $(".btn-group-vertical").empty();
+
+            if(this.files && this.files[0]){
+                var reader = new FileReader();
+                reader.onload = function(e){
+                    $("#input-preview img").attr('src', e.target.result);
+                    $("#input-url").val("");
+                }
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+
+        $("#input-confirm [type=reset]").click(function(){
+            $("#input-preview img").attr('src', "image/default.png");
+            $(".btn-group-vertical").empty();
+        });
+
+        $("#input-form").submit(function(e){
+            e.preventDefault();
+            $(".btn-group-vertical").html('<div class="h3">Loading ...</div>');
+            
+            var formData = new FormData($("#input-form")[0]);
+            var promise = $.ajax({
+                'url': "upload.php", 
+                'type': 'POST', 
+                'data': formData, 
+                'success': function(data, textStatus, jqxhr){
+                    var ret = JSON.parse(data);
+                    outputCandidate(ret);
+                }, 
+                'cache': false, 
+                'contentType': false, 
+                'processData': false
+            });
+        });
+
+        function outputCandidate(ret){
+            $(".btn-group-vertical").empty();
+            for(var idx = 0; idx < ret.length; idx++){
+                var rankClass = "rank-" + (idx + 1);
+                var rankScore = $('<span>' + ret[idx]['score'] + '%</span>')
+                    .addClass("badge");
+                var rankBtn = $('<button>' + ret[idx]['name'] + ' </button>')
+                    .addClass("btn btn-lg btn-primary " + rankClass)
+                    .append(rankScore)
+                    .appendTo("#food-candidate .btn-group-vertical")
+
+                var recommend = $('<button></button>')
+                    .addClass("btn btn-lg btn-default " + rankClass)
+                    .text(ret[idx]['recommend'])
+                    .appendTo("#recommend .btn-group-vertical");
+            }
+        }
+    </script>
+  </body>
+</html>

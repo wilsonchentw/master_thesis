@@ -2,7 +2,7 @@ function run_demo(path)
     try
         % Setup third party library and script path, then load model
         initialize_environment();
-        load('50data_large.mat');
+        load('50data.mat');
 
         % Read image, normalize image size and cropping center
         image = read_image(path);
@@ -20,15 +20,11 @@ function run_demo(path)
         % Predict label and output
         [label, score] = rank_candidate(feature, model);
 
-
-        % Linear scale score => norm_score(1) = 49/50, norm_score = 1/50
-        norm_score = score * (atanh(0.96) - atanh(-0.96)) + atanh(-0.96);
-        norm_score = tanh(norm_score + atanh(-0.96)) * 0.5 + 0.5;
+        % Linear scale score => norm_score(1) = 49/50, norm_score(0) = 1/50
+        anchor = ((1.0 - 1.0 / length(label)) - 0.5) * 2.0;
+        norm_score = score * (atanh(anchor) - atanh(-anchor)) + atanh(-anchor);
+        norm_score = tanh(norm_score + atanh(-anchor)) * 0.5 + 0.5;
         norm_score = norm_score / sum(norm_score) * 100;
-
-        %% Direct output probability
-        %norm_score = tanh(score) * 0.5 + 0.5;
-
 
         % Output
         num_candidate = min(length(label), 5);
@@ -39,6 +35,6 @@ function run_demo(path)
         fprintf('\n');
 
     catch
-        fprintf('Error\n');
+        fprintf('%d Error 100.0\n', length(label) + 1);
     end
 end
